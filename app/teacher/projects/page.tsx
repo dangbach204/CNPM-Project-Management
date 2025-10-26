@@ -57,7 +57,7 @@ export default function TeacherProjectsPage() {
           <div className="p-8 space-y-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold">Đề tài của tôi</h1>
+                <h1 className="text-3xl font-bold">Danh sách đề tài</h1>
                 <p className="text-muted-foreground mt-2">Quản lý các đề tài bạn đang giảng dạy</p>
               </div>
               <Link href="/teacher/projects/new">

@@ -37,11 +37,11 @@ export default function NewProjectPage() {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-8 max-w-2xl">
+        <main className="flex-1 overflow-y-auto flex justify-center items-start">
+          <div className="p-8 max-w-2xl w-full">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold">Tạo Đề tài Mới</h1>
-              <p className="text-muted-foreground mt-2">Nhập thông tin chi tiết cho đề tài của bạn</p>
+              <h1 className="text-3xl font-bold text-center">Tạo đề tài mới</h1>
+              <p className="text-muted-foreground mt-2 text-center">Nhập thông tin chi tiết cho đề tài của bạn</p>
             </div>
 
             <Card>

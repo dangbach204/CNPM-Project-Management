@@ -60,7 +60,7 @@ export default function TeacherSubmissionsPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="p-8 space-y-8">
             <div>
-              <h1 className="text-3xl font-bold">Bài nộp</h1>
+              <h1 className="text-3xl font-bold">Quản lý, chấm điểm</h1>
               <p className="text-muted-foreground mt-2">Quản lý và chấm điểm bài nộp của sinh viên</p>
             </div>
 
@@ -70,7 +70,7 @@ export default function TeacherSubmissionsPage() {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Tổng bài nộp</p>
+                      <p className="text-sm text-muted-foreground">Tổng bài đã nộp</p>
                       <p className="text-3xl font-bold mt-2">{mySubmissions.length}</p>
                     </div>
                     <FileText className="w-8 h-8 text-blue-600" />

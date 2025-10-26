@@ -37,11 +37,11 @@ export default function SettingsPage() {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto flex justify-center items-start">
           <div className="p-8 max-w-2xl space-y-8">
             <div>
-              <h1 className="text-3xl font-bold">Cài đặt</h1>
-              <p className="text-muted-foreground mt-2">Quản lý tài khoản và cài đặt cá nhân</p>
+              <h1 className="text-3xl font-bold text-center">Cài đặt</h1>
+              <p className="text-muted-foreground mt-2 text-center">Quản lý tài khoản và cài đặt cá nhân</p>
             </div>
 
             {/* Profile Settings */}
