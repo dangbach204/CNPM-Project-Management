@@ -14,7 +14,7 @@ export function Sidebar() {
   if (!user) return null
 
   const getMenuItems = () => {
-    const baseItems = [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }]
+    const baseItems = [{ href: "/dashboard", label: "General", icon: LayoutDashboard }]
 
     if (user.role === "admin") {
       return [
@@ -29,7 +29,7 @@ export function Sidebar() {
     if (user.role === "teacher") {
       return [
         ...baseItems,
-        { href: "/teacher/projects", label: "Đề tài của tôi", icon: BookOpen },
+        { href: "/teacher/projects", label: "Đề tài", icon: BookOpen },
         { href: "/teacher/submissions", label: "Bài nộp", icon: FileText },
         { href: "/teacher/grading", label: "Chấm điểm", icon: BarChart3 },
         { href: "/settings", label: "Cài đặt", icon: Settings },
@@ -54,8 +54,8 @@ export function Sidebar() {
     <aside className="w-64 bg-sidebar border-r border-sidebar-border h-screen flex flex-col">
       {/* Logo */}
       <div className="p-6 border-b border-sidebar-border">
-        <h1 className="text-2xl font-bold text-sidebar-primary">UniProject</h1>
-        <p className="text-xs text-sidebar-foreground/60 mt-1">Quản lý Đề tài</p>
+        <h1 className="text-2xl font-bold text-sidebar-primary">Quản lý đồ án</h1>
+        <p className="text-xs text-sidebar-foreground/60 mt-1">Quản lý các đề tài</p>
       </div>
 
       {/* Navigation */}

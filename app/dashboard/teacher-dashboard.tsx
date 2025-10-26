@@ -71,7 +71,7 @@ export default function TeacherDashboard() {
       {/* My Projects */}
       <Card>
         <CardHeader>
-          <CardTitle>Đề tài của tôi</CardTitle>
+          <CardTitle>Danh sách đề tài</CardTitle>
           <CardDescription>Danh sách các đề tài bạn đang quản lý</CardDescription>
         </CardHeader>
         <CardContent>

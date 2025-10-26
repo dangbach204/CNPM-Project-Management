@@ -3,26 +3,16 @@
 import { useAuth } from "@/lib/auth-context"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { mockUsers, mockProjects, mockSubmissions, mockGrades } from "@/lib/mock-data"
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts"
 import { redirect } from "next/navigation"
+import { useState } from "react"
 
 export default function AdminReportsPage() {
   const { user, isLoading } = useAuth()
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   if (isLoading) return null
   if (!user || user.role !== "admin") redirect("/login")
@@ -35,44 +25,48 @@ export default function AdminReportsPage() {
   const totalSubmissions = mockSubmissions.length
   const totalGraded = mockGrades.length
 
-  // User distribution
-  const userDistribution = [
-    { name: "Quản trị viên", value: mockUsers.filter((u) => u.role === "admin").length },
-    { name: "Giáo viên", value: totalTeachers },
-    { name: "Sinh viên", value: totalStudents },
-  ]
+  const handleCardClick = (category: string) => {
+    setSelectedCategory(category)
+    setIsModalOpen(true)
+  }
 
-  // Project status distribution
-  const projectStatus = [
-    { name: "Mở", value: mockProjects.filter((p) => p.status === "open").length },
-    { name: "Đang thực hiện", value: mockProjects.filter((p) => p.status === "in-progress").length },
-    { name: "Hoàn thành", value: mockProjects.filter((p) => p.status === "completed").length },
-    { name: "Lưu trữ", value: mockProjects.filter((p) => p.status === "archived").length },
-  ]
-
-  // Submission status
-  const submissionStatus = [
-    { name: "Đã nộp", value: mockSubmissions.filter((s) => s.status === "submitted").length },
-    { name: "Đã xem", value: mockSubmissions.filter((s) => s.status === "reviewed").length },
-    { name: "Chấp nhận", value: mockSubmissions.filter((s) => s.status === "approved").length },
-    { name: "Từ chối", value: mockSubmissions.filter((s) => s.status === "rejected").length },
-  ]
-
-  // Average score by project
-  const scoreByProject = mockProjects.map((project) => {
-    const projectSubmissions = mockSubmissions.filter((s) => s.projectId === project.id)
-    const projectGrades = mockGrades.filter((g) => projectSubmissions.some((s) => s.id === g.submissionId))
-    const avgScore =
-      projectGrades.length > 0
-        ? Math.round((projectGrades.reduce((sum, g) => sum + g.score, 0) / projectGrades.length) * 10) / 10
-        : 0
-    return {
-      name: project.title.substring(0, 15),
-      score: avgScore,
+  const getDetailData = () => {
+    switch (selectedCategory) {
+      case "users":
+        return mockUsers
+      case "teachers":
+        return mockUsers.filter((u) => u.role === "teacher")
+      case "students":
+        return mockUsers.filter((u) => u.role === "student")
+      case "projects":
+        return mockProjects
+      case "submissions":
+        return mockSubmissions
+      case "graded":
+        return mockGrades
+      default:
+        return []
     }
-  })
+  }
 
-  const COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#ef4444"]
+  const getDetailTitle = () => {
+    switch (selectedCategory) {
+      case "users":
+        return "Danh sách Người dùng"
+      case "teachers":
+        return "Danh sách Giáo viên"
+      case "students":
+        return "Danh sách Sinh viên"
+      case "projects":
+        return "Danh sách Đề tài"
+      case "submissions":
+        return "Danh sách Bài nộp"
+      case "graded":
+        return "Danh sách Bài đã chấm"
+      default:
+        return ""
+    }
+  }
 
   return (
     <div className="flex h-screen bg-background">
@@ -88,134 +82,63 @@ export default function AdminReportsPage() {
 
             {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-              <Card>
-                <CardContent className="pt-6">
+              <Card
+                className="cursor-pointer hover:shadow-xl transition-all hover:scale-105 border-l-4 border-l-primary"
+                onClick={() => handleCardClick("users")}
+              >
+                <CardContent className="pt-6 text-center ">
                   <p className="text-sm text-muted-foreground">Tổng người dùng</p>
                   <p className="text-3xl font-bold mt-2">{totalUsers}</p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="pt-6">
+              <Card
+                className="cursor-pointer hover:shadow-xl transition-all hover:scale-105 border-l-4 border-l-primary"
+                onClick={() => handleCardClick("teachers")}
+              >
+                <CardContent className="pt-6 text-center">
                   <p className="text-sm text-muted-foreground">Giáo viên</p>
                   <p className="text-3xl font-bold mt-2">{totalTeachers}</p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="pt-6">
+              <Card
+                className="cursor-pointer hover:shadow-xl transition-all hover:scale-105 border-l-4 border-l-primary"
+                onClick={() => handleCardClick("students")}
+              >
+                <CardContent className="pt-6 text-center">
                   <p className="text-sm text-muted-foreground">Sinh viên</p>
                   <p className="text-3xl font-bold mt-2">{totalStudents}</p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="pt-6">
+              <Card
+                className="cursor-pointer hover:shadow-xl transition-all hover:scale-105 border-l-4 border-l-primary"
+                onClick={() => handleCardClick("projects")}
+              >
+                <CardContent className="pt-6 text-center">
                   <p className="text-sm text-muted-foreground">Đề tài</p>
                   <p className="text-3xl font-bold mt-2">{totalProjects}</p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="pt-6">
+              <Card
+                className="cursor-pointer hover:shadow-xl transition-all hover:scale-105 border-l-4 border-l-primary"
+                onClick={() => handleCardClick("submissions")}
+              >
+                <CardContent className="pt-6 text-center">
                   <p className="text-sm text-muted-foreground">Bài nộp</p>
                   <p className="text-3xl font-bold mt-2">{totalSubmissions}</p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="pt-6">
+              <Card
+                className="cursor-pointer hover:shadow-xl transition-all hover:scale-105 border-l-4 border-l-primary"
+                onClick={() => handleCardClick("graded")}
+              >
+                <CardContent className="pt-6 text-center">
                   <p className="text-sm text-muted-foreground">Đã chấm</p>
                   <p className="text-3xl font-bold mt-2">{totalGraded}</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* User Distribution */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Phân bố Người dùng</CardTitle>
-                  <CardDescription>Số lượng người dùng theo vai trò</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={userDistribution}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, value }) => `${name}: ${value}`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {userDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              {/* Project Status */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Trạng thái Đề tài</CardTitle>
-                  <CardDescription>Phân bố theo trạng thái</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={projectStatus}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="value" fill="#3b82f6" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              {/* Submission Status */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Trạng thái Bài nộp</CardTitle>
-                  <CardDescription>Phân bố theo trạng thái</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={submissionStatus}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="value" fill="#8b5cf6" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              {/* Average Score by Project */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Điểm trung bình theo Đề tài</CardTitle>
-                  <CardDescription>Điểm TB của mỗi đề tài</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={scoreByProject}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis domain={[0, 100]} />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="score" stroke="#10b981" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
                 </CardContent>
               </Card>
             </div>
@@ -226,8 +149,8 @@ export default function AdminReportsPage() {
                 <CardTitle>Tóm tắt Hoạt động</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-3">
+                <div className="flex flex-col md:flex-row gap-8 divide-y md:divide-y-0 md:divide-x">
+                  <div className="space-y-3 md:pr-8 flex-1">
                     <h3 className="font-semibold">Tỷ lệ Hoàn thành</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
@@ -247,39 +170,7 @@ export default function AdminReportsPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <h3 className="font-semibold">Tỷ lệ Tham gia</h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Sinh viên</span>
-                        <span className="font-medium">
-                          {totalStudents > 0
-                            ? Math.round(
-                                (mockProjects.reduce((sum, p) => sum + p.enrolledStudents.length, 0) / totalStudents) *
-                                  100,
-                              )
-                            : 0}
-                          %
-                        </span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full"
-                          style={{
-                            width: `${
-                              totalStudents > 0
-                                ? (
-                                    mockProjects.reduce((sum, p) => sum + p.enrolledStudents.length, 0) / totalStudents
-                                  ) * 100
-                                : 0
-                            }%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
+                  <div className="space-y-3 md:pl-8 flex-1">
                     <h3 className="font-semibold">Trung bình Điểm</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
@@ -311,6 +202,58 @@ export default function AdminReportsPage() {
           </div>
         </main>
       </div>
+
+      {/* Detail Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-4xl max-h-96 overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{getDetailTitle()}</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {selectedCategory === "users" || selectedCategory === "teachers" || selectedCategory === "students" ? (
+              <div className="space-y-3">
+                {getDetailData().map((user: any) => (
+                  <div key={user.id} className="p-3 border rounded-lg hover:bg-muted/50">
+                    <p className="font-medium">{user.name}</p>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <p className="text-xs text-muted-foreground">Vai trò: {user.role}</p>
+                  </div>
+                ))}
+              </div>
+            ) : selectedCategory === "projects" ? (
+              <div className="space-y-3">
+                {getDetailData().map((project: any) => (
+                  <div key={project.id} className="p-3 border rounded-lg hover:bg-muted/50">
+                    <p className="font-medium">{project.title}</p>
+                    <p className="text-sm text-muted-foreground">{project.description}</p>
+                    <p className="text-xs text-muted-foreground">Trạng thái: {project.status}</p>
+                  </div>
+                ))}
+              </div>
+            ) : selectedCategory === "submissions" ? (
+              <div className="space-y-3">
+                {getDetailData().map((submission: any) => (
+                  <div key={submission.id} className="p-3 border rounded-lg hover:bg-muted/50">
+                    <p className="font-medium">Bài nộp ID: {submission.id}</p>
+                    <p className="text-sm text-muted-foreground">Dự án ID: {submission.projectId}</p>
+                    <p className="text-xs text-muted-foreground">Trạng thái: {submission.status}</p>
+                  </div>
+                ))}
+              </div>
+            ) : selectedCategory === "graded" ? (
+              <div className="space-y-3">
+                {getDetailData().map((grade: any) => (
+                  <div key={grade.id} className="p-3 border rounded-lg hover:bg-muted/50">
+                    <p className="font-medium">Điểm: {grade.score}/100</p>
+                    <p className="text-sm text-muted-foreground">Bài nộp ID: {grade.submissionId}</p>
+                    <p className="text-xs text-muted-foreground">Nhận xét: {grade.feedback}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
