@@ -1,12 +1,17 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import Link from "next/link"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -18,17 +23,64 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center p-4">
+    <div className="relative min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-primary/10 to-primary/5">
+
+
+      {/* 🔹 Logo Bách Khoa (trái trên) */}
+      <div className="absolute top-4 left-4 flex items-center space-x-3">
+        <Image
+          src="/logobk.png"
+          alt="Logo Trường Đại học Bách Khoa Đà Nẵng"
+          width={48}
+          height={48}
+          className="object-contain"
+        />
+        <div className="hidden sm:block">
+          <p className="text-sm font-semibold text-blue-800 leading-tight">
+            ĐẠI HỌC ĐÀ NẴNG
+          </p>
+          <p className="text-base font-extrabold text-blue-900 leading-tight">
+            TRƯỜNG ĐẠI HỌC BÁCH KHOA
+          </p>
+        </div>
+      </div>
+
+      {/* 🔹 Logo Khoa Điện tử Viễn thông (phải trên) */}
+      <div className="absolute top-4 right-4 flex items-center space-x-3">
+        <div className="hidden sm:block text-right">
+          <p className="text-sm font-semibold text-blue-800 leading-tight">
+            KHOA
+          </p>
+          <p className="text-base font-extrabold text-blue-900 leading-tight">
+            ĐIỆN TỬ - VIỄN THÔNG
+          </p>
+        </div>
+        <Image
+          src="/logokhoa.jpeg"
+          alt="Logo Khoa Điện tử Viễn thông"
+          width={48}
+          height={48}
+          className="object-contain rounded-full"
+        />
+      </div>
+
+      {/* Nội dung chính */}
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-primary mb-2">UniProject</h1>
-          <p className="text-muted-foreground">Hệ thống Quản lý Đề tài Sinh viên</p>
+          <p className="text-muted-foreground">
+            Hệ thống Quản lý Đề tài Sinh viên
+          </p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Quên mật khẩu</CardTitle>
-            <CardDescription>{submitted ? "Kiểm tra email của bạn" : "Nhập email để đặt lại mật khẩu"}</CardDescription>
+            <CardDescription>
+              {submitted
+                ? "Kiểm tra email của bạn"
+                : "Nhập email để đặt lại mật khẩu"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {!submitted ? (
@@ -51,8 +103,12 @@ export default function ForgotPasswordPage() {
             ) : (
               <div className="text-center space-y-4">
                 <div className="text-5xl">📧</div>
-                <p className="text-sm text-muted-foreground">Chúng tôi đã gửi liên kết đặt lại mật khẩu đến {email}</p>
-                <p className="text-xs text-muted-foreground">Vui lòng kiểm tra email của bạn (bao gồm thư mục spam)</p>
+                <p className="text-sm text-muted-foreground">
+                  Chúng tôi đã gửi liên kết đặt lại mật khẩu đến {email}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Vui lòng kiểm tra email của bạn (bao gồm thư mục spam)
+                </p>
               </div>
             )}
 
