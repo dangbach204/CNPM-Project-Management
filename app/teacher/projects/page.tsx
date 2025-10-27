@@ -8,13 +8,18 @@ import { Button } from "@/components/ui/button"
 import { mockProjects, mockUsers } from "@/lib/mock-data"
 import { Plus, Edit2, Trash2, Users } from "lucide-react"
 import Link from "next/link"
-import { redirect } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 export default function TeacherProjectsPage() {
   const { user, isLoading } = useAuth()
+  const router = useRouter()
 
   if (isLoading) return null
-  if (!user || user.role !== "teacher") redirect("/login")
+
+  if (!user || user.role !== "teacher") {
+    router.push("/login") // ✅ Dùng router.push thay vì redirect
+    return null
+  }
 
   const myProjects = mockProjects.filter((p) => p.teacherId === user.id)
 
@@ -58,7 +63,9 @@ export default function TeacherProjectsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold">Danh sách đề tài</h1>
-                <p className="text-muted-foreground mt-2">Quản lý các đề tài bạn đang giảng dạy</p>
+                <p className="text-muted-foreground mt-2">
+                  Quản lý các đề tài bạn đang giảng dạy
+                </p>
               </div>
               <Link href="/teacher/projects/new">
                 <Button className="gap-2">
@@ -71,7 +78,9 @@ export default function TeacherProjectsPage() {
             {myProjects.length === 0 ? (
               <Card>
                 <CardContent className="pt-12 pb-12 text-center">
-                  <p className="text-muted-foreground mb-4">Bạn chưa tạo đề tài nào</p>
+                  <p className="text-muted-foreground mb-4">
+                    Bạn chưa tạo đề tài nào
+                  </p>
                   <Link href="/teacher/projects/new">
                     <Button>Tạo Đề tài Đầu tiên</Button>
                   </Link>
@@ -92,7 +101,9 @@ export default function TeacherProjectsPage() {
                               {getStatusLabel(project.status)}
                             </span>
                           </div>
-                          <p className="text-muted-foreground mb-4">{project.description}</p>
+                          <p className="text-muted-foreground mb-4">
+                            {project.description}
+                          </p>
 
                           <div className="grid grid-cols-3 gap-4 mb-4">
                             <div>

@@ -38,12 +38,12 @@ export default function LoginPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center p-4">
+    <div className="min-h-screen from-primary/10 to-primary/5 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-primary mb-2">UniProject</h1>
-          <p className="text-muted-foreground">Hệ thống Quản lý Đề tài Sinh viên</p>
+          <h1 className="text-4xl font-bold text-primary mb-2">Quản lý đồ án</h1>
+          <p className="text-muted-foreground">Hệ thống Quản lý đồ án Sinh viên</p>
         </div>
 
         {/* Login Card */}
