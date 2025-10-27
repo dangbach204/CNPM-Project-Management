@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
@@ -8,16 +10,19 @@ import { Button } from "@/components/ui/button"
 import { mockProjects, mockUsers } from "@/lib/mock-data"
 import { Plus, Edit2, Trash2, Users } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 
 export default function TeacherProjectsPage() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
 
-  if (isLoading) return null
+  useEffect(() => {
+    if (!isLoading && (!user || user.role !== "teacher")) {
+      router.push("/login")
+    }
+  }, [isLoading, user, router])
 
-  if (!user || user.role !== "teacher") {
-    router.push("/login") // ✅ Dùng router.push thay vì redirect
+  if (isLoading || !user || user.role !== "teacher") {
+    // Trong lúc đang loading hoặc chưa xác thực -> return null để tránh render UI
     return null
   }
 
