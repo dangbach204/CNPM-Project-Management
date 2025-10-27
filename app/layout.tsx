@@ -18,8 +18,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "UniProject - Quản lý Đề tài Sinh viên",
-  description: "Hệ thống quản lý đề tài sinh viên",
+  title: "Quản lý đồ án",
+  description: "Hệ thống quản lý đồ án sinh viên",
   generator: "v0.app",
 }
 
