@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-primary/10 to-primary/5">
+    <div className="relative min-h-screen flex items-center justify-center p-4 bg-linear-to-b from-primary/10 to-primary/5">
 
 
       {/* 🔹 Logo Bách Khoa (trái trên) */}

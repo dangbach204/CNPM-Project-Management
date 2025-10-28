@@ -38,7 +38,7 @@ export default function LoginPage() {
   ]
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-primary/10 to-primary/5">
+    <div className="relative min-h-screen flex items-center justify-center p-4 bg-linear-to-b from-primary/10 to-primary/5">
       {/* 🔹 Logo Bách Khoa (trái trên) */}
       <div className="absolute top-4 left-4 flex items-center space-x-3">
         <Image
@@ -80,7 +80,7 @@ export default function LoginPage() {
         <div className="text-center space-y-2">
           <h1
             className="text-3xl sm:text-3xl font-extrabold tracking-wide 
-                       bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 
+                       bg-linear-to-r from-blue-600 via-purple-600 to-pink-500 
                        bg-clip-text text-transparent drop-shadow-sm font-[Poppins]"
           >
             QUẢN LÝ ĐỒ ÁN TRƯỜNG BÁCH KHOA ĐÀ NẴNG
@@ -156,12 +156,6 @@ export default function LoginPage() {
           <p>
             <Link href="/forgot-password" className="text-primary hover:underline">
               Quên mật khẩu?
-            </Link>
-          </p>
-          <p>
-            Chưa có tài khoản?{" "}
-            <Link href="/register" className="text-primary hover:underline">
-              Đăng ký
             </Link>
           </p>
         </div>
