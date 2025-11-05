@@ -107,7 +107,7 @@ export default function LoginPage() {
             <CardDescription>Nhập email để tiếp tục</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={ handleSubmit } className="space-y-4">
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
@@ -144,7 +144,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        {/* 🔹 Footer Links */}
+        {/* Footer Links */}
         <div className="text-center text-sm text-muted-foreground space-y-2">
           <p>
             <Link

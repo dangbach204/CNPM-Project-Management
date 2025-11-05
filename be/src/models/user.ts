@@ -38,6 +38,8 @@ const User = db.define(
   {
     tableName: 'users',
     timestamps: false,
+    paranoid: true,
+    deletedAt: 'deleted_at'
   }
 );
 export default User;

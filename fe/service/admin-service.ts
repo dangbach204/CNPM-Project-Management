@@ -36,3 +36,14 @@ export const createUser = async (userData: {
     throw error;
   }
 };
+
+export const deleteUser = async (userId: number)=> {
+  try {
+    const response = await api.delete(`${ADMIN.DELETE_USER}/${userId}`);
+
+    return response.data;
+  } catch (error) {
+    console.error("Delete user failed", error);
+    throw error;
+  }
+}
