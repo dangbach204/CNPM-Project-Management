@@ -9,15 +9,33 @@ import { mockUsers } from "@/lib/mock-data";
 import { Search, Plus, Edit2, Trash2, BookOpen, UsersIcon } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useAuthStore } from "@/stores/user";
 import { useAdminUserManagement } from "@/hooks/useAdminUserManagement";
+import { deleteUser } from "@/service/admin-service";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export default function AdminUsersPage() {
   const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState<string>("all");
-  const { isLoading, adminUserManagement } = useAdminUserManagement();
+  const { isLoading, adminUserManagement, refetch } = useAdminUserManagement();
+  const { toast } = useToast();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{
+    id: number;
+    fullName: string;
+  } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   if (!user || user.role !== "admin") redirect("/login");
 
@@ -56,6 +74,45 @@ export default function AdminUsersPage() {
     }
   };
 
+  const requestDeleteUser = useCallback(
+    (userId: number, fullName: string) => {
+      // Prevent deleting currently logged-in user
+      if (user && user.id === userId) {
+        toast({
+          title: "Không thể xóa chính bạn",
+          description: "Vui lòng đăng nhập bằng tài khoản khác để xóa.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setSelectedUser({ id: userId, fullName });
+      setDialogOpen(true);
+    },
+    [user, toast]
+  );
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!selectedUser) return;
+    setDeleteLoading(true);
+    try {
+      await deleteUser(selectedUser.id);
+      toast({ title: "Xóa thành công" });
+      await refetch();
+      setDialogOpen(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Xóa thất bại",
+        description: "Có lỗi xảy ra, vui lòng thử lại.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, [selectedUser, refetch, toast]);
+
   const stats = [
     {
       label: "Tổng người dùng",
@@ -65,13 +122,17 @@ export default function AdminUsersPage() {
     },
     {
       label: "Giáo viên",
-      value: adminUserManagement?.users.filter((u) => u.role === "teacher").length || 0,
+      value:
+        adminUserManagement?.users.filter((u) => u.role === "teacher").length ||
+        0,
       icon: BookOpen,
       color: "bg-purple-100 text-purple-600",
     },
     {
       label: "Sinh viên",
-      value: adminUserManagement?.users.filter((u) => u.role === "student").length || 0,
+      value:
+        adminUserManagement?.users.filter((u) => u.role === "student").length ||
+        0,
       icon: UsersIcon,
       color: "bg-green-100 text-green-600",
     },
@@ -94,6 +155,37 @@ export default function AdminUsersPage() {
         <Header />
         <main className="flex-1 overflow-y-auto">
           <div className="p-8 space-y-8">
+            {/* Delete confirmation dialog */}
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Xác nhận xóa</DialogTitle>
+                  <DialogDescription>
+                    Bạn có chắc muốn xóa{" "}
+                    <strong>{selectedUser?.fullName}</strong>? Hành động này
+                    không thể hoàn tác.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setDialogOpen(false);
+                      setSelectedUser(null);
+                    }}
+                    disabled={deleteLoading}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    onClick={handleConfirmDelete}
+                    disabled={deleteLoading}
+                  >
+                    {deleteLoading ? "Đang xóa..." : "Xác nhận xóa"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold">Quản lý Người dùng</h1>
@@ -259,9 +351,19 @@ export default function AdminUsersPage() {
                                   variant="outline"
                                   size="sm"
                                   className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+                                  onClick={() =>
+                                    requestDeleteUser(u.id, u.fullName)
+                                  }
+                                  disabled={
+                                    deleteLoading || (user && user.id === u.id)
+                                  }
                                 >
                                   <Trash2 className="w-4 h-4" />
-                                  <span>Xóa</span>
+                                  <span>
+                                    {user && user.id === u.id
+                                      ? "Không thể xóa"
+                                      : "Xóa"}
+                                  </span>
                                 </Button>
                               </div>
                             </td>
