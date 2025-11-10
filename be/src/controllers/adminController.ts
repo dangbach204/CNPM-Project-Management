@@ -180,15 +180,18 @@ export const getAdminOverview = async (req: Request, res: Response) => {
 export const getUsersManagement = async (req: Request, res: Response) => {
   try {
     const [users, admins, teachers, students] = await Promise.all([
-      User.findAll(),
+      User.findAll({ order: [["id", "ASC"]] }),
       User.findAll({
         where: { role: "admin" },
+        order: [["id", "ASC"]],
       }),
       User.findAll({
         where: { role: "teacher" },
+        order: [["id", "ASC"]],
       }),
       User.findAll({
         where: { role: "student" },
+        order: [["id", "ASC"]],
       }),
     ]);
 
