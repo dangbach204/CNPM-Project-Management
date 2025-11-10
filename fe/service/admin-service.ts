@@ -37,7 +37,7 @@ export const createUser = async (userData: {
   }
 };
 
-export const deleteUser = async (userId: number)=> {
+export const deleteUser = async (userId: number) => {
   try {
     const response = await api.delete(`${ADMIN.DELETE_USER}/${userId}`);
 
@@ -46,4 +46,24 @@ export const deleteUser = async (userId: number)=> {
     console.error("Delete user failed", error);
     throw error;
   }
-}
+};
+
+export const updateUserInfo = async (
+  userId: number,
+  userData: {
+    fullName?: string;
+    email?: string;
+    role?: string;
+  }
+) => {
+  try {
+    const response = await api.patch(
+      `${ADMIN.UPDATE_USER}/${userId}`,
+      userData
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Update user info failed", error);
+    throw error;
+  }
+};

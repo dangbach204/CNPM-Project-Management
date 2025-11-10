@@ -59,7 +59,7 @@ export const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-export const modifyUserInfo = async (req: Request, res: Response) => {
+export const updateUserInfo = async (req: Request, res: Response) => {
   try {
     const userIdParam = req.params.userId;
     const userId = Number(userIdParam);
