@@ -8,5 +8,6 @@ export const ADMIN = {
     USER_MANAGEMENT: "/admin/users-management",
     CREATE_USER: "/admin/create-user",
     DELETE_USER: "/admin/delete-user",
-    UPDATE_USER: "/admin/update-user-info"
+    UPDATE_USER: "/admin/update-user-info",
+    PROJECTS_MANAGEMENT: "/admin/projects-management",
 }
