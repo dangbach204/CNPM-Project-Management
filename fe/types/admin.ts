@@ -1,4 +1,5 @@
 import { User } from "./auth";
+import { ProjectStatus, SubmissionStatus } from "./status";
 
 export interface Submission {
   id: number;
@@ -6,15 +7,18 @@ export interface Submission {
   studentId: number;
   reportLink: string;
   submittedAt: string;
+  status?: SubmissionStatus;
 }
+
 export interface Project {
   id: number;
   title: string;
   description: string;
   teacherId: number;
   studentId: number;
-  status: string;
+  status: ProjectStatus;
   createdAt: string;
+  expiredAt: string;
   studentCount?: number;
   teacherInstructor?: string;
 }
@@ -42,4 +46,9 @@ export interface AdminCreateUser {
   email: string;
   password: string;
   role: "admin" | "teacher" | "student";
+}
+
+export interface AdminProjectsManagement {
+  projects: Project[];
+  totalProjects: number;
 }
