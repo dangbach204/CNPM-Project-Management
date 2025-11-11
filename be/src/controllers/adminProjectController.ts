@@ -3,7 +3,7 @@ import Project from "../models/project";
 
 export const getProjectsManagement = async (req: Request, res: Response) => {
   try {
-    const [projects, totalProjects] = await Promise.all([
+    const [projects] = await Promise.all([
       Project.findAll({
         attributes: [
           "id",
@@ -16,12 +16,10 @@ export const getProjectsManagement = async (req: Request, res: Response) => {
         ],
         order: [["id", "ASC"]],
       }),
-      Project.count(),
     ]);
 
     return res.status(200).json({
       projects,
-      totalProjects,
     });
   } catch (error) {
     console.error("Error fetching projects:", error);

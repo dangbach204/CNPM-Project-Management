@@ -67,3 +67,13 @@ export const updateUserInfo = async (
     throw error;
   }
 };
+
+export const getAdminProjectsManagement = async () => {
+  try {
+    const response = await api.get(ADMIN.PROJECTS_MANAGEMENT);
+    return response.data;
+  } catch (error) {
+    console.log("Get admin projects management failed", error);
+    throw error;
+  }
+}
