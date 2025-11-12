@@ -3,26 +3,16 @@
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  BookOpen,
-  Edit2,
-  Trash2,
-  Users,
-  CheckCircle,
-  Clock,
-  XCircle,
-} from "lucide-react";
 import { redirect } from "next/navigation";
 import { useAuthStore } from "@/stores/user";
 import { useAdminProjectsManagement } from "@/hooks/useAdminProjectsManagement";
-import {
-  getProjectStatusColor,
-  getProjectStatusLabel,
-  countProjectsByStatus,
-} from "@/lib/project-utils";
+import { countProjectsByStatus } from "@/lib/project-utils";
 import { useMemo } from "react";
 import StatsCard from "@/components/admin/StatsCard";
+import { ProjectCard } from "@/components/admin/ProjectCard";
+import { ProjectsSearchFilter } from "@/components/admin/ProjectsSearchFilter";
+import { useProjectsFilter } from "@/hooks/useProjectsFilter";
+import { PROJECT_STATS_CONFIG } from "@/constants/project-stats";
 
 export default function AdminProjectsPage() {
   const { user } = useAuthStore();
@@ -32,40 +22,23 @@ export default function AdminProjectsPage() {
   if (!user || user.role !== "admin") redirect("/login");
 
   const stats = useMemo(
-    () => [
-      {
-        label: "Tổng đề tài",
-        value: projects.length,
-        icon: BookOpen,
-        color: "bg-blue-100 text-blue-600",
-      },
-      {
-        label: "Mở",
-        value: countProjectsByStatus(projects, "available"),
-        icon: BookOpen,
-        color: "bg-green-100 text-green-600",
-      },
-      {
-        label: "Đang thực hiện",
-        value: countProjectsByStatus(projects, "pending"),
-        icon: Clock,
-        color: "bg-blue-100 text-blue-600",
-      },
-      {
-        label: "Hoàn thành",
-        value: countProjectsByStatus(projects, "completed"),
-        icon: CheckCircle,
-        color: "bg-purple-100 text-purple-600",
-      },
-      {
-        label: "Đã phê duyệt",
-        value: countProjectsByStatus(projects, "approved"),
-        icon: CheckCircle,
-        color: "bg-green-100 text-green-600",
-      },
-    ],
+    () =>
+      PROJECT_STATS_CONFIG.map((config: any) => ({
+        ...config,
+        value: config.statusKey
+          ? countProjectsByStatus(projects, config.statusKey)
+          : projects.length,
+      })),
     [projects]
   );
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    filterStatus,
+    setFilterStatus,
+    filteredProjects,
+  } = useProjectsFilter(projects);
 
   if (isLoading) {
     return (
@@ -100,92 +73,30 @@ export default function AdminProjectsPage() {
               ))}
             </div>
 
+            {/* Search & Filter */}
+            <ProjectsSearchFilter
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              filterStatus={filterStatus}
+              onFilterChange={setFilterStatus}
+            />
+
             {/* Projects List */}
             <Card>
               <CardContent className="pt-6">
-                {projects.length === 0 ? (
+                {filteredProjects.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground">Không có đề tài nào</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {projects.map((project) => (
-                      <div
+                    {filteredProjects.map((project: any) => (
+                      <ProjectCard
                         key={project.id}
-                        className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold">
-                              {project.title}
-                            </h3>
-                            <span
-                              className={`text-xs px-3 py-1 rounded-full font-medium ${getProjectStatusColor(
-                                project.status
-                              )}`}
-                            >
-                              {getProjectStatusLabel(project.status)}
-                            </span>
-                          </div>
-
-                          <p className="text-sm text-muted-foreground mb-3">
-                            {project.description}
-                          </p>
-
-                          <div className="grid grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <p className="text-muted-foreground">
-                                Giảng viên hướng dẫn
-                              </p>
-                              <p className="font-medium">
-                                {project.teacherInstructor || "Không có"}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground flex items-center gap-1">
-                                <Users className="w-3 h-3" />
-                                Sinh viên
-                              </p>
-                              <p className="font-medium">
-                                {project.studentCount || 0}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">Ngày tạo</p>
-                              <p className="font-medium">
-                                {new Date(project.createdAt).toLocaleDateString(
-                                  "vi-VN"
-                                )}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">
-                                Ngày hết hạn
-                              </p>
-                              <p className="font-medium">
-                                {new Date(project.expiredAt).toLocaleDateString(
-                                  "vi-VN"
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" className="gap-2">
-                            <Edit2 className="w-4 h-4" />
-                            Sửa
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="gap-2 text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Xóa
-                          </Button>
-                        </div>
-                      </div>
+                        project={project}
+                        onEdit={(p) => console.log("Edit", p)}
+                        onDelete={(p) => console.log("Delete", p)}
+                      />
                     ))}
                   </div>
                 )}
