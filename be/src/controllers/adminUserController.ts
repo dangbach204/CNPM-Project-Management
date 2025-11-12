@@ -4,7 +4,7 @@ import User from "../models/user";
 
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { fullName, email, role, password } = req.body;
+    const { fullName, email, role, password, avatar } = req.body;
 
     if (!fullName || !email || !role || !password) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -22,6 +22,7 @@ export const createUser = async (req: Request, res: Response) => {
       email,
       role,
       password_hash: passwordHash,
+      avatar: avatar ?? null,
     });
 
     return res.status(201).json({
@@ -30,6 +31,7 @@ export const createUser = async (req: Request, res: Response) => {
       fullName: newUser.full_name,
       email: newUser.email,
       role: newUser.role,
+      avatar: newUser.avatar,
     });
   } catch (error: any) {
     console.error("Error creating user:", error);
@@ -67,7 +69,7 @@ export const updateUserInfo = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid userId parameter" });
     }
 
-    const { fullName, email, role } = req.body;
+  const { fullName, email, role, avatar } = req.body;
 
     if (!fullName && !email && !role) {
       return res.status(400).json({ message: "No fields to update" });
@@ -106,6 +108,10 @@ export const updateUserInfo = async (req: Request, res: Response) => {
       user.role = role;
     }
 
+    if (avatar) {
+      user.avatar = avatar;
+    }
+
     await user.save();
 
     return res.status(200).json({
@@ -115,6 +121,7 @@ export const updateUserInfo = async (req: Request, res: Response) => {
         fullName: user.full_name,
         email: user.email,
         role: user.role,
+        avatar: user.avatar,
       },
     });
   } catch (error) {

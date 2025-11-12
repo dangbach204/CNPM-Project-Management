@@ -26,6 +26,10 @@ const User = db.define(
       type: DataTypes.ENUM('admin', 'teacher', 'student'), 
       allowNull: false 
     },
+    avatar: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     is_active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
