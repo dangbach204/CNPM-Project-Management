@@ -4,7 +4,13 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AddUserModalProps {
   onClose: () => void;
@@ -14,6 +20,7 @@ interface AddUserModalProps {
     email: string;
     password: string;
     role: string;
+    avatar?: string;
   }) => void;
 }
 
@@ -25,16 +32,36 @@ function AddUserModal({ onClose, onSubmit }: AddUserModalProps) {
     password: "",
     confirmPassword: "",
     role: "",
+    avatar: "",
   });
 
   const [error, setError] = useState("");
+  const [preview, setPreview] = useState<string | null>(null);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result as string);
+        handleChange("avatar", reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = () => {
-    if (!form.firstName || !form.lastName || !form.email || !form.password || !form.role) {
+    if (
+      !form.firstName ||
+      !form.lastName ||
+      !form.email ||
+      !form.password ||
+      !form.role
+    ) {
       setError("Vui lòng điền đầy đủ thông tin");
       return;
     }
@@ -53,7 +80,9 @@ function AddUserModal({ onClose, onSubmit }: AddUserModalProps) {
         <CardContent className="p-6 space-y-4">
           <div>
             <h2 className="text-xl font-semibold">Thêm người dùng</h2>
-            <p className="text-muted-foreground text-sm">Thêm một người dùng mới vào hệ thống</p>
+            <p className="text-muted-foreground text-sm">
+              Thêm một người dùng mới vào hệ thống
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -100,6 +129,23 @@ function AddUserModal({ onClose, onSubmit }: AddUserModalProps) {
               <SelectItem value="student">Student</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Avatar Upload */}
+          <div className="space-y-2 pt-2">
+            <label className="text-sm font-medium">Ảnh đại diện</label>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+            />
+            {preview && (
+              <img
+                src={preview}
+                alt="Avatar preview"
+                className="w-20 h-20 rounded-full object-cover border mx-auto mt-2"
+              />
+            )}
+          </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
 

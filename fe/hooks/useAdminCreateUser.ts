@@ -7,17 +7,44 @@ export const useAdminCreateUser = () => {
   const [success, setSuccess] = useState<boolean>(false);
 
   const handleCreateUser = async (userData: {
-    fullName: string;
+    firstName?: string;
+    lastName?: string;
     email: string;
     password: string;
     role: string;
+    avatar?: string | File | null;
   }) => {
     setIsLoading(true);
     setError("");
     setSuccess(false);
 
     try {
-      const response = await createUser(userData);
+      // ✅ Gộp firstName + lastName thành fullName (backend cần fullName)
+      const fullName = `${userData.firstName ?? ""} ${userData.lastName ?? ""}`.trim();
+
+      // ✅ Chuẩn bị payload — nếu avatar là File thì chuyển sang Base64
+      let avatarData: string | undefined;
+
+      if (userData.avatar instanceof File) {
+        const fileReader = new FileReader();
+        avatarData = await new Promise<string>((resolve, reject) => {
+          fileReader.onload = () => resolve(fileReader.result as string);
+          fileReader.onerror = reject;
+          fileReader.readAsDataURL(userData.avatar as File);
+        });
+      } else if (typeof userData.avatar === "string") {
+        avatarData = userData.avatar;
+      }
+
+      const payload = {
+        fullName,
+        email: userData.email,
+        password: userData.password,
+        role: userData.role,
+        avatar: avatarData, // ✅ thêm avatar nếu có
+      };
+
+      const response = await createUser(payload);
       setSuccess(true);
       return response;
     } catch (err: any) {

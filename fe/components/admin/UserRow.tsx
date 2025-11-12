@@ -40,11 +40,39 @@ export default function UserRow({
     <tr className="group border-b border-border/40 hover:bg-muted/30 transition-all">
       <td className="py-3 px-5">
         <div className="flex items-center gap-3">
-          <img
-            src="/placeholder.svg"
-            alt={user.fullName}
-            className="w-9 h-9 rounded-full ring-2 ring-background group-hover:ring-primary/40 transition-all"
-          />
+          {/* Star-shaped avatar: use SVG clipPath to mask image into a star. Falls back to placeholder.svg */}
+          <div className="w-9 h-9 relative">
+            <svg viewBox="0 0 100 100" className="w-9 h-9 block">
+              <defs>
+                <clipPath id={`starClip-${user.id}`} clipPathUnits="objectBoundingBox">
+                  {/* star path in normalized coords */}
+                  <path d="M0.5 0.02 L0.63 0.36 L0.98 0.36 L0.69 0.57 L0.8 0.91 L0.5 0.7 L0.2 0.91 L0.31 0.57 L0.02 0.36 L0.37 0.36 Z" />
+                </clipPath>
+              </defs>
+              {user.avatar ? (
+                <image
+                  href={user.avatar}
+                  x="0"
+                  y="0"
+                  width="100%"
+                  height="100%"
+                  preserveAspectRatio="xMidYMid slice"
+                  clipPath={`url(#starClip-${user.id})`}
+                />
+              ) : (
+                <image
+                  href="/placeholder.svg"
+                  x="0"
+                  y="0"
+                  width="100%"
+                  height="100%"
+                  preserveAspectRatio="xMidYMid slice"
+                  clipPath={`url(#starClip-${user.id})`}
+                />
+              )}
+            </svg>
+            <span className="absolute inset-0 rounded-full ring-2 ring-background group-hover:ring-primary/40 pointer-events-none" />
+          </div>
           <div>
             <p className="font-medium text-foreground">{user.fullName}</p>
             <p className="text-xs text-muted-foreground">{user.id}</p>

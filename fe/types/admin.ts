@@ -22,6 +22,7 @@ export interface Project {
   studentCount?: number;
   teacherInstructor?: string;
 }
+
 export interface AdminOverView {
   teachers: User[];
   students: User[];
@@ -41,11 +42,15 @@ export interface AdminUserManagement {
   students: User[];
 }
 
+/**
+ * Dữ liệu để tạo mới một người dùng trong admin dashboard
+ */
 export interface AdminCreateUser {
   fullName: string;
   email: string;
   password: string;
   role: "admin" | "teacher" | "student";
+  avatar?: string | File; // ✅ thêm trường avatar (tùy chọn)
 }
 
 export interface AdminProjectsManagement {
