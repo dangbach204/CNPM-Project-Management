@@ -71,7 +71,7 @@ export function useUserOperations({
   const handleConfirmUpdate = useCallback(
     async (
       userId: number,
-      data: { fullName: string; email: string; role: UserRole }
+      data: { fullName: string; email: string; role: UserRole; avatar?: string }
     ) => {
       setEditLoading(true);
       try {

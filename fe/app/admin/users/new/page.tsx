@@ -39,6 +39,7 @@ const UserForm = () => {
     email: "",
     password: "",
     role: "",
+    avatar: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -98,6 +99,20 @@ const UserForm = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      setAvatarPreview(result);
+      setFormData((prev) => ({ ...prev, avatar: result }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -206,6 +221,15 @@ const UserForm = () => {
               />
               {errors.password && (
                 <p className="text-sm text-red-500">{errors.password}</p>
+              )}
+            </div>
+
+            {/* Avatar upload */}
+            <div className="space-y-2">
+              <Label htmlFor="avatar">Ảnh đại diện (tuỳ chọn)</Label>
+              <Input id="avatar" name="avatar" type="file" accept="image/*" onChange={handleFileChange} disabled={isLoading} />
+              {avatarPreview && (
+                <img src={avatarPreview} alt="Avatar preview" className="w-20 h-20 rounded-full object-cover border mt-2" />
               )}
             </div>
 
