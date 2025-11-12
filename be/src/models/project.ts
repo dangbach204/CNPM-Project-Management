@@ -37,7 +37,7 @@ const Project = sequelizeDb.define(
     expire_at: {
       type: ProjectDataTypes.DATE,
       allowNull: true,
-    }
+    },
   },
   {
     tableName: "projects",

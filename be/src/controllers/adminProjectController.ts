@@ -3,6 +3,7 @@ import Project from "../models/project";
 import User from "../models/user";
 import { Sequelize } from "sequelize";
 import { ProjectStudents } from "../models";
+import sequelize from "../config/db";
 
 export const getProjectsManagement = async (req: Request, res: Response) => {
   try {
@@ -63,5 +64,35 @@ export const getProjectsManagement = async (req: Request, res: Response) => {
     return res.status(500).json({
       message: "Lỗi server khi lấy danh sách dự án",
     });
+  }
+};
+
+export const deleteProject = async (req: Request, res: Response) => {
+  try {
+    const { projectId } = req.params;
+    const { user } = (res as any).user;
+    const project = await Project.findByPk(projectId);
+
+    if (!user) {
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    }
+
+    if (user.role !== "admin") {
+      return res
+        .status(400)
+        .json({ message: "Bạn không có quyền xóa project" });
+    }
+
+    if (!project) {
+      return res.status(404).json({ message: "Project không tồn tại" });
+    }
+
+    await sequelize.transaction(async (t: any) => {
+      await project.destroy({ transaction: t });
+    });
+    return res.status(200).json({ message: "Xóa project thành công" });
+  } catch (error) {
+    console.error("Lỗi xóa project:", error);
+    return res.status(500).json({ message: "Lỗi server khi xóa project" });
   }
 };
