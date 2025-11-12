@@ -1,10 +1,10 @@
 # Hướng dẫn: Truy vấn Status từ Backend
 
-## 📋 Tổng quan
+## Tổng quan
 
 Backend API trả về dữ liệu với các status chuẩn. Dưới đây là hướng dẫn chi tiết về cách sử dụng status trong Frontend.
 
-## 🔍 1. Project Status từ Backend
+## 1. Project Status từ Backend
 
 ### Status Types
 
@@ -12,12 +12,12 @@ Backend trả về các giá trị status sau cho Projects:
 
 ```typescript
 type ProjectStatus =
-  | "available" // Mở - sẵn sàng để sinh viên đăng ký
-  | "pending" // Đang thực hiện
-  | "completed" // Hoàn thành
-  | "approved" // Đã phê duyệt
-  | "rejected" // Đã từ chối
-  | "expired"; // Hết hạn
+  | "available"
+  | "pending"
+  | "completed"
+  | "approved"
+  | "rejected"
+  | "expired";
 ```
 
 ### Ví dụ Response từ BE:
@@ -31,7 +31,7 @@ type ProjectStatus =
       "description": "Mô tả dự án...",
       "teacherId": 5,
       "studentId": 10,
-      "status": "available", // ← Status từ BE
+      "status": "available",
       "createdAt": "2025-01-15T10:00:00Z",
       "studentCount": 3,
       "teacherInstructor": "Nguyễn Văn A"

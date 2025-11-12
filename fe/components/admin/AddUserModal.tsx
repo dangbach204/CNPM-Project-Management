@@ -52,8 +52,8 @@ function AddUserModal({ onClose, onSubmit }: AddUserModalProps) {
       <Card className="w-full max-w-md bg-white rounded-xl shadow-xl">
         <CardContent className="p-6 space-y-4">
           <div>
-            <h2 className="text-xl font-semibold">Create User</h2>
-            <p className="text-muted-foreground text-sm">Add a new user to the system</p>
+            <h2 className="text-xl font-semibold">Thêm người dùng</h2>
+            <p className="text-muted-foreground text-sm">Thêm một người dùng mới vào hệ thống</p>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
