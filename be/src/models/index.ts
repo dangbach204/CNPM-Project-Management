@@ -7,7 +7,12 @@ import Submission from "./submission";
 import User from "./user";
 
 User.hasMany(Project, { foreignKey: "teacher_id", as: "taughtProjects" });
-User.hasMany(Project, { foreignKey: "student_id", as: "studentProjects" });
+User.belongsToMany(Project, {
+  through: ProjectStudents,
+  foreignKey: "student_id",
+  otherKey: "project_id",
+  as: "joinedProjects",
+});
 User.hasMany(Submission, {
   foreignKey: "student_id",
   as: "studentSubmissions",
@@ -21,15 +26,26 @@ User.hasMany(ProjectStudents, {
 });
 
 Project.belongsTo(User, { foreignKey: "teacher_id", as: "teacher" });
-Project.belongsTo(User, { foreignKey: "student_id", as: "student" });
+Project.belongsToMany(User, {
+  through: ProjectStudents,
+  foreignKey: "project_id",
+  otherKey: "student_id",
+  as: "students",
+});
 Project.hasMany(Submission, {
   foreignKey: "project_id",
   as: "projectSubmissions",
+  ondelete: "CASCADE",
 });
-Project.hasMany(Comments, { foreignKey: "project_id", as: "projectComments" });
+Project.hasMany(Comments, {
+  foreignKey: "project_id",
+  as: "projectComments",
+  ondelete: "CASCADE",
+});
 Project.hasMany(ProjectStudents, {
   foreignKey: "project_id",
   as: "projectStudents",
+  ondelete: "CASCADE",
 });
 
 Submission.belongsTo(Project, {

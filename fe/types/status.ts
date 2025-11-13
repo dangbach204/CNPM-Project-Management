@@ -44,3 +44,13 @@ export const SUBMISSION_STATUS_COLORS: Record<SubmissionStatus, string> = {
   approved: "bg-green-100 text-green-700",
   rejected: "bg-red-100 text-red-700",
 };
+
+// Project status options for select/dropdown
+export const PROJECT_STATUS_OPTIONS = [
+  { value: "available", label: "Mở" },
+  { value: "pending", label: "Đang thực hiện" },
+  { value: "completed", label: "Hoàn thành" },
+  { value: "approved", label: "Đã phê duyệt" },
+  { value: "rejected", label: "Đã từ chối" },
+  { value: "expired", label: "Hết hạn" },
+] as const;

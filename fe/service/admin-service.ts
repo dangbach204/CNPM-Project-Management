@@ -22,23 +22,20 @@ export const getAdminUserManagement = async () => {
   }
 };
 
-/**
- * Create a new user
- * @param userData Object chứa thông tin người dùng
- */
 export const createUser = async (userData: any) => {
   try {
-    // normalize payload: support callers that pass { firstName, lastName, avatar }
     const payload: any = {};
 
     if (userData.fullName) payload.fullName = userData.fullName;
     else if (userData.firstName || userData.lastName)
-      payload.fullName = `${userData.firstName ?? ""} ${userData.lastName ?? ""}`.trim();
+      payload.fullName = `${userData.firstName ?? ""} ${
+        userData.lastName ?? ""
+      }`.trim();
 
     if (userData.email) payload.email = userData.email;
     if (userData.password) payload.password = userData.password;
     if (userData.role) payload.role = userData.role;
-    if (userData.avatar) payload.avatar = userData.avatar; // avatar can be base64 string or url
+    if (userData.avatar) payload.avatar = userData.avatar;
 
     const response = await api.post(ADMIN.CREATE_USER, payload);
     return response.data;
@@ -48,9 +45,6 @@ export const createUser = async (userData: any) => {
   }
 };
 
-/**
- * Delete a user by ID
- */
 export const deleteUser = async (userId: number) => {
   try {
     const response = await api.delete(`${ADMIN.DELETE_USER}/${userId}`);
@@ -61,20 +55,20 @@ export const deleteUser = async (userId: number) => {
   }
 };
 
-/**
- * Update user info
- */
 export const updateUserInfo = async (
   userId: number,
   userData: {
     fullName?: string;
     email?: string;
     role?: string;
-    avatar?: string; // ✅ thêm avatar
+    avatar?: string;
   }
 ) => {
   try {
-    const response = await api.patch(`${ADMIN.UPDATE_USER}/${userId}`, userData);
+    const response = await api.patch(
+      `${ADMIN.UPDATE_USER}/${userId}`,
+      userData
+    );
     return response.data;
   } catch (error) {
     console.error("Update user info failed", error);
@@ -88,6 +82,40 @@ export const getAdminProjectsManagement = async () => {
     return response.data;
   } catch (error) {
     console.log("Get admin projects management failed", error);
+    throw error;
+  }
+};
+
+export const deleteProject = async (projectId: number) => {
+  try {
+    const response = await api.delete(`${ADMIN.DELETE_PROJECT}/${projectId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Delete project failed", error);
+    throw error;
+  }
+};
+
+export const updateProjectInfo = async (
+  projectId: number,
+  projectData: {
+    title?: string;
+    description?: string;
+    teacherId?: string | number;
+    status?: string;
+    expiredAt?: string | Date;
+    addStudents?: number[];
+    removeStudents?: number[];
+  }
+) => {
+  try {
+    const response = await api.patch(
+      `${ADMIN.UPDATE_PROJECT}/${projectId}`,
+      projectData
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Update project info failed", error);
     throw error;
   }
 };
