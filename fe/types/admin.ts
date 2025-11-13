@@ -42,15 +42,12 @@ export interface AdminUserManagement {
   students: User[];
 }
 
-/**
- * Dữ liệu để tạo mới một người dùng trong admin dashboard
- */
 export interface AdminCreateUser {
   fullName: string;
   email: string;
   password: string;
   role: "admin" | "teacher" | "student";
-  avatar?: string | File; // ✅ thêm trường avatar (tùy chọn)
+  avatar?: string | File;
 }
 
 export interface AdminProjectsManagement {

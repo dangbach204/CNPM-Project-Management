@@ -1,5 +1,3 @@
-import { DEV_CLIENT_PAGES_MANIFEST } from "next/dist/shared/lib/constants";
-
 export const AUTH = {
     LOGIN: "/auth/login",
     // REGISTER: "/auth/register",
@@ -13,4 +11,5 @@ export const ADMIN = {
     UPDATE_USER: "/admin/update-user-info",
     PROJECTS_MANAGEMENT: "/admin/projects-management",
     DELETE_PROJECT: "/admin/delete-project",
+    UPDATE_PROJECT: "/admin/update-project",
 }

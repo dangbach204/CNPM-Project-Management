@@ -19,10 +19,8 @@ export const useAdminCreateUser = () => {
     setSuccess(false);
 
     try {
-      // ✅ Gộp firstName + lastName thành fullName (backend cần fullName)
       const fullName = `${userData.firstName ?? ""} ${userData.lastName ?? ""}`.trim();
 
-      // ✅ Chuẩn bị payload — nếu avatar là File thì chuyển sang Base64
       let avatarData: string | undefined;
 
       if (userData.avatar instanceof File) {
@@ -41,7 +39,7 @@ export const useAdminCreateUser = () => {
         email: userData.email,
         password: userData.password,
         role: userData.role,
-        avatar: avatarData, // ✅ thêm avatar nếu có
+        avatar: avatarData,
       };
 
       const response = await createUser(payload);

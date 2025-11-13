@@ -13,11 +13,20 @@ import { ProjectCard } from "@/components/admin/ProjectCard";
 import { ProjectsSearchFilter } from "@/components/admin/ProjectsSearchFilter";
 import { useProjectsFilter } from "@/hooks/useProjectsFilter";
 import { PROJECT_STATS_CONFIG } from "@/constants/project-stats";
+import DeleteUserDialog from "@/components/admin/DeleteUserDialog";
+import { useProjectOperations } from "@/hooks/useProjectOperations";
+import { EditProjectDialog } from "@/components/admin/EditProjectDialog";
+import { useAdminUserManagement } from "@/hooks/useAdminUserManagement";
 
 export default function AdminProjectsPage() {
   const { user } = useAuthStore();
-  const { isLoading, projectsManagement } = useAdminProjectsManagement();
+  const { isLoading, projectsManagement, refetch } =
+    useAdminProjectsManagement() as any;
+  const { adminUserManagement } = useAdminUserManagement();
+
   const projects = projectsManagement?.projects || [];
+  const teachers = adminUserManagement?.teachers || [];
+  const students = adminUserManagement?.students || [];
 
   if (!user || user.role !== "admin") redirect("/login");
 
@@ -39,6 +48,10 @@ export default function AdminProjectsPage() {
     setFilterStatus,
     filteredProjects,
   } = useProjectsFilter(projects);
+
+  const projectOperations = useProjectOperations({
+    onSuccess: refetch,
+  });
 
   if (isLoading) {
     return (
@@ -81,6 +94,26 @@ export default function AdminProjectsPage() {
               onFilterChange={setFilterStatus}
             />
 
+            {/* Delete confirmation dialog */}
+            <DeleteUserDialog
+              open={projectOperations.deleteDialogOpen}
+              onClose={() => projectOperations.setDeleteDialogOpen(false)}
+              onConfirm={projectOperations.handleConfirmDelete}
+              userName={projectOperations.selectedProject?.title}
+              loading={projectOperations.deleteLoading}
+            />
+
+            {/* Edit Project Dialog */}
+            <EditProjectDialog
+              open={projectOperations.editDialogOpen}
+              onClose={() => projectOperations.setEditDialogOpen(false)}
+              onSave={projectOperations.handleConfirmUpdate}
+              project={projectOperations.editProject}
+              loading={projectOperations.editLoading}
+              teachers={teachers}
+              allStudents={students}
+            />
+
             {/* Projects List */}
             <Card>
               <CardContent className="pt-6">
@@ -94,8 +127,9 @@ export default function AdminProjectsPage() {
                       <ProjectCard
                         key={project.id}
                         project={project}
-                        onEdit={(p) => console.log("Edit", p)}
-                        onDelete={(p) => console.log("Delete", p)}
+                        onEdit={projectOperations.handleUpdateRequest}
+                        onDelete={projectOperations.handleDeleteRequest}
+                        teachers={teachers}
                       />
                     ))}
                   </div>
