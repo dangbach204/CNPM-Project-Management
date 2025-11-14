@@ -2,47 +2,85 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/user";
+
+const generateAccessToken = (user: any) => {
+  return jwt.sign(
+    { id: user.id, role: user.role },
+    process.env.JWT_SECRET || "ACCESS_SECRET",
+    { expiresIn: "15m" }
+  );
+};
+
+const generateRefreshToken = (user: any) => {
+  return jwt.sign(
+    { id: user.id },
+    process.env.JWT_REFRESH_SECRET || "REFRESH_SECRET",
+    { expiresIn: "7d" }
+  );
+};
+
 export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
+  if (!email || !password)
     return res.status(400).json({ message: "Email và mật khẩu không được để trống" });
-  }
 
   try {
     const user = await User.findOne({
       where: { email, is_active: true },
     });
 
-    if (!user) {
-      return res.status(400).json({
-        message: "Email không tồn tại hoặc tài khoản bị khóa",
-      });
-    }
+    if (!user)
+      return res.status(400).json({ message: "Email không tồn tại hoặc tài khoản bị khóa" });
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch) {
+    if (!isMatch)
       return res.status(400).json({ message: "Sai mật khẩu" });
-    }
-    const token = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_SECRET || "YOUR_SECRET_KEY",
-      { expiresIn: "2h" }
-    );
+
+    const access = generateAccessToken(user);
+    const refresh = generateRefreshToken(user);
 
     return res.status(200).json({
       message: "Đăng nhập thành công",
-      token,
+      access,
+      refresh,
       user: {
         id: user.id,
         email: user.email,
         role: user.role,
         fullName: user.full_name,
-        createAt: user.created_at
-      }
+        createAt: user.created_at,
+      },
     });
   } catch (error) {
     console.error("Lỗi đăng nhập:", error);
     return res.status(500).json({ message: "Lỗi server" });
+  }
+};
+
+export const refreshToken = (req: Request, res: Response) => {
+  const { refresh } = req.body;
+
+  if (!refresh)
+    return res.status(400).json({ message: "Thiếu refresh token" });
+
+  try {
+    const payload = jwt.verify(
+      refresh,
+      process.env.JWT_REFRESH_SECRET || "REFRESH_SECRET"
+    ) as any;
+
+    const newAccess = jwt.sign(
+      { id: payload.id, role: payload.role },
+      process.env.JWT_SECRET || "ACCESS_SECRET",
+      { expiresIn: "15m" }
+    );
+
+    return res.json({
+      access: newAccess,
+      refresh,
+    });
+  } catch (error) {
+    return res.status(401).json({ message: "Refresh token không hợp lệ" });
   }
 };

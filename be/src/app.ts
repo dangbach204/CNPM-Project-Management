@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes";
 import adminRoutes from "./routes/adminRoutes";
+import userRoutes from "./routes/userRoutes";
 import { camelCaseResponse } from "./middlewares/snakeToCamel";
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/user", userRoutes);
 
 app.use(camelCaseResponse);
 // test endpoint

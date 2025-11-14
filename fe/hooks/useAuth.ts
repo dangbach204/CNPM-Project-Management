@@ -14,7 +14,7 @@ export function useAuth() {
   const [error, setError] = useState("");
   const setUser = useAuthStore((state) => state.setUser);
   const logout = useAuthStore((state) => state.logout);
-  // Đăng nhập
+
   const handleLogin = async (
     username: string,
     password: string

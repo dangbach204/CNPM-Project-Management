@@ -1,10 +1,24 @@
 import express from "express";
-import { createUser, deleteUser, updateUserInfo } from "../controllers/adminUserController";
-import { getAdminOverview, getUsersManagement } from "../controllers/adminController";
-import { deleteProject, getProjectsManagement, updateProjectInfo } from "../controllers/adminProjectController";
-
+import {
+  createUser,
+  deleteUser,
+  updateUserInfo,
+} from "../controllers/adminUserController";
+import {
+  getAdminOverview,
+  getUsersManagement,
+} from "../controllers/adminController";
+import {
+  deleteProject,
+  getProjectsManagement,
+  updateProjectInfo,
+} from "../controllers/adminProjectController";
+import { authMiddleware, authorize } from "../middlewares/authMiddleware";
 
 const router = express.Router();
+
+router.use(authMiddleware);
+router.use(authorize("admin"));
 
 router.get("/overview", getAdminOverview);
 router.get("/users-management", getUsersManagement);

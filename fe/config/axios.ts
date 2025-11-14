@@ -42,7 +42,7 @@ const refreshAccessToken = async (): Promise<string | null> => {
       const refreshToken = Cookies.get(REFRESH_TOKEN_KEY);
       if (!refreshToken) throw new Error("No refresh token");
 
-      const response = await axios.post(`${API_URL}/users/refresh-token/`, {
+      const response = await axios.post(`${API_URL}/auth/refresh-token`, {
         refresh: refreshToken,
       });
 

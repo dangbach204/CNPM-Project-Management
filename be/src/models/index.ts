@@ -1,4 +1,4 @@
-import Comments from "./comment";
+import Comments from "./feedback";
 import Grade from "./grade";
 import Log from "./log";
 import Project from "./project";
