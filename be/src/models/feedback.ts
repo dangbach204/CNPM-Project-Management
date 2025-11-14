@@ -1,8 +1,8 @@
 import { DataTypes } from "sequelize";
 import database from "../config/db";
 
-const Comments = database.define(
-  "Comment",
+const Feedbacks = database.define(
+  "Feedbacks",
   {
     id: {
       type: DataTypes.INTEGER,
@@ -37,9 +37,9 @@ const Comments = database.define(
     },
   },
   {
-    tableName: "comments",
+    tableName: "feedbacks",
     timestamps: false,
   }
 );
 
-export default Comments;
+export default Feedbacks;

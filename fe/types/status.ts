@@ -6,7 +6,6 @@ export type ProjectStatus =
   | "rejected"
   | "expired";
 
-// Submission Status từ Backend
 export type SubmissionStatus =
   | "submitted"
   | "reviewed"
@@ -45,7 +44,6 @@ export const SUBMISSION_STATUS_COLORS: Record<SubmissionStatus, string> = {
   rejected: "bg-red-100 text-red-700",
 };
 
-// Project status options for select/dropdown
 export const PROJECT_STATUS_OPTIONS = [
   { value: "available", label: "Mở" },
   { value: "pending", label: "Đang thực hiện" },
