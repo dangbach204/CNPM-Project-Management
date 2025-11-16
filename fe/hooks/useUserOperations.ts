@@ -51,11 +51,12 @@ export function useUserOperations({
       setDeleteDialogOpen(false);
       setSelectedUser(null);
       onSuccess?.();
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại.";
       toast({
         title: "Xóa thất bại",
-        description: "Có lỗi xảy ra, vui lòng thử lại.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -80,11 +81,12 @@ export function useUserOperations({
         setEditDialogOpen(false);
         setEditUser(null);
         onSuccess?.();
-      } catch (error) {
-        console.error(error);
+      } catch (error: any) {
+        const errorMessage =
+          error?.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại.";
         toast({
           title: "Cập nhật thất bại",
-          description: "Có lỗi xảy ra, vui lòng thử lại.",
+          description: errorMessage,
           variant: "destructive",
         });
       } finally {

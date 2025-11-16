@@ -217,7 +217,6 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
 
     await transaction.commit();
 
-    // Lấy thông tin project đầy đủ sau khi cập nhật
     const updatedProject = await Project.findByPk(projectId, {
       include: [
         {
@@ -239,7 +238,6 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
       ],
     });
 
-    // Format response
     const projectData = updatedProject?.toJSON() as any;
     const students =
       projectData?.projectStudents?.map((ps: any) => ({

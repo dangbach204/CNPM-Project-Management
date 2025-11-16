@@ -23,7 +23,9 @@ export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   if (!email || !password)
-    return res.status(400).json({ message: "Email và mật khẩu không được để trống" });
+    return res
+      .status(400)
+      .json({ message: "Email và mật khẩu không được để trống" });
 
   try {
     const user = await User.findOne({
@@ -31,11 +33,12 @@ export const loginUser = async (req: Request, res: Response) => {
     });
 
     if (!user)
-      return res.status(400).json({ message: "Email không tồn tại hoặc tài khoản bị khóa" });
+      return res
+        .status(400)
+        .json({ message: "Email không tồn tại hoặc tài khoản bị khóa" });
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch)
-      return res.status(400).json({ message: "Sai mật khẩu" });
+    if (!isMatch) return res.status(400).json({ message: "Sai mật khẩu" });
 
     const access = generateAccessToken(user);
     const refresh = generateRefreshToken(user);
@@ -58,29 +61,48 @@ export const loginUser = async (req: Request, res: Response) => {
   }
 };
 
-export const refreshToken = (req: Request, res: Response) => {
+export const refreshToken = async (req: Request, res: Response) => {
   const { refresh } = req.body;
 
-  if (!refresh)
-    return res.status(400).json({ message: "Thiếu refresh token" });
+  if (!refresh) return res.status(400).json({ message: "Thiếu refresh token" });
 
   try {
     const payload = jwt.verify(
       refresh,
       process.env.JWT_REFRESH_SECRET || "REFRESH_SECRET"
-    ) as any;
+    ) as { id: number };
+
+    const user = await User.findOne({
+      where: { id: payload.id, is_active: true },
+    });
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({
+          message: "Refresh token không hợp lệ hoặc tài khoản đã bị khóa",
+        });
+    }
 
     const newAccess = jwt.sign(
-      { id: payload.id, role: payload.role },
+      { id: user.id, role: user.role },
       process.env.JWT_SECRET || "ACCESS_SECRET",
       { expiresIn: "15m" }
     );
 
+    const newRefresh = jwt.sign(
+      { id: user.id },
+      process.env.JWT_REFRESH_SECRET || "REFRESH_SECRET",
+      { expiresIn: "7d" }
+    )
+
     return res.json({
       access: newAccess,
-      refresh,
+      refresh: newRefresh
     });
   } catch (error) {
-    return res.status(401).json({ message: "Refresh token không hợp lệ" });
+    return res
+      .status(401)
+      .json({ message: "Refresh token không hợp lệ hoặc đã hết hạn" });
   }
 };

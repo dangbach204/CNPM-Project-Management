@@ -73,6 +73,7 @@ interface EditProjectDialogProps {
   loading?: boolean;
   teachers?: Teacher[];
   allStudents?: Student[];
+  allProjects?: Project[];
 }
 
 const getFullName = (item: Teacher | Student) =>
@@ -103,6 +104,7 @@ export function EditProjectDialog({
   loading = false,
   teachers = [],
   allStudents = [],
+  allProjects = [],
 }: EditProjectDialogProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -172,8 +174,21 @@ export function EditProjectDialog({
     );
   };
 
+  // Get all student IDs that are in other projects (not current project)
+  const studentsInOtherProjects = new Set<number>();
+  allProjects.forEach((proj) => {
+    if (proj.id !== project?.id && (proj as any).students) {
+      (proj as any).students.forEach((student: Student) => {
+        studentsInOtherProjects.add(student.id);
+      });
+    }
+  });
+
+  // Filter out students already in current project or in other projects
   const availableStudents = allStudents.filter(
-    (student) => !projectStudents.some((ps) => ps.id === student.id)
+    (student) =>
+      !projectStudents.some((ps) => ps.id === student.id) &&
+      !studentsInOtherProjects.has(student.id)
   );
 
   const selectedTeacher = teachers.find((t) => t.id.toString() === teacherId);
@@ -356,7 +371,11 @@ export function EditProjectDialog({
                       <Command shouldFilter={true}>
                         <CommandInput placeholder="Tìm theo tên hoặc email..." />
                         <CommandList className="max-h-[300px] overflow-y-auto rounded-r-xl">
-                          <CommandEmpty>Không tìm thấy sinh viên.</CommandEmpty>
+                          <CommandEmpty>
+                            {availableStudents.length === 0
+                              ? "Không có sinh viên khả dụng (tất cả đã tham gia project khác)"
+                              : "Không tìm thấy sinh viên."}
+                          </CommandEmpty>
                           <CommandGroup>
                             {availableStudents.map((student) => (
                               <CommandItem

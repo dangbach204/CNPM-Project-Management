@@ -11,13 +11,9 @@ export const updateProfile = async (
   }
 ) => {
   try {
-    const response = await api.patch(
-      `${USER.UPDATE_PROFILE}/${userId}`,
-      userData
-    );
+    const response = await api.patch(USER.UPDATE_PROFILE, userData);
     return response.data;
   } catch (error) {
-    console.error("Update profile failed", error);
     throw error;
   }
 };
