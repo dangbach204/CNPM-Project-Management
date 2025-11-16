@@ -40,7 +40,6 @@ export const createUser = async (userData: any) => {
     const response = await api.post(ADMIN.CREATE_USER, payload);
     return response.data;
   } catch (error) {
-    console.error("Create user failed", error);
     throw error;
   }
 };
@@ -50,7 +49,6 @@ export const deleteUser = async (userId: number) => {
     const response = await api.delete(`${ADMIN.DELETE_USER}/${userId}`);
     return response.data;
   } catch (error) {
-    console.error("Delete user failed", error);
     throw error;
   }
 };
@@ -71,7 +69,6 @@ export const updateUserInfo = async (
     );
     return response.data;
   } catch (error) {
-    console.error("Update user info failed", error);
     throw error;
   }
 };
@@ -81,7 +78,6 @@ export const getAdminProjectsManagement = async () => {
     const response = await api.get(ADMIN.PROJECTS_MANAGEMENT);
     return response.data;
   } catch (error) {
-    console.log("Get admin projects management failed", error);
     throw error;
   }
 };
@@ -91,7 +87,6 @@ export const deleteProject = async (projectId: number) => {
     const response = await api.delete(`${ADMIN.DELETE_PROJECT}/${projectId}`);
     return response.data;
   } catch (error) {
-    console.error("Delete project failed", error);
     throw error;
   }
 };
@@ -115,7 +110,6 @@ export const updateProjectInfo = async (
     );
     return response.data;
   } catch (error) {
-    console.error("Update project info failed", error);
     throw error;
   }
 };

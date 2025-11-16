@@ -35,6 +35,12 @@ const onRefreshed = (newAccessToken: string) => {
   refreshSubscribers = [];
 };
 
+const handleLogout = () => {
+  Cookies.remove(ACCESS_TOKEN_KEY);
+  Cookies.remove(REFRESH_TOKEN_KEY);
+  window.location.href = "/login";
+};
+
 const refreshAccessToken = async (): Promise<string | null> => {
   if (!isRefreshing) {
     isRefreshing = true;
@@ -56,6 +62,7 @@ const refreshAccessToken = async (): Promise<string | null> => {
       return newAccessToken;
     } catch (error) {
       console.error("Refresh token failed:", error);
+      handleLogout();
       return null;
     } finally {
       isRefreshing = false;
@@ -71,6 +78,7 @@ api.interceptors.request.use(
   async (config) => {
     const accessToken = Cookies.get(ACCESS_TOKEN_KEY);
     if (accessToken) {
+      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
@@ -88,14 +96,23 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error?.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+    if (originalRequest.url?.includes("auth/refresh-token")) {
+      return Promise.reject(error);
+    }
+
+    if (error?.response?.status === 401 && !(originalRequest as any)._retry) {
+      (originalRequest as any)._retry = true;
 
       const newAccessToken = await refreshAccessToken();
       if (newAccessToken) {
+        originalRequest.headers = originalRequest.headers || {};
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       }
+    }
+
+    if (error.response?.status === 403) {
+      handleLogout();
     }
 
     return Promise.reject(error);

@@ -26,8 +26,8 @@ export function useAuth() {
     try {
       const result = await login(username, password);
 
-      const access = result?.data?.accessToken;
-      const refresh = result?.data?.refreshToken;
+      const access = result?.data?.access;
+      const refresh = result?.data?.refresh;
       setUser(result?.data?.user);
       if (!access || !refresh) {
         const msg = result.data?.message || "Đăng nhập thất bại.";

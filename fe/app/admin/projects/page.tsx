@@ -112,6 +112,7 @@ export default function AdminProjectsPage() {
               loading={projectOperations.editLoading}
               teachers={teachers}
               allStudents={students}
+              allProjects={projects}
             />
 
             {/* Projects List */}

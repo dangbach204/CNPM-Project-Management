@@ -4,7 +4,15 @@ import bcrypt from "bcrypt";
 
 export const updateUserProfile = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    const requestUser = (req as any).user;
+    const targetUserId = req.body.userId || requestUser.id;
+
+    if (requestUser.role !== "admin" && requestUser.id !== targetUserId) {
+      return res
+        .status(403)
+        .json({ message: "Bạn không có quyền thực hiện thao tác này" });
+    }
+
     const { fullName, email, currentPassword, newPassword } = req.body;
 
     if (!fullName && !email && !newPassword) {
@@ -13,27 +21,16 @@ export const updateUserProfile = async (req: Request, res: Response) => {
         .json({ message: "Không có thông tin để cập nhật" });
     }
 
-    const user = await User.findByPk(userId);
+    const user = await User.findByPk(targetUserId);
     if (!user) {
       return res.status(404).json({ message: "Người dùng không tồn tại" });
     }
 
-    const requestUser = (req as any).user; 
-    if (
-      requestUser &&
-      requestUser.id !== parseInt(userId) &&
-      requestUser.role !== "admin"
-    ) {
-      return res
-        .status(403)
-        .json({ message: "Bạn không có quyền cập nhật thông tin này" });
-    }
-
     if (newPassword) {
       if (!currentPassword) {
-        return res.status(400).json({
-          message: "Vui lòng nhập mật khẩu hiện tại để đổi mật khẩu mới",
-        });
+        return res
+          .status(400)
+          .json({ message: "Vui lòng nhập mật khẩu hiện tại" });
       }
 
       const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
@@ -43,8 +40,7 @@ export const updateUserProfile = async (req: Request, res: Response) => {
           .json({ message: "Mật khẩu hiện tại không đúng" });
       }
 
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      user.password_hash = hashedPassword;
+      user.password_hash = await bcrypt.hash(newPassword, 10);
     }
 
     if (email && email !== user.email) {
