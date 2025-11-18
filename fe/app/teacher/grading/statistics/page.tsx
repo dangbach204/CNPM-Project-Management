@@ -5,15 +5,13 @@ import { Header } from "@/components/layout/header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { mockSubmissions, mockProjects, mockGrades } from "@/lib/mock-data"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
-import { redirect } from "next/navigation"
 import { useAuthStore } from "@/stores/user"
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 
 export default function GradingStatisticsPage() {
   const { user } = useAuthStore()
 
-  if (!user || user.role !== "teacher") redirect("/login")
-
-  const myProjects = mockProjects.filter((p) => p.teacherId === user.id.toString())
+  const myProjects = user ? mockProjects.filter((p) => p.teacherId === user.id.toString()) : []
   const mySubmissions = mockSubmissions.filter((s) => myProjects.some((p) => p.id === s.projectId))
   const myGrades = mockGrades.filter((g) => mySubmissions.some((s) => s.id === g.submissionId))
 
@@ -44,8 +42,11 @@ export default function GradingStatisticsPage() {
 
   const COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#ef4444"]
 
+  ]
+
   return (
-    <div className="flex h-screen bg-background">
+    <ProtectedRoute allowedRoles={["teacher"]}>
+      <div className="flex h-screen bg-background">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
@@ -174,6 +175,7 @@ export default function GradingStatisticsPage() {
           </div>
         </main>
       </div>
-    </div>
+      </div>
+    </ProtectedRoute>
   )
 }

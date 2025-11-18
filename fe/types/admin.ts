@@ -54,3 +54,13 @@ export interface AdminProjectsManagement {
   projects: Project[];
   totalProjects: number;
 }
+
+export interface Log {
+  id: number;
+  action: string;
+  createdAt: string;
+  entityType: string;
+  entityId: number;
+  details: JSON;
+  ipAddress: string;
+}

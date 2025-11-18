@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import Project from "../models/project";
 import User from "../models/user";
-import { Sequelize } from "sequelize";
-import { Comments, ProjectStudents, Submission } from "../models";
+import { ProjectStudents } from "../models";
 import sequelize from "../config/db";
+import LogService, { LOG_ACTIONS, ENTITY_TYPES } from "../lib/logService";
 
 export const getProjectsManagement = async (req: Request, res: Response) => {
   try {
@@ -102,7 +102,19 @@ export const deleteProject = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Project không tồn tại" });
     }
 
+    const projectData = project.toJSON() as any;
     await project.destroy({ transaction });
+
+    await LogService.log(
+      LOG_ACTIONS.DELETE_PROJECT,
+      req,
+      ENTITY_TYPES.PROJECT,
+      projectData.id,
+      {
+        title: projectData.title,
+        teacher_id: projectData.teacher_id,
+      }
+    );
 
     await transaction.commit();
     return res
@@ -171,6 +183,14 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
 
     if (Object.keys(updateData).length > 0) {
       await project.update(updateData, { transaction });
+
+      await LogService.log(
+        LOG_ACTIONS.UPDATE_PROJECT,
+        req,
+        ENTITY_TYPES.PROJECT,
+        projectId,
+        { updated_fields: Object.keys(updateData), ...updateData }
+      );
     }
 
     if (addStudents && Array.isArray(addStudents) && addStudents.length > 0) {
@@ -199,6 +219,16 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
         student_id: studentId,
       }));
       await ProjectStudents.bulkCreate(projectStudentsData, { transaction });
+
+      for (const studentId of addStudents) {
+        await LogService.log(
+          LOG_ACTIONS.ADD_STUDENT,
+          req,
+          ENTITY_TYPES.PROJECT,
+          projectId,
+          { student_id: studentId }
+        );
+      }
     }
 
     if (
@@ -213,6 +243,16 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
         },
         transaction,
       });
+
+      for (const studentId of removeStudents) {
+        await LogService.log(
+          LOG_ACTIONS.REMOVE_STUDENT,
+          req,
+          ENTITY_TYPES.PROJECT,
+          projectId,
+          { student_id: studentId }
+        );
+      }
     }
 
     await transaction.commit();

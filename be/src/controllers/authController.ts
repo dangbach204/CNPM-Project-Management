@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/user";
+import LogService, { LOG_ACTIONS, ENTITY_TYPES } from "../lib/logService";
 
 const generateAccessToken = (user: any) => {
   return jwt.sign(
@@ -43,6 +44,11 @@ export const loginUser = async (req: Request, res: Response) => {
     const access = generateAccessToken(user);
     const refresh = generateRefreshToken(user);
 
+    await LogService.log(LOG_ACTIONS.LOGIN, req, ENTITY_TYPES.USER, user.id, {
+      email: user.email,
+      user_agent: req.headers["user-agent"],
+    });
+
     return res.status(200).json({
       message: "Đăng nhập thành công",
       access,
@@ -77,11 +83,9 @@ export const refreshToken = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res
-        .status(401)
-        .json({
-          message: "Refresh token không hợp lệ hoặc tài khoản đã bị khóa",
-        });
+      return res.status(401).json({
+        message: "Refresh token không hợp lệ hoặc tài khoản đã bị khóa",
+      });
     }
 
     const newAccess = jwt.sign(
@@ -94,11 +98,11 @@ export const refreshToken = async (req: Request, res: Response) => {
       { id: user.id },
       process.env.JWT_REFRESH_SECRET || "REFRESH_SECRET",
       { expiresIn: "7d" }
-    )
+    );
 
     return res.json({
       access: newAccess,
-      refresh: newRefresh
+      refresh: newRefresh,
     });
   } catch (error) {
     return res

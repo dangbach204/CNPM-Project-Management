@@ -50,6 +50,8 @@ export function useAuth() {
     logout();
     Cookies.remove(ACCESS_TOKEN_KEY);
     Cookies.remove(REFRESH_TOKEN_KEY);
+    // Clear all auth data from localStorage
+    localStorage.removeItem("auth-store");
   };
   return {
     isLoading,

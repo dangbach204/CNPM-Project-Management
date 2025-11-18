@@ -113,3 +113,12 @@ export const updateProjectInfo = async (
     throw error;
   }
 };
+
+export const getLogs = async () => {
+  try {
+    const response = await api.get(ADMIN.LOGS);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}

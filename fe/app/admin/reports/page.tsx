@@ -1,258 +1,350 @@
-"use client"
+"use client";
 
-import { Sidebar } from "@/components/layout/sidebar"
-import { Header } from "@/components/layout/header"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { mockUsers, mockProjects, mockSubmissions, mockGrades } from "@/lib/mock-data"
-import { redirect } from "next/navigation"
-import { useState } from "react"
-import { useAuthStore } from "@/stores/user"
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { useAuthStore } from "@/stores/user";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useAdminLogs } from "@/hooks/useAdminLogs";
+import { Log } from "@/types/admin";
+import {
+  FileText,
+  User,
+  FolderOpen,
+  Activity,
+  Clock,
+  Globe,
+} from "lucide-react";
 
 export default function AdminReportsPage() {
   const { user } = useAuthStore();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { logs, isLoading } = useAdminLogs();
+  const [selectedLog, setSelectedLog] = useState<Log | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  if (!user || user.role !== "admin") redirect("/login")
+  // Ensure logs is always an array
+  const logsArray = Array.isArray(logs) ? logs : [];
 
-  // Calculate statistics
-  const totalUsers = mockUsers.length
-  const totalTeachers = mockUsers.filter((u) => u.role === "teacher").length
-  const totalStudents = mockUsers.filter((u) => u.role === "student").length
-  const totalProjects = mockProjects.length
-  const totalSubmissions = mockSubmissions.length
-  const totalGraded = mockGrades.length
+  const handleLogClick = (log: Log) => {
+    setSelectedLog(log);
+    setIsModalOpen(true);
+  };
 
-  const handleCardClick = (category: string) => {
-    setSelectedCategory(category)
-    setIsModalOpen(true)
-  }
-
-  const getDetailData = () => {
-    switch (selectedCategory) {
-      case "users":
-        return mockUsers
-      case "teachers":
-        return mockUsers.filter((u) => u.role === "teacher")
-      case "students":
-        return mockUsers.filter((u) => u.role === "student")
-      case "projects":
-        return mockProjects
-      case "submissions":
-        return mockSubmissions
-      case "graded":
-        return mockGrades
+  const getEntityIcon = (entityType: string) => {
+    switch (entityType.toLowerCase()) {
+      case "user":
+        return <User className="h-4 w-4" />;
+      case "project":
+        return <FolderOpen className="h-4 w-4" />;
+      case "submission":
+        return <FileText className="h-4 w-4" />;
       default:
-        return []
+        return <Activity className="h-4 w-4" />;
     }
-  }
+  };
 
-  const getDetailTitle = () => {
-    switch (selectedCategory) {
-      case "users":
-        return "Danh sách Người dùng"
-      case "teachers":
-        return "Danh sách Giáo viên"
-      case "students":
-        return "Danh sách Sinh viên"
-      case "projects":
-        return "Danh sách Đề tài"
-      case "submissions":
-        return "Danh sách Bài nộp"
-      case "graded":
-        return "Danh sách Bài đã chấm"
-      default:
-        return ""
+  const getActionColor = (action: string) => {
+    const lowerAction = action.toLowerCase();
+    if (lowerAction.includes("create") || lowerAction.includes("add")) {
+      return "bg-green-100 text-green-700 border-green-200";
+    } else if (lowerAction.includes("update") || lowerAction.includes("edit")) {
+      return "bg-blue-100 text-blue-700 border-blue-200";
+    } else if (
+      lowerAction.includes("delete") ||
+      lowerAction.includes("remove")
+    ) {
+      return "bg-red-100 text-red-700 border-red-200";
+    } else if (
+      lowerAction.includes("login") ||
+      lowerAction.includes("logout")
+    ) {
+      return "bg-purple-100 text-purple-700 border-purple-200";
     }
-  }
+    return "bg-gray-100 text-gray-700 border-gray-200";
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString("vi-VN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-8 space-y-8">
-            <div>
-              <h1 className="text-3xl font-bold">Báo cáo Hệ thống</h1>
-              <p className="text-muted-foreground mt-2">Tổng quan thống kê toàn hệ thống</p>
-            </div>
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <div className="flex h-screen bg-background">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-y-auto">
+            <div className="p-8 space-y-8">
+              <div>
+                <h1 className="text-3xl font-bold">Nhật ký Hệ thống</h1>
+                <p className="text-muted-foreground mt-2">
+                  Theo dõi tất cả các hoạt động trong hệ thống
+                </p>
+              </div>
 
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-              <Card
-                className="cursor-pointer hover:shadow-xl transition-all hover:scale-105 border-l-4 border-l-primary"
-                onClick={() => handleCardClick("users")}
-              >
-                <CardContent className="pt-6 text-center ">
-                  <p className="text-sm text-muted-foreground">Tổng người dùng</p>
-                  <p className="text-3xl font-bold mt-2">{totalUsers}</p>
-                </CardContent>
-              </Card>
-
-              <Card
-                className="cursor-pointer hover:shadow-xl transition-all hover:scale-105 border-l-4 border-l-primary"
-                onClick={() => handleCardClick("teachers")}
-              >
-                <CardContent className="pt-6 text-center">
-                  <p className="text-sm text-muted-foreground">Giáo viên</p>
-                  <p className="text-3xl font-bold mt-2">{totalTeachers}</p>
-                </CardContent>
-              </Card>
-
-              <Card
-                className="cursor-pointer hover:shadow-xl transition-all hover:scale-105 border-l-4 border-l-primary"
-                onClick={() => handleCardClick("students")}
-              >
-                <CardContent className="pt-6 text-center">
-                  <p className="text-sm text-muted-foreground">Sinh viên</p>
-                  <p className="text-3xl font-bold mt-2">{totalStudents}</p>
-                </CardContent>
-              </Card>
-
-              <Card
-                className="cursor-pointer hover:shadow-xl transition-all hover:scale-105 border-l-4 border-l-primary"
-                onClick={() => handleCardClick("projects")}
-              >
-                <CardContent className="pt-6 text-center">
-                  <p className="text-sm text-muted-foreground">Đề tài</p>
-                  <p className="text-3xl font-bold mt-2">{totalProjects}</p>
-                </CardContent>
-              </Card>
-
-              <Card
-                className="cursor-pointer hover:shadow-xl transition-all hover:scale-105 border-l-4 border-l-primary"
-                onClick={() => handleCardClick("submissions")}
-              >
-                <CardContent className="pt-6 text-center">
-                  <p className="text-sm text-muted-foreground">Bài nộp</p>
-                  <p className="text-3xl font-bold mt-2">{totalSubmissions}</p>
-                </CardContent>
-              </Card>
-
-              <Card
-                className="cursor-pointer hover:shadow-xl transition-all hover:scale-105 border-l-4 border-l-primary"
-                onClick={() => handleCardClick("graded")}
-              >
-                <CardContent className="pt-6 text-center">
-                  <p className="text-sm text-muted-foreground">Đã chấm</p>
-                  <p className="text-3xl font-bold mt-2">{totalGraded}</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Summary Table */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Tóm tắt Hoạt động</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col md:flex-row gap-8 divide-y md:divide-y-0 md:divide-x">
-                  <div className="space-y-3 md:pr-8 flex-1">
-                    <h3 className="font-semibold">Tỷ lệ Hoàn thành</h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Bài nộp</span>
-                        <span className="font-medium">
-                          {totalSubmissions > 0 ? Math.round((totalGraded / totalSubmissions) * 100) : 0}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full"
-                          style={{
-                            width: `${totalSubmissions > 0 ? (totalGraded / totalSubmissions) * 100 : 0}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 md:pl-8 flex-1">
-                    <h3 className="font-semibold">Trung bình Điểm</h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Tất cả bài</span>
-                        <span className="font-medium">
-                          {totalGraded > 0
-                            ? Math.round((mockGrades.reduce((sum, g) => sum + g.score, 0) / totalGraded) * 10) / 10
-                            : 0}
-                          /100
-                        </span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full"
-                          style={{
-                            width: `${
-                              totalGraded > 0
-                                ? (mockGrades.reduce((sum, g) => sum + g.score, 0) / totalGraded / 100) * 100
-                                : 0
-                            }%`,
-                          }}
-                        />
-                      </div>
-                    </div>
+              {/* Loading State */}
+              {isLoading && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                    <p className="mt-4 text-muted-foreground">
+                      Đang tải nhật ký...
+                    </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
+              )}
+
+              {/* Logs Summary */}
+              {!isLoading && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            Tổng số Log
+                          </p>
+                          <p className="text-2xl font-bold mt-1">
+                            {logsArray.length}
+                          </p>
+                        </div>
+                        <Activity className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            Người dùng
+                          </p>
+                          <p className="text-2xl font-bold mt-1">
+                            {
+                              logsArray.filter(
+                                (l) => l.entityType?.toLowerCase() === "user"
+                              ).length
+                            }
+                          </p>
+                        </div>
+                        <User className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            Bài nộp
+                          </p>
+                          <p className="text-2xl font-bold mt-1">
+                            {
+                              logsArray.filter(
+                                (l) =>
+                                  l.entityType?.toLowerCase() === "submission"
+                              ).length
+                            }
+                          </p>
+                        </div>
+                        <FolderOpen className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">
+                            Bài nộp
+                          </p>
+                          <p className="text-2xl font-bold mt-1">
+                            {
+                              logsArray.filter(
+                                (l) =>
+                                  l.entityType?.toLowerCase() === "submission"
+                              ).length
+                            }
+                          </p>
+                        </div>
+                        <FileText className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Logs Table */}
+              {!isLoading && logsArray.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Danh sách Nhật ký</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {logsArray.map((log) => (
+                        <div
+                          key={log.id}
+                          onClick={() => handleLogClick(log)}
+                          className="p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-all hover:shadow-md"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-start gap-3 flex-1">
+                              <div className="mt-1">
+                                {getEntityIcon(log.entityType)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap mb-2">
+                                  <Badge className={getActionColor(log.action)}>
+                                    {log.action}
+                                  </Badge>
+                                  <Badge variant="outline">
+                                    {log.entityType}
+                                  </Badge>
+                                  <span className="text-xs text-muted-foreground">
+                                    ID: {log.entityId}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    <span>{formatDate(log.createdAt)}</span>
+                                  </div>
+                                  {log.ipAddress && (
+                                    <div className="flex items-center gap-1">
+                                      <Globe className="h-3 w-3" />
+                                      <span>{log.ipAddress}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Empty State */}
+              {!isLoading && logsArray.length === 0 && (
+                <Card>
+                  <CardContent className="py-12">
+                    <div className="text-center">
+                      <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">
+                        Chưa có nhật ký
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Các hoạt động trong hệ thống sẽ được ghi lại tại đây
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </main>
+        </div>
       </div>
 
       {/* Detail Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-4xl max-h-96 overflow-y-auto">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{getDetailTitle()}</DialogTitle>
+            <DialogTitle>Chi tiết Nhật ký</DialogTitle>
+            <DialogDescription>
+              Thông tin chi tiết về hoạt động #{selectedLog?.id}
+            </DialogDescription>
           </DialogHeader>
-          <div className="mt-4">
-            {selectedCategory === "users" || selectedCategory === "teachers" || selectedCategory === "students" ? (
-              <div className="space-y-3">
-                {getDetailData().map((user: any) => (
-                  <div key={user.id} className="p-3 border rounded-lg hover:bg-muted/50">
-                    <p className="font-medium">{user.name}</p>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
-                    <p className="text-xs text-muted-foreground">Vai trò: {user.role}</p>
+          {selectedLog && (
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    Hành động
+                  </p>
+                  <Badge className={getActionColor(selectedLog.action)}>
+                    {selectedLog.action}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    Loại đối tượng
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {getEntityIcon(selectedLog.entityType)}
+                    <span className="font-medium">
+                      {selectedLog.entityType}
+                    </span>
                   </div>
-                ))}
+                </div>
               </div>
-            ) : selectedCategory === "projects" ? (
-              <div className="space-y-3">
-                {getDetailData().map((project: any) => (
-                  <div key={project.id} className="p-3 border rounded-lg hover:bg-muted/50">
-                    <p className="font-medium">{project.title}</p>
-                    <p className="text-sm text-muted-foreground">{project.description}</p>
-                    <p className="text-xs text-muted-foreground">Trạng thái: {project.status}</p>
+
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">
+                  ID đối tượng
+                </p>
+                <p className="font-mono text-sm">{selectedLog.entityId}</p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">
+                  Thời gian
+                </p>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-sm">{formatDate(selectedLog.createdAt)}</p>
+                </div>
+              </div>
+
+              {selectedLog.ipAddress && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    Địa chỉ IP
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    <p className="font-mono text-sm">{selectedLog.ipAddress}</p>
                   </div>
-                ))}
-              </div>
-            ) : selectedCategory === "submissions" ? (
-              <div className="space-y-3">
-                {getDetailData().map((submission: any) => (
-                  <div key={submission.id} className="p-3 border rounded-lg hover:bg-muted/50">
-                    <p className="font-medium">Bài nộp ID: {submission.id}</p>
-                    <p className="text-sm text-muted-foreground">Dự án ID: {submission.projectId}</p>
-                    <p className="text-xs text-muted-foreground">Trạng thái: {submission.status}</p>
+                </div>
+              )}
+
+              {selectedLog.details && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                    Chi tiết
+                  </p>
+                  <div className="bg-muted/50 rounded-lg p-4 max-h-64 overflow-y-auto">
+                    <pre className="text-xs font-mono whitespace-pre-wrap wrap-break-word">
+                      {JSON.stringify(selectedLog.details, null, 2)}
+                    </pre>
                   </div>
-                ))}
-              </div>
-            ) : selectedCategory === "graded" ? (
-              <div className="space-y-3">
-                {getDetailData().map((grade: any) => (
-                  <div key={grade.id} className="p-3 border rounded-lg hover:bg-muted/50">
-                    <p className="font-medium">Điểm: {grade.score}/100</p>
-                    <p className="text-sm text-muted-foreground">Bài nộp ID: {grade.submissionId}</p>
-                    <p className="text-xs text-muted-foreground">Nhận xét: {grade.feedback}</p>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
-    </div>
-  )
+    </ProtectedRoute>
+  );
 }

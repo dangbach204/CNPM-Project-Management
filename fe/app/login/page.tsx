@@ -18,6 +18,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useAuthStore } from "@/stores/user";
 import { useAuth } from "@/hooks/useAuth";
+import Cookies from "js-cookie";
+import { ACCESS_TOKEN_KEY } from "@/constants";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,7 +42,8 @@ export default function LoginPage() {
 
   const { user } = useAuthStore();
   useEffect(() => {
-    if (user) {
+    // Only redirect if user exists AND has valid token
+    if (user && Cookies.get(ACCESS_TOKEN_KEY)) {
       router.push("/dashboard");
     }
   }, [router, user]);
@@ -107,7 +110,7 @@ export default function LoginPage() {
             <CardDescription>Nhập email để tiếp tục</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={ handleSubmit } className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />

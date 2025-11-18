@@ -1,4 +1,3 @@
-// store/auth-store.ts
 import { User } from "@/types/auth";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
