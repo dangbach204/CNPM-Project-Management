@@ -6,6 +6,7 @@ import {
 } from "../controllers/adminUserController";
 import {
   getAdminOverview,
+  getLogsOverview,
   getUsersManagement,
 } from "../controllers/adminController";
 import {
@@ -28,4 +29,5 @@ router.patch("/update-user-info/:userId", updateUserInfo);
 router.get("/projects-management", getProjectsManagement);
 router.delete("/delete-project/:projectId", deleteProject);
 router.patch("/update-project/:projectId", updateProjectInfo);
+router.get("/logs-overview", getLogsOverview);
 export default router;

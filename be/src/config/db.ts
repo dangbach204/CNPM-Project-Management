@@ -12,8 +12,10 @@ const sequelize = new Sequelize(
       ssl: {
         require: true,
         rejectUnauthorized: false,
-        useUTC: false,
       },
+      useUTC: false,
+      dateStrings: true,
+      typeCast: true,
     },
     logging: false,
   }

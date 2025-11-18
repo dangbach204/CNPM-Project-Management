@@ -38,6 +38,8 @@ const onRefreshed = (newAccessToken: string) => {
 const handleLogout = () => {
   Cookies.remove(ACCESS_TOKEN_KEY);
   Cookies.remove(REFRESH_TOKEN_KEY);
+  // Clear user from localStorage
+  localStorage.removeItem("auth-store");
   window.location.href = "/login";
 };
 

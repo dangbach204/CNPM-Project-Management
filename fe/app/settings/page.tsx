@@ -16,10 +16,10 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Bell, Lock, User, LogOut, CheckCircle2, XCircle } from "lucide-react";
 import { useState } from "react";
-import { redirect } from "next/navigation";
 import { useAuthStore } from "@/stores/user";
 import { updateProfile } from "@/service/user-service";
 import { useToast } from "@/hooks/use-toast";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function SettingsPage() {
   const { user, setUser, logout } = useAuthStore();
@@ -40,12 +40,15 @@ export default function SettingsPage() {
   const [profileError, setProfileError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  if (!user) redirect("/login");
-
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setProfileError("");
     setIsLoadingProfile(true);
+
+    if (!user) {
+      setIsLoadingProfile(false);
+      return;
+    }
 
     try {
       const updateData: any = {};
@@ -96,6 +99,8 @@ export default function SettingsPage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError("");
+
+    if (!user) return;
 
     if (!passwordData.currentPassword) {
       setPasswordError("Vui lòng nhập mật khẩu hiện tại");
@@ -150,147 +155,150 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto flex justify-center items-start">
-          <div className="p-8 max-w-2xl space-y-8">
-            <div>
-              <h1 className="text-3xl font-bold text-center">Cài đặt</h1>
-              <p className="text-muted-foreground mt-2 text-center">
-                Quản lý tài khoản và cài đặt cá nhân
-              </p>
-            </div>
+    <ProtectedRoute>
+      <div className="flex h-screen bg-background">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-y-auto flex justify-center items-start">
+            <div className="p-8 max-w-2xl space-y-8">
+              <div>
+                <h1 className="text-3xl font-bold text-center">Cài đặt</h1>
+                <p className="text-muted-foreground mt-2 text-center">
+                  Quản lý tài khoản và cài đặt cá nhân
+                </p>
+              </div>
 
-            {/* Profile Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Hồ sơ Cá nhân
-                </CardTitle>
-                <CardDescription>
-                  Cập nhật thông tin cá nhân của bạn
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {profileError && (
-                  <Alert variant="destructive" className="mb-4">
-                    <XCircle className="h-4 w-4" />
-                    <AlertDescription>{profileError}</AlertDescription>
-                  </Alert>
-                )}
-                <form onSubmit={handleSaveProfile} className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Họ và tên</label>
-                    <Input
-                      value={formData.fullName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, fullName: e.target.value })
-                      }
-                      disabled={isLoadingProfile}
-                    />
-                  </div>
+              {/* Profile Settings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Hồ sơ Cá nhân
+                  </CardTitle>
+                  <CardDescription>
+                    Cập nhật thông tin cá nhân của bạn
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {profileError && (
+                    <Alert variant="destructive" className="mb-4">
+                      <XCircle className="h-4 w-4" />
+                      <AlertDescription>{profileError}</AlertDescription>
+                    </Alert>
+                  )}
+                  <form onSubmit={handleSaveProfile} className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Họ và tên</label>
+                      <Input
+                        value={formData.fullName}
+                        onChange={(e) =>
+                          setFormData({ ...formData, fullName: e.target.value })
+                        }
+                        disabled={isLoadingProfile}
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Email</label>
-                    <Input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      disabled={isLoadingProfile}
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Email</label>
+                      <Input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) =>
+                          setFormData({ ...formData, email: e.target.value })
+                        }
+                        disabled={isLoadingProfile}
+                      />
+                    </div>
 
-                  <Button type="submit" disabled={isLoadingProfile}>
-                    {isLoadingProfile ? "Đang lưu..." : "Lưu Thay đổi"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                    <Button type="submit" disabled={isLoadingProfile}>
+                      {isLoadingProfile ? "Đang lưu..." : "Lưu Thay đổi"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
 
-            {/* Change Password */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lock className="w-5 h-5" />
-                  Thay đổi Mật khẩu
-                </CardTitle>
-                <CardDescription>Cập nhật mật khẩu của bạn</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {passwordError && (
-                  <Alert variant="destructive" className="mb-4">
-                    <XCircle className="h-4 w-4" />
-                    <AlertDescription>{passwordError}</AlertDescription>
-                  </Alert>
-                )}
-                <form onSubmit={handleChangePassword} className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Mật khẩu hiện tại
-                    </label>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      value={passwordData.currentPassword}
-                      onChange={(e) =>
-                        setPasswordData({
-                          ...passwordData,
-                          currentPassword: e.target.value,
-                        })
-                      }
-                      disabled={isLoadingPassword}
-                    />
-                  </div>
+              {/* Change Password */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Lock className="w-5 h-5" />
+                    Thay đổi Mật khẩu
+                  </CardTitle>
+                  <CardDescription>Cập nhật mật khẩu của bạn</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {passwordError && (
+                    <Alert variant="destructive" className="mb-4">
+                      <XCircle className="h-4 w-4" />
+                      <AlertDescription>{passwordError}</AlertDescription>
+                    </Alert>
+                  )}
+                  <form onSubmit={handleChangePassword} className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Mật khẩu hiện tại
+                      </label>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        value={passwordData.currentPassword}
+                        onChange={(e) =>
+                          setPasswordData({
+                            ...passwordData,
+                            currentPassword: e.target.value,
+                          })
+                        }
+                        disabled={isLoadingPassword}
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Mật khẩu mới</label>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      value={passwordData.newPassword}
-                      onChange={(e) =>
-                        setPasswordData({
-                          ...passwordData,
-                          newPassword: e.target.value,
-                        })
-                      }
-                      disabled={isLoadingPassword}
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Mật khẩu mới
+                      </label>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        value={passwordData.newPassword}
+                        onChange={(e) =>
+                          setPasswordData({
+                            ...passwordData,
+                            newPassword: e.target.value,
+                          })
+                        }
+                        disabled={isLoadingPassword}
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Xác nhận mật khẩu mới
-                    </label>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      value={passwordData.confirmPassword}
-                      onChange={(e) =>
-                        setPasswordData({
-                          ...passwordData,
-                          confirmPassword: e.target.value,
-                        })
-                      }
-                      disabled={isLoadingPassword}
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Xác nhận mật khẩu mới
+                      </label>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        value={passwordData.confirmPassword}
+                        onChange={(e) =>
+                          setPasswordData({
+                            ...passwordData,
+                            confirmPassword: e.target.value,
+                          })
+                        }
+                        disabled={isLoadingPassword}
+                      />
+                    </div>
 
-                  <Button type="submit" disabled={isLoadingPassword}>
-                    {isLoadingPassword
-                      ? "Đang thay đổi..."
-                      : "Thay đổi Mật khẩu"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                    <Button type="submit" disabled={isLoadingPassword}>
+                      {isLoadingPassword
+                        ? "Đang thay đổi..."
+                        : "Thay đổi Mật khẩu"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
 
-            {/* Notifications
+              {/* Notifications
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -325,9 +333,10 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
             </Card> */}
-          </div>
-        </main>
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

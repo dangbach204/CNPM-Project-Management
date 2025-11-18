@@ -12,6 +12,7 @@ export const ADMIN = {
   PROJECTS_MANAGEMENT: "/admin/projects-management",
   DELETE_PROJECT: "/admin/delete-project",
   UPDATE_PROJECT: "/admin/update-project",
+  LOGS: "/admin/logs-overview",
 };
 
 export const USER = {

@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
 import { Op, fn, col } from "sequelize";
-import { User, Project, Submission, ProjectStudents } from "../models/index";
+import {
+  User,
+  Project,
+  Submission,
+  ProjectStudents,
+  Log,
+} from "../models/index";
 
 export const getAdminOverview = async (req: Request, res: Response) => {
   try {
@@ -205,6 +211,30 @@ export const getUsersManagement = async (req: Request, res: Response) => {
     console.error("Lỗi lấy quản lý người dùng:", error);
     return res.status(500).json({
       message: "Lỗi server khi lấy dữ liệu",
+    });
+  }
+};
+
+export const getLogsOverview = async (req: Request, res: Response) => {
+  try {
+    const logs = await Log.findAll({
+      order: [["created_at", "DESC"]],
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "full_name", "email"],
+        },
+      ],
+    });
+
+    return res.status(200).json({
+      logs,
+    });
+  } catch (error) {
+    console.error("Lỗi lấy logs:", error);
+    return res.status(500).json({
+      message: "Lỗi server khi lấy dữ liệu logs",
     });
   }
 };

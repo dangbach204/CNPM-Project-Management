@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import User from "../models/user";
+import LogService, { ENTITY_TYPES, LOG_ACTIONS } from "../lib/logService";
 
 export const createUser = async (req: Request, res: Response) => {
   try {
@@ -24,6 +25,18 @@ export const createUser = async (req: Request, res: Response) => {
       password_hash: passwordHash,
       avatar: avatar ?? null,
     });
+
+    await LogService.log(
+      LOG_ACTIONS.CREATE_USER,
+      req,
+      ENTITY_TYPES.USER,
+      newUser.id,
+      {
+        fullName: newUser.full_name,
+        email: newUser.email,
+        role: newUser.role,
+      }
+    );
 
     return res.status(201).json({
       message: "User created successfully",
@@ -51,7 +64,22 @@ export const deleteUser = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Người dùng không tồn tại" });
     }
 
+    const userData = {
+      fullName: user.full_name,
+      email: user.email,
+      role: user.role,
+    };
+
     await user.destroy();
+
+    await LogService.log(
+      LOG_ACTIONS.DELETE_USER,
+      req,
+      ENTITY_TYPES.USER,
+      Number(userId),
+      userData
+    );
+
     return res.status(200).json({ message: "Xóa người dùng thành công" });
   } catch (error) {
     console.error("Lỗi xóa người dùng:", error);
@@ -69,7 +97,7 @@ export const updateUserInfo = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid userId parameter" });
     }
 
-  const { fullName, email, role, avatar } = req.body;
+    const { fullName, email, role, avatar } = req.body;
 
     if (!fullName && !email && !role) {
       return res.status(400).json({ message: "No fields to update" });
@@ -88,9 +116,7 @@ export const updateUserInfo = async (req: Request, res: Response) => {
 
       const existing = await User.findOne({ where: { email } });
       if (existing && existing.id !== user.id) {
-        return res
-          .status(400)
-          .json({ message: "Email đã tồn tại" });
+        return res.status(400).json({ message: "Email đã tồn tại" });
       }
 
       user.email = email;
@@ -113,6 +139,20 @@ export const updateUserInfo = async (req: Request, res: Response) => {
     }
 
     await user.save();
+
+    const updatedFields: any = {};
+    if (fullName) updatedFields.fullName = fullName;
+    if (email) updatedFields.email = email;
+    if (role) updatedFields.role = role;
+    if (avatar) updatedFields.avatar = avatar;
+
+    await LogService.log(
+      LOG_ACTIONS.UPDATE_USER,
+      req,
+      ENTITY_TYPES.USER,
+      userId,
+      { updated_fields: Object.keys(updatedFields), ...updatedFields }
+    );
 
     return res.status(200).json({
       message: "Thông tin người dùng đã được cập nhật",
