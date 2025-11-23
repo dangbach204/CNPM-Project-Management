@@ -27,7 +27,12 @@ interface EditUserDialogProps {
   onClose: () => void;
   onSave: (
     userId: number,
-    updatedUser: { fullName: string; email: string; role: UserRole; avatar?: string }
+    updatedUser: {
+      fullName: string;
+      email: string;
+      role: UserRole;
+      avatar?: string | File;
+    }
   ) => void;
   user: User | null;
   loading?: boolean;
@@ -50,7 +55,7 @@ export default function EditUserDialog({
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<UserRole>("student");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -58,17 +63,19 @@ export default function EditUserDialog({
       setEmail(user.email);
       setRole((user.role as UserRole) || "student");
       setAvatarPreview(user.avatar ?? null);
+      setAvatarFile(null);
     }
   }, [user]);
 
   const handleSave = () => {
     if (!user) return;
-    onSave(user.id, { fullName, email, role, avatar: avatarPreview ?? undefined });
+    onSave(user.id, { fullName, email, role, avatar: avatarFile ?? undefined });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setAvatarFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
       setAvatarPreview(reader.result as string);
@@ -129,9 +136,19 @@ export default function EditUserDialog({
 
           <div>
             <Label className="text-sm font-medium">Ảnh đại diện</Label>
-            <input type="file" accept="image/*" onChange={handleFileChange} className="mt-1" disabled={loading} />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="mt-1"
+              disabled={loading}
+            />
             {avatarPreview && (
-              <img src={avatarPreview} alt="Avatar preview" className="w-20 h-20 rounded-full object-cover border mt-2" />
+              <img
+                src={avatarPreview}
+                alt="Avatar preview"
+                className="w-20 h-20 rounded-full object-cover border mt-2"
+              />
             )}
           </div>
         </div>

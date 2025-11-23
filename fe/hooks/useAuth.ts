@@ -6,6 +6,7 @@ import { login } from "@/service/auth-service";
 import { useAuthStore } from "@/stores/user";
 
 import Cookies from "js-cookie";
+import router from "next/router";
 import { useState } from "react";
 
 export function useAuth() {
@@ -28,14 +29,23 @@ export function useAuth() {
 
       const access = result?.data?.access;
       const refresh = result?.data?.refresh;
-      setUser(result?.data?.user);
+
       if (!access || !refresh) {
         const msg = result.data?.message || "Đăng nhập thất bại.";
         setError(msg);
         return { success: false, message: msg };
       }
+
+      // Set cookies first
       Cookies.set(ACCESS_TOKEN_KEY, access);
       Cookies.set(REFRESH_TOKEN_KEY, refresh);
+
+      // Set user to store
+      setUser(result?.data?.user);
+
+      // Wait a bit for store to persist to localStorage
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       return { success: true };
     } catch (err: any) {
       const msg = err.response?.data?.message || "Đăng nhập thất bại.";
@@ -50,8 +60,8 @@ export function useAuth() {
     logout();
     Cookies.remove(ACCESS_TOKEN_KEY);
     Cookies.remove(REFRESH_TOKEN_KEY);
-    // Clear all auth data from localStorage
     localStorage.removeItem("auth-store");
+    router.push("/login");
   };
   return {
     isLoading,

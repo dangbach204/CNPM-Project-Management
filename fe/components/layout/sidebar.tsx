@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import Cookies from "js-cookie";
+import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/constants";
 import {
   LayoutDashboard,
   BookOpen,
@@ -18,6 +20,14 @@ import { useAuthStore } from "@/stores/user";
 export function Sidebar() {
   const { user, logout } = useAuthStore();
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    Cookies.remove(ACCESS_TOKEN_KEY);
+    Cookies.remove(REFRESH_TOKEN_KEY);
+    router.push("/login");
+  };
 
   if (!user) return null;
 
@@ -120,7 +130,7 @@ export function Sidebar() {
         <Button
           variant="outline"
           className="w-full justify-start gap-2 text-sidebar-foreground bg-transparent"
-          onClick={logout}
+          onClick={handleLogout}
         >
           <LogOut className="w-4 h-4" />
           Đăng xuất

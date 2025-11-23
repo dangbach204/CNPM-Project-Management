@@ -4,6 +4,7 @@ import authRoutes from "./routes/authRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import userRoutes from "./routes/userRoutes";
 import { camelCaseResponse } from "./middlewares/snakeToCamel";
+import teacherRoutes from "./routes/teacherRoutes";
 
 const app = express();
 app.use(
@@ -13,10 +14,12 @@ app.use(
   })
 );
 
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/teacher", teacherRoutes);
 
 app.use(camelCaseResponse);
 // test endpoint

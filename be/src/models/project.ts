@@ -24,7 +24,7 @@ const Project = sequelizeDb.define(
         model: "users",
         key: "id",
       },
-      onDelete: "SET NULL",
+      ondelete: "SET NULL",
     },
     status: {
       type: ProjectDataTypes.STRING(50),

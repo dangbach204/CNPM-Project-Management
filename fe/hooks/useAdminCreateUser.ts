@@ -19,28 +19,29 @@ export const useAdminCreateUser = () => {
     setSuccess(false);
 
     try {
-      const fullName = `${userData.firstName ?? ""} ${userData.lastName ?? ""}`.trim();
+      const fullName = `${userData.firstName ?? ""} ${
+        userData.lastName ?? ""
+      }`.trim();
 
-      let avatarData: string | undefined;
+      let payload: any;
 
       if (userData.avatar instanceof File) {
-        const fileReader = new FileReader();
-        avatarData = await new Promise<string>((resolve, reject) => {
-          fileReader.onload = () => resolve(fileReader.result as string);
-          fileReader.onerror = reject;
-          fileReader.readAsDataURL(userData.avatar as File);
-        });
-      } else if (typeof userData.avatar === "string") {
-        avatarData = userData.avatar;
+        const formData = new FormData();
+        formData.append("fullName", fullName);
+        formData.append("email", userData.email);
+        formData.append("password", userData.password);
+        formData.append("role", userData.role);
+        formData.append("avatar", userData.avatar);
+        payload = formData;
+      } else {
+        payload = {
+          fullName,
+          email: userData.email,
+          password: userData.password,
+          role: userData.role,
+          avatar: userData.avatar,
+        };
       }
-
-      const payload = {
-        fullName,
-        email: userData.email,
-        password: userData.password,
-        role: userData.role,
-        avatar: avatarData,
-      };
 
       const response = await createUser(payload);
       setSuccess(true);

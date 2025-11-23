@@ -113,9 +113,9 @@ api.interceptors.response.use(
       }
     }
 
-    if (error.response?.status === 403) {
-      handleLogout();
-    }
+    // if (error.response?.status === 403) {
+    //   handleLogout();
+    // }
 
     return Promise.reject(error);
   }

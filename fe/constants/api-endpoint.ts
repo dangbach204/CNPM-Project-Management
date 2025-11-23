@@ -18,3 +18,7 @@ export const ADMIN = {
 export const USER = {
   UPDATE_PROFILE: "/user/profile",
 };
+
+export const TEACHER = {
+  OVERVIEW: "/teacher/overview",
+}

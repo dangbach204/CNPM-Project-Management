@@ -24,6 +24,13 @@ export const getAdminUserManagement = async () => {
 
 export const createUser = async (userData: any) => {
   try {
+    if (userData instanceof FormData) {
+      const response = await api.post(ADMIN.CREATE_USER, userData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return response.data;
+    }
+
     const payload: any = {};
 
     if (userData.fullName) payload.fullName = userData.fullName;
@@ -55,17 +62,25 @@ export const deleteUser = async (userId: number) => {
 
 export const updateUserInfo = async (
   userId: number,
-  userData: {
-    fullName?: string;
-    email?: string;
-    role?: string;
-    avatar?: string;
-  }
+  userData:
+    | {
+        fullName?: string;
+        email?: string;
+        role?: string;
+        avatar?: string | File;
+      }
+    | FormData
 ) => {
   try {
+    const isFormData = userData instanceof FormData;
     const response = await api.patch(
       `${ADMIN.UPDATE_USER}/${userId}`,
-      userData
+      userData,
+      {
+        headers: isFormData
+          ? { "Content-Type": "multipart/form-data" }
+          : undefined,
+      }
     );
     return response.data;
   } catch (error) {
@@ -121,4 +136,4 @@ export const getLogs = async () => {
   } catch (error) {
     throw error;
   }
-}
+};

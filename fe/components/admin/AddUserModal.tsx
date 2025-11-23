@@ -20,7 +20,7 @@ interface AddUserModalProps {
     email: string;
     password: string;
     role: string;
-    avatar?: string;
+    avatar?: string | File;
   }) => void;
 }
 
@@ -37,6 +37,7 @@ function AddUserModal({ onClose, onSubmit }: AddUserModalProps) {
 
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -45,10 +46,10 @@ function AddUserModal({ onClose, onSubmit }: AddUserModalProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setAvatarFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
-        handleChange("avatar", reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -70,7 +71,7 @@ function AddUserModal({ onClose, onSubmit }: AddUserModalProps) {
       return;
     }
 
-    onSubmit(form);
+    onSubmit({ ...form, avatar: avatarFile || undefined });
     onClose();
   };
 
@@ -133,11 +134,7 @@ function AddUserModal({ onClose, onSubmit }: AddUserModalProps) {
           {/* Avatar Upload */}
           <div className="space-y-2 pt-2">
             <label className="text-sm font-medium">Ảnh đại diện</label>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-            />
+            <Input type="file" accept="image/*" onChange={handleFileChange} />
             {preview && (
               <img
                 src={preview}

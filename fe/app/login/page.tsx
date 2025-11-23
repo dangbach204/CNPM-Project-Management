@@ -42,7 +42,6 @@ export default function LoginPage() {
 
   const { user } = useAuthStore();
   useEffect(() => {
-    // Only redirect if user exists AND has valid token
     if (user && Cookies.get(ACCESS_TOKEN_KEY)) {
       router.push("/dashboard");
     }
