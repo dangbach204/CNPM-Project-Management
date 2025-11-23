@@ -72,11 +72,26 @@ export function useUserOperations({
   const handleConfirmUpdate = useCallback(
     async (
       userId: number,
-      data: { fullName: string; email: string; role: UserRole; avatar?: string }
+      data: {
+        fullName: string;
+        email: string;
+        role: UserRole;
+        avatar?: string | File;
+      }
     ) => {
       setEditLoading(true);
       try {
-        await updateUserInfo(userId, data);
+        let submitData: any = data;
+        if (data.avatar instanceof File) {
+          const formData = new FormData();
+          formData.append("fullName", data.fullName);
+          formData.append("email", data.email);
+          formData.append("role", data.role);
+          formData.append("avatar", data.avatar);
+          submitData = formData;
+        }
+
+        await updateUserInfo(userId, submitData);
         toast({ title: "Cập nhật thành công" });
         setEditDialogOpen(false);
         setEditUser(null);

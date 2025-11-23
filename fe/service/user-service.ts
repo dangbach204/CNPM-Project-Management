@@ -3,15 +3,20 @@ import { USER } from "@/constants/api-endpoint";
 
 export const updateProfile = async (
   userId: number,
-  userData: {
-    fullName?: string;
-    email?: string;
-    currentPassword?: string;
-    newPassword?: string;
-  }
+  userData:
+    | FormData
+    | {
+        fullName?: string;
+        email?: string;
+        currentPassword?: string;
+        newPassword?: string;
+      }
 ) => {
   try {
-    const response = await api.patch(USER.UPDATE_PROFILE, userData);
+    const isFormData = userData instanceof FormData;
+    const response = await api.patch(USER.UPDATE_PROFILE, userData, {
+      headers: isFormData ? { "Content-Type": undefined } : undefined,
+    });
     return response.data;
   } catch (error) {
     throw error;

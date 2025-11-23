@@ -14,12 +14,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Bell, Lock, User, LogOut, CheckCircle2, XCircle } from "lucide-react";
+import {
+  Bell,
+  Lock,
+  User,
+  LogOut,
+  CheckCircle2,
+  XCircle,
+  Camera,
+} from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/stores/user";
 import { updateProfile } from "@/service/user-service";
 import { useToast } from "@/hooks/use-toast";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function SettingsPage() {
   const { user, setUser, logout } = useAuthStore();
@@ -35,10 +44,25 @@ export default function SettingsPage() {
     confirmPassword: "",
   });
 
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isLoadingPassword, setIsLoadingPassword] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,17 +75,25 @@ export default function SettingsPage() {
     }
 
     try {
-      const updateData: any = {};
+      const submitData = new FormData();
+      let hasChanges = false;
 
       if (formData.fullName !== user.fullName) {
-        updateData.fullName = formData.fullName;
+        submitData.append("fullName", formData.fullName);
+        hasChanges = true;
       }
 
       if (formData.email !== user.email) {
-        updateData.email = formData.email;
+        submitData.append("email", formData.email);
+        hasChanges = true;
       }
 
-      if (Object.keys(updateData).length === 0) {
+      if (avatarFile) {
+        submitData.append("avatar", avatarFile);
+        hasChanges = true;
+      }
+
+      if (!hasChanges) {
         toast({
           title: "Không có thay đổi",
           description: "Không có thông tin nào được thay đổi",
@@ -70,13 +102,17 @@ export default function SettingsPage() {
         return;
       }
 
-      const response = await updateProfile(user.id, updateData);
+      const response = await updateProfile(user.id, submitData);
 
       setUser({
         ...user,
         fullName: response.user.fullName,
         email: response.user.email,
+        avatar: response.user.avatar,
       });
+
+      setAvatarFile(null);
+      setAvatarPreview(null);
 
       toast({
         title: "Thành công",
@@ -188,6 +224,41 @@ export default function SettingsPage() {
                     </Alert>
                   )}
                   <form onSubmit={handleSaveProfile} className="space-y-4">
+                    <div className="flex flex-col items-center space-y-4 mb-6">
+                      <div className="relative">
+                        <Avatar className="w-24 h-24">
+                          <AvatarImage
+                            src={
+                              avatarPreview ||
+                              user?.avatar ||
+                              "/placeholder.svg"
+                            }
+                            alt="Avatar"
+                          />
+                          <AvatarFallback>
+                            {user?.fullName?.charAt(0) || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <label
+                          htmlFor="avatar-upload"
+                          className="absolute bottom-0 right-0 p-1 bg-primary text-primary-foreground rounded-full cursor-pointer hover:bg-primary/90 transition-colors"
+                        >
+                          <Camera className="w-4 h-4" />
+                          <input
+                            id="avatar-upload"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleAvatarChange}
+                            disabled={isLoadingProfile}
+                          />
+                        </label>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Nhấn vào biểu tượng máy ảnh để thay đổi ảnh đại diện
+                      </p>
+                    </div>
+
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Họ và tên</label>
                       <Input

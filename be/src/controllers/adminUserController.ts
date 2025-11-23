@@ -5,7 +5,8 @@ import LogService, { ENTITY_TYPES, LOG_ACTIONS } from "../lib/logService";
 
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { fullName, email, role, password, avatar } = req.body;
+    const { fullName, email, role, password } = req.body;
+    const avatarFile = req.file;
 
     if (!fullName || !email || !role || !password) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -23,7 +24,7 @@ export const createUser = async (req: Request, res: Response) => {
       email,
       role,
       password_hash: passwordHash,
-      avatar: avatar ?? null,
+      avatar: avatarFile ? avatarFile.path : null,
     });
 
     await LogService.log(
@@ -97,9 +98,10 @@ export const updateUserInfo = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid userId parameter" });
     }
 
-    const { fullName, email, role, avatar } = req.body;
+    const { fullName, email, role } = req.body;
+    const avatarFile = req.file;
 
-    if (!fullName && !email && !role) {
+    if (!fullName && !email && !role && !avatarFile) {
       return res.status(400).json({ message: "No fields to update" });
     }
 
@@ -134,8 +136,8 @@ export const updateUserInfo = async (req: Request, res: Response) => {
       user.role = role;
     }
 
-    if (avatar) {
-      user.avatar = avatar;
+    if (avatarFile) {
+      user.avatar = avatarFile.path;
     }
 
     await user.save();
@@ -144,7 +146,7 @@ export const updateUserInfo = async (req: Request, res: Response) => {
     if (fullName) updatedFields.fullName = fullName;
     if (email) updatedFields.email = email;
     if (role) updatedFields.role = role;
-    if (avatar) updatedFields.avatar = avatar;
+    if (avatarFile) updatedFields.avatar = avatarFile.path;
 
     await LogService.log(
       LOG_ACTIONS.UPDATE_USER,

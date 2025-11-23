@@ -20,17 +20,36 @@ export function useAuthVerify() {
     const verifyAuth = () => {
       const accessToken = Cookies.get(ACCESS_TOKEN_KEY);
 
-      // If no user in store or no access token, logout and redirect
-      if (!user || !accessToken) {
+      // If no access token, logout and redirect
+      if (!accessToken) {
         logout();
         Cookies.remove(ACCESS_TOKEN_KEY);
         localStorage.removeItem("auth-store");
         router.push("/login");
         setIsAuthenticated(false);
-      } else {
-        setIsAuthenticated(true);
+        setIsVerifying(false);
+        return;
       }
 
+      // If has token but no user, wait a bit for store to hydrate
+      if (!user) {
+        // Give store time to hydrate from localStorage
+        const timeoutId = setTimeout(() => {
+          // Check again after delay
+          const storedUser = localStorage.getItem("auth-store");
+          if (!storedUser) {
+            logout();
+            Cookies.remove(ACCESS_TOKEN_KEY);
+            router.push("/login");
+            setIsAuthenticated(false);
+          }
+          setIsVerifying(false);
+        }, 200);
+        return () => clearTimeout(timeoutId);
+      }
+
+      // User exists and has token
+      setIsAuthenticated(true);
       setIsVerifying(false);
     };
 

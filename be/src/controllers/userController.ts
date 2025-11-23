@@ -15,8 +15,18 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     }
 
     const { fullName, email, currentPassword, newPassword } = req.body;
+    const avatarFile = req.file;
 
-    if (!fullName && !email && !newPassword) {
+    console.log("Update Profile Request:");
+    console.log("Body:", req.body);
+    console.log("File:", req.file);
+    console.log("Cloudinary Config:", {
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY ? "***" : "missing",
+      api_secret: process.env.CLOUDINARY_API_SECRET ? "***" : "missing",
+    });
+
+    if (!fullName && !email && !newPassword && !avatarFile) {
       return res
         .status(400)
         .json({ message: "Không có thông tin để cập nhật" });
@@ -29,6 +39,12 @@ export const updateUserProfile = async (req: Request, res: Response) => {
 
     const updatedFields: string[] = [];
     const logDetails: any = {};
+
+    if (avatarFile) {
+      user.avatar = avatarFile.path;
+      updatedFields.push("avatar");
+      logDetails.new_avatar = avatarFile.path;
+    }
 
     if (newPassword) {
       if (!currentPassword) {
@@ -77,7 +93,10 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     }
 
     if (
-      updatedFields.some((field) => field === "email" || field === "fullName")
+      updatedFields.some(
+        (field) =>
+          field === "email" || field === "fullName" || field === "avatar"
+      )
     ) {
       await LogService.log(
         LOG_ACTIONS.UPDATE_PROFILE,
