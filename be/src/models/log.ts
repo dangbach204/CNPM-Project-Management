@@ -1,7 +1,7 @@
 import { DataTypes as LogDataTypes } from "sequelize";
-import sequelizeConn from "../config/db";
+import db from "../config/db";
 
-const Log = sequelizeConn.define(
+const Log = db.define(
   "Log",
   {
     id: {

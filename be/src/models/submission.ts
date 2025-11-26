@@ -1,9 +1,9 @@
 import Project from "./project";
 
 import { DataTypes as SubmissionDataTypes } from "sequelize";
-import sequelizeInstance from "../config/db";
+import db from "../config/db";
 
-const Submission = sequelizeInstance.define(
+const Submission = db.define(
   "Submission",
   {
     id: {

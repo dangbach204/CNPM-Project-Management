@@ -1,22 +1,13 @@
 import { DataTypes } from "sequelize";
 import db from "../config/db";
 
-const Feedbacks = db.define(
-  "Feedbacks",
+const PasswordResetTokens = db.define(
+  "PasswordResetTokens",
   {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
-    },
-    project_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: "projects",
-        key: "id",
-      },
-      onDelete: "CASCADE",
     },
     user_id: {
       type: DataTypes.INTEGER,
@@ -27,7 +18,7 @@ const Feedbacks = db.define(
       },
       onDelete: "CASCADE",
     },
-    content: {
+    token_hash: {
       type: DataTypes.TEXT,
       allowNull: false,
     },
@@ -35,11 +26,15 @@ const Feedbacks = db.define(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    expire_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
   },
   {
-    tableName: "feedbacks",
+    tableName: "password_reset_tokens",
     timestamps: false,
   }
 );
 
-export default Feedbacks;
+export default PasswordResetTokens;

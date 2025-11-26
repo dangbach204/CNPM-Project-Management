@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import { Project, ProjectStudents, Submission, User } from "../models";
+import LogService, { ENTITY_TYPES, LOG_ACTIONS } from "../lib/logService";
 
 export const getTeacherOverview = async (req: Request, res: Response) => {
   try {
     const teacherId = req.user?.id;
-    console.log("teacherId:", teacherId);
+    // console.log("teacherId:", teacherId);
 
     const [totalProjects, projects, submissions, totalSubmissions] =
       await Promise.all([
@@ -105,6 +106,61 @@ export const getTeacherOverview = async (req: Request, res: Response) => {
     console.error("Lỗi lấy tổng quan giáo viên:", error);
     return res.status(500).json({
       message: "Lỗi server khi lấy tổng quan giáo viên",
+    });
+  }
+};
+
+export const createProject = async (req: Request, res: Response) => {
+  try {
+    const [title, description, expireAt] = req.body;
+    const teacherId = req.user?.id;
+
+    if (!title) {
+      return res.status(400).json({ message: "Tiêu đề đề tài là bắt buộc" });
+    }
+
+    if (!title && !description && !expireAt) {
+      return res
+        .status(400)
+        .json({
+          message: "Vui lòng cung cấp ít nhất một trường để tạo đề tài",
+        });
+    }
+
+    const newProject = await Project.create({
+      title,
+      description,
+      teacher_id: teacherId,
+      created_at: new Date(),
+      expireAt,
+      status: "open",
+    });
+
+    await LogService.log(
+      LOG_ACTIONS.CREATE_PROJECT,
+      req,
+      ENTITY_TYPES.PROJECT,
+      newProject.id,
+      {
+        title: newProject.title,
+        description: newProject.description,
+        expireAt: newProject.expireAt,
+      }
+    );
+
+    return res.status(201).json({
+      message: "Tạo đề tài thành công",
+      project: {
+        id: newProject.id,
+        title: newProject.title,
+        description: newProject.description,
+        expireAt: newProject.expireAt,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi tạo đề tài:", error);
+    return res.status(500).json({
+      message: "Lỗi server khi tạo đề tài",
     });
   }
 };

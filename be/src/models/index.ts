@@ -1,6 +1,7 @@
 import Comments from "./feedback";
 import Grade from "./grade";
 import Log from "./log";
+import PasswordRestTokens from "./passwordResetTokens";
 import Project from "./project";
 import ProjectStudents from "./projectStudents";
 import Submission from "./submission";
@@ -24,6 +25,8 @@ User.hasMany(ProjectStudents, {
   foreignKey: "student_id",
   as: "projectMemberships",
 });
+
+User.hasMany(PasswordRestTokens, {foreignKey: "user_id"});
 
 Project.belongsTo(User, { foreignKey: "teacher_id", as: "teacher" });
 Project.belongsToMany(User, {
@@ -69,4 +72,6 @@ ProjectStudents.belongsTo(Project, {
 });
 ProjectStudents.belongsTo(User, { foreignKey: "student_id", as: "student" });
 
-export { User, Project, Submission, Grade, Comments, Log, ProjectStudents };
+PasswordRestTokens.belongsTo(User, {foreignKey: "user_id"});
+
+export { User, Project, Submission, Grade, Comments, Log, ProjectStudents, PasswordRestTokens };
