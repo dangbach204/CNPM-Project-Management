@@ -1,6 +1,8 @@
 export const AUTH = {
   LOGIN: "/auth/login",
-  // REGISTER: "/auth/register",
+  FORGOT_PASSWORD: "/auth/forgot-password",
+  VERIFY_RESET_TOKEN: "/auth/verify-reset-token",
+  RESET_PASSWORD: "/auth/reset-password",
 };
 
 export const ADMIN = {
@@ -21,4 +23,4 @@ export const USER = {
 
 export const TEACHER = {
   OVERVIEW: "/teacher/overview",
-}
+};

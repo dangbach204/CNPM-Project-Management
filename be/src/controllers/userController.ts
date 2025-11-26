@@ -17,14 +17,14 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     const { fullName, email, currentPassword, newPassword } = req.body;
     const avatarFile = req.file;
 
-    console.log("Update Profile Request:");
-    console.log("Body:", req.body);
-    console.log("File:", req.file);
-    console.log("Cloudinary Config:", {
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY ? "***" : "missing",
-      api_secret: process.env.CLOUDINARY_API_SECRET ? "***" : "missing",
-    });
+    // console.log("Update Profile Request:");
+    // console.log("Body:", req.body);
+    // console.log("File:", req.file);
+    // console.log("Cloudinary Config:", {
+    //   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    //   api_key: process.env.CLOUDINARY_API_KEY ? "***" : "missing",
+    //   api_secret: process.env.CLOUDINARY_API_SECRET ? "***" : "missing",
+    // });
 
     if (!fullName && !email && !newPassword && !avatarFile) {
       return res

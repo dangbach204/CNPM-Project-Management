@@ -1,7 +1,7 @@
 import { DataTypes as ProjectDataTypes } from "sequelize";
-import sequelizeDb from "../config/db";
+import db from "../config/db";
 
-const Project = sequelizeDb.define(
+const Project = db.define(
   "Project",
   {
     id: {
