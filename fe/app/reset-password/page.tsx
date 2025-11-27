@@ -47,7 +47,6 @@ function ResetPasswordForm() {
       return;
     }
 
-    // Verify token ngay khi trang load
     const verifyToken = async () => {
       try {
         await verifyResetToken(emailParam, tokenParam);
