@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, FileText, Inbox } from "lucide-react";
+import { FolderOpen, FileText, Plus, Inbox } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/user";
 import { useTeacherOverview } from "@/hooks/useTeacherOverview";
@@ -37,64 +37,72 @@ export default function TeacherDashboard() {
   }
 
   return (
-    <div className="p-8 space-y-10">
+    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <header className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Bảng điều khiển Giáo viên
-          </h1>
-          <p className="text-muted-foreground">
-            Chào mừng {user?.fullName}, quản lý đề tài và bài nộp của sinh viên
-          </p>
-        </div>
-        <Link href="/teacher/projects/new">
-          <Button size="lg">
-            <BookOpen className="w-4 h-4 mr-2" />
-            Tạo Đề tài Mới
-          </Button>
-        </Link>
+      <header className="space-y-1">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Bảng điều khiển Giáo viên
+        </h1>
+        <p className="text-muted-foreground">
+          Chào mừng {user?.fullName}, quản lý đề tài và bài nộp của sinh viên
+        </p>
       </header>
 
-      {/* Stats Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {[
-          {
-            title: "Đề tài của tôi",
-            value: overview?.totalProjects ?? 0,
-            icon: <BookOpen className="w-6 h-6" />,
-            color: "blue",
-            role: "project",
-          },
-          {
-            title: "Bài nộp",
-            value: overview?.totalSubmissions ?? 0,
-            icon: <FileText className="w-6 h-6" />,
-            color: "green",
-            role: "submission",
-          },
-        ].map((card, idx) => (
-          <Card
-            key={idx}
-            onClick={() => handleCardClick(card.role as any)}
-            className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
-          >
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{card.title}</p>
-                  <p className="text-3xl font-bold mt-2">{card.value}</p>
-                </div>
-                <div
-                  className={`p-3 rounded-lg bg-${card.color}-100 text-${card.color}-600`}
-                >
-                  {card.icon}
-                </div>
+      {/* Stats Cards */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Đề tài Card */}
+        <Card 
+          className="bg-blue-600 text-white border-0 hover:shadow-lg transition-all cursor-pointer"
+          onClick={() => handleCardClick("project")}
+        >
+          <CardContent className="pt-6 pb-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-6xl font-bold mb-2">
+                  {overview?.totalProjects ?? 0}
+                </p>
+                <p className="text-blue-100 text-base">Đề tài của tôi</p>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+              <div className="p-3 bg-white/20 rounded-lg">
+                <FolderOpen className="w-7 h-7" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Bài nộp Card */}
+        <Card 
+          className="bg-green-600 text-white border-0 hover:shadow-lg transition-all cursor-pointer"
+          onClick={() => handleCardClick("submission")}
+        >
+          <CardContent className="pt-6 pb-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-6xl font-bold mb-2">
+                  {overview?.totalSubmissions ?? 0}
+                </p>
+                <p className="text-green-100 text-base">Bài nộp chờ duyệt</p>
+              </div>
+              <div className="p-3 bg-white/20 rounded-lg">
+                <FileText className="w-7 h-7" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </section>
+
+      {/* Create New Project Button */}
+      <div>
+        <Link href="/teacher/projects/new" className="block">
+          <Button 
+            size="lg" 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-base font-medium"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Tạo đề tài mới
+          </Button>
+        </Link>
+      </div>
 
       {/* Data Table */}
       {selectedRole && (

@@ -1,13 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { Search, Plus, BookOpen, UsersIcon } from "lucide-react";
+import { Search, Plus, BookOpen, UsersIcon, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Components
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import StatsCard from "@/components/admin/StatsCard";
 import DeleteUserDialog from "@/components/admin/DeleteUserDialog";
 import EditUserDialog from "@/components/admin/EditUserDialog";
@@ -22,7 +29,7 @@ import { useUserFilters } from "@/hooks/useUserFilters";
 
 // Utils
 import { getRoleLabel, UserRole } from "@/lib/user-utils";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export default function AdminUsersPage() {
   const { user } = useAuthStore();
@@ -43,6 +50,14 @@ export default function AdminUsersPage() {
     setFilterRole,
     filteredUsers,
   } = useUserFilters(users);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
   // Stats
   const stats = useMemo(
@@ -89,7 +104,7 @@ export default function AdminUsersPage() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
           <main className="flex-1 overflow-y-auto">
-            <div className="p-8 space-y-8">
+            <div className="p-8 space-y-6">
               {/* Dialogs */}
               <DeleteUserDialog
                 open={userOperations.deleteDialogOpen}
@@ -107,63 +122,142 @@ export default function AdminUsersPage() {
               />
 
               {/* Header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold">Quản lý Người dùng</h1>
-                  <p className="text-muted-foreground mt-2">
-                    Quản lý tài khoản và quyền hạn người dùng
-                  </p>
-                </div>
-                <Link href="/admin/users/new">
-                  <Button className="gap-2">
-                    <Plus className="w-4 h-4" />
-                    Thêm Người dùng
-                  </Button>
-                </Link>
+              <div>
+                <h1 className="text-2xl font-bold">Danh sách Người dùng</h1>
               </div>
 
-              {/* Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {stats.map((stat) => (
-                  <StatsCard key={stat.label} {...stat} />
-                ))}
-              </div>
+              {/* Search, Filters and Add Button */}
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex flex-col md:flex-row gap-3 items-center">
+                  {/* Search */}
+                  <div className="w-full md:w-96 relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Tìm kiếm theo tên, email..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 h-10"
+                    />
+                  </div>
 
-              {/* Search and Filter */}
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Tìm kiếm theo tên hoặc email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+                  {/* Role Filter */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium whitespace-nowrap">Vai trò:</label>
+                    <Select value={filterRole} onValueChange={setFilterRole}>
+                      <SelectTrigger className="h-10 w-40">
+                        <SelectValue placeholder="Vai trò" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tất cả</SelectItem>
+                        <SelectItem value="admin">Quản trị viên</SelectItem>
+                        <SelectItem value="teacher">Giảng viên</SelectItem>
+                        <SelectItem value="student">Sinh viên</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="flex gap-2">
-                  {["all", "admin", "teacher", "student"].map((role) => (
-                    <Button
-                      key={role}
-                      variant={filterRole === role ? "default" : "outline"}
-                      onClick={() => setFilterRole(role)}
-                    >
-                      {role === "all"
-                        ? "Tất cả"
-                        : getRoleLabel(role as UserRole)}
+                  {/* Status Filter */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium whitespace-nowrap">Trạng thái:</label>
+                    <Select defaultValue="all">
+                      <SelectTrigger className="h-10 w-40">
+                        <SelectValue placeholder="Trạng thái" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tất cả</SelectItem>
+                        <SelectItem value="active">Hoạt động</SelectItem>
+                        <SelectItem value="inactive">Khóa</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Add User Button */}
+                  <Link href="/admin/users/new" className="ml-auto">
+                    <Button className="gap-2 bg-blue-600 hover:bg-blue-700 h-10">
+                      <Plus className="w-4 h-4" />
+                      Thêm người dùng mới
                     </Button>
-                  ))}
+                  </Link>
                 </div>
               </div>
 
               {/* Users Table */}
-              <UserTable
-                users={filteredUsers}
-                currentUserId={user?.id}
-                onEdit={userOperations.handleUpdateRequest}
-                onDelete={userOperations.handleDeleteRequest}
-                deleteLoading={userOperations.deleteLoading}
-              />
+              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <UserTable
+                  users={paginatedUsers}
+                  currentUserId={user?.id}
+                  onEdit={userOperations.handleUpdateRequest}
+                  onDelete={userOperations.handleDeleteRequest}
+                  deleteLoading={userOperations.deleteLoading}
+                />
+
+                {/* Pagination */}
+                {filteredUsers.length > 0 && (
+                  <div className="border-t border-gray-200 px-4 py-3 flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      Hiển thị {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} trong số {filteredUsers.length} người dùng
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                      
+                      {totalPages > 5 && currentPage < totalPages - 2 && (
+                        <>
+                          <span className="text-muted-foreground">...</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(totalPages)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {totalPages}
+                          </Button>
+                        </>
+                      )}
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </main>
         </div>
