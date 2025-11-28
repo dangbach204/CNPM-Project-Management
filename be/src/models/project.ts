@@ -38,6 +38,11 @@ const Project = db.define(
       type: ProjectDataTypes.DATE,
       allowNull: true,
     },
+    max_students: {
+      type: ProjectDataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 4,
+    }
   },
   {
     tableName: "projects",
