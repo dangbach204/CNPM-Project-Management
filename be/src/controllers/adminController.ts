@@ -22,11 +22,11 @@ export const getAdminOverview = async (req: Request, res: Response) => {
     ] = await Promise.all([
       User.findAll({
         where: { role: "teacher" },
-        attributes: ["id", "email", "full_name", "created_at"],
+        attributes: ["id", "email", "full_name", "created_at", "avatar"],
       }),
       User.findAll({
         where: { role: "student" },
-        attributes: ["id", "email", "full_name", "created_at"],
+        attributes: ["id", "email", "full_name", "created_at", "avatar"],
       }),
       Project.findAll({
         order: [["created_at", "DESC"]],

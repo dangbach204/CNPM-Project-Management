@@ -52,7 +52,7 @@ export default function TeacherDashboard() {
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Đề tài Card */}
         <Card 
-          className="bg-blue-600 text-white border-0 hover:shadow-lg transition-all cursor-pointer"
+          className="bg-blue-600 text-white border-0 hover:shadow-xl transition-all duration-200 hover:scale-[1.03] cursor-pointer"
           onClick={() => handleCardClick("project")}
         >
           <CardContent className="pt-6 pb-6">
@@ -72,7 +72,7 @@ export default function TeacherDashboard() {
 
         {/* Bài nộp Card */}
         <Card 
-          className="bg-green-600 text-white border-0 hover:shadow-lg transition-all cursor-pointer"
+          className="bg-green-600 text-white border-0 hover:shadow-xl transition-all duration-200 hover:scale-[1.03] cursor-pointer"
           onClick={() => handleCardClick("submission")}
         >
           <CardContent className="pt-6 pb-6">

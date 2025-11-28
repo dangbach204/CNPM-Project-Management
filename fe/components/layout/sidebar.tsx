@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Cookies from "js-cookie";
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/constants";
 import {
@@ -96,10 +97,10 @@ export function Sidebar() {
               <Button
                 variant={isActive ? "default" : "ghost"}
                 className={cn(
-                  "w-full justify-start gap-3",
+                  "w-full justify-start gap-3 transition-all duration-200",
                   isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent"
+                    ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg scale-105"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:shadow-md hover:scale-105"
                 )}
               >
                 <Icon className="w-4 h-4" />
@@ -113,7 +114,12 @@ export function Sidebar() {
       {/* User Info & Logout */}
       <div className="p-4 border-t border-sidebar-border space-y-3">
         <div className="flex items-center gap-3">
-          {/* <img src={user.avatar || "/placeholder.svg"} alt={user.name} className="w-10 h-10 rounded-full" /> */}
+          <Avatar className="w-10 h-10">
+            <AvatarImage src={user.avatar || undefined} alt={user.fullName} />
+            <AvatarFallback className="bg-primary text-primary-foreground">
+              {user.fullName.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-sidebar-foreground truncate">
               {user.fullName}

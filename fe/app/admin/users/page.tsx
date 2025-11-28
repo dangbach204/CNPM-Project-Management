@@ -103,7 +103,15 @@ export default function AdminUsersPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto">
+          <main 
+            className="flex-1 overflow-y-auto"
+            style={{
+              backgroundImage: 'url(/bkhoa1.jpg)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
+          >
             <div className="p-8 space-y-6">
               {/* Dialogs */}
               <DeleteUserDialog
@@ -127,7 +135,7 @@ export default function AdminUsersPage() {
               </div>
 
               {/* Search, Filters and Add Button */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg p-4 shadow-lg">
                 <div className="flex flex-col md:flex-row gap-3 items-center">
                   {/* Search */}
                   <div className="w-full md:w-96 relative">
@@ -182,7 +190,7 @@ export default function AdminUsersPage() {
               </div>
 
               {/* Users Table */}
-              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg overflow-hidden shadow-lg">
                 <UserTable
                   users={paginatedUsers}
                   currentUserId={user?.id}

@@ -89,7 +89,15 @@ export default function AdminReportsPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto">
+          <main 
+            className="flex-1 overflow-y-auto"
+            style={{
+              backgroundImage: 'url(/bkhoa1.jpg)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
+          >
             <div className="p-8 space-y-8">
               <div>
                 <h1 className="text-3xl font-bold">Nhật ký Hệ thống</h1>

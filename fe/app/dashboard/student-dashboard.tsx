@@ -122,7 +122,7 @@ export default function StudentDashboard() {
           return (
             <Card
               key={stat.title}
-              className="hover:shadow-lg transition-shadow"
+              className="hover:shadow-xl transition-all duration-200 hover:scale-[1.03]"
             >
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
@@ -167,7 +167,7 @@ export default function StudentDashboard() {
               enrolledProjects.map((project) => (
                 <div
                   key={project.id}
-                  className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -221,7 +221,7 @@ export default function StudentDashboard() {
               mySubmissions.map((submission) => (
                 <div
                   key={submission.id}
-                  className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
