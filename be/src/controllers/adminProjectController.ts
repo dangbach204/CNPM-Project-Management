@@ -84,17 +84,6 @@ export const deleteProject = async (req: Request, res: Response) => {
   const transaction = await sequelize.transaction();
   try {
     const { projectId } = req.params;
-    // const { user } = (req as any);
-
-    // if (!user) {
-    //   await transaction.rollback();
-    //   return res.status(404).json({ message: "Người dùng không tồn tại" });
-    // }
-
-    // if (user.role !== "admin") {
-    //   await transaction.rollback();
-    //   return res.status(403).json({ message: "Bạn không có quyền xóa project" });
-    // }
 
     const project = await Project.findByPk(projectId);
     if (!project) {
@@ -194,6 +183,27 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
     }
 
     if (addStudents && Array.isArray(addStudents) && addStudents.length > 0) {
+      const currentStudentCount = await ProjectStudents.count({
+        where: { project_id: projectId },
+      });
+
+      const projectData = project.toJSON() as any;
+      const maxStudents = projectData.max_students || 4;
+
+      const removeCount =
+        removeStudents && Array.isArray(removeStudents)
+          ? removeStudents.length
+          : 0;
+      const finalStudentCount =
+        currentStudentCount - removeCount + addStudents.length;
+
+      if (finalStudentCount > maxStudents) {
+        await transaction.rollback();
+        return res.status(400).json({
+          message: `Không thể thêm sinh viên. Dự án đã đạt số lượng tối đa ${maxStudents} sinh viên. Hiện tại có ${currentStudentCount} sinh viên, không thể thêm ${addStudents.length} sinh viên nữa.`,
+        });
+      }
+
       for (const studentId of addStudents) {
         const student = await User.findByPk(studentId);
         if (!student || student.role !== "student") {
