@@ -5,40 +5,43 @@ import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { mockProjects, mockUsers } from "@/lib/mock-data";
 import { Search, Users, Calendar } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { useAuthStore } from "@/stores/user";
+import { useState, useMemo } from "react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useStudentProjects } from "@/hooks/useStudentProjects";
 
 export default function StudentProjectsPage() {
-  const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const enrolledProjectIds = mockProjects
-    .filter((p) => p.enrolledStudents.includes(user.id.toString()))
-    .map((p) => p.id);
+  const {
+    isLoading,
+    projects,
+    myProjectIds,
+    joinLoading,
+    handleJoinProject,
+    handleLeaveProject,
+  } = useStudentProjects();
 
-  const filteredProjects = mockProjects.filter((p) => {
-    const matchesSearch =
-      p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.description.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredProjects = useMemo(() => {
+    return projects.filter((p) => {
+      const matchesSearch =
+        p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.teacher.fullName.toLowerCase().includes(searchTerm.toLowerCase());
 
-    if (filterStatus === "enrolled") {
-      return matchesSearch && enrolledProjectIds.includes(p.id);
-    } else if (filterStatus === "available") {
-      return (
-        matchesSearch &&
-        !enrolledProjectIds.includes(p.id) &&
-        p.status === "open" &&
-        p.enrolledStudents.length < p.maxStudents
-      );
-    }
+      if (filterStatus === "enrolled") {
+        return matchesSearch && myProjectIds.includes(p.id);
+      } else if (filterStatus === "available") {
+        return (
+          matchesSearch && !myProjectIds.includes(p.id) && p.status === "open"
+        );
+      }
 
-    return matchesSearch;
-  });
+      return matchesSearch;
+    });
+  }, [projects, myProjectIds, searchTerm, filterStatus]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -61,10 +64,32 @@ export default function StudentProjectsPage() {
         return "Đang thực hiện";
       case "completed":
         return "Hoàn thành";
+      case "closed":
+        return "Đã đóng";
       default:
         return status;
     }
   };
+
+  if (isLoading) {
+    return (
+      <ProtectedRoute allowedRoles={["student"]}>
+        <div className="flex h-screen bg-background">
+          <Sidebar />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <Header />
+            <main className="flex-1 overflow-y-auto">
+              <div className="flex items-center justify-center h-[60vh]">
+                <p className="text-muted-foreground animate-pulse text-lg">
+                  Đang tải dữ liệu...
+                </p>
+              </div>
+            </main>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute allowedRoles={["student"]}>
@@ -106,7 +131,7 @@ export default function StudentProjectsPage() {
                     }
                     onClick={() => setFilterStatus("enrolled")}
                   >
-                    Đã tham gia ({enrolledProjectIds.length})
+                    Đã tham gia ({myProjectIds.length})
                   </Button>
                   <Button
                     variant={
@@ -131,12 +156,8 @@ export default function StudentProjectsPage() {
               ) : (
                 <div className="grid gap-6">
                   {filteredProjects.map((project) => {
-                    const isEnrolled = enrolledProjectIds.includes(project.id);
-                    const isFull =
-                      project.enrolledStudents.length >= project.maxStudents;
-                    const teacher = mockUsers.find(
-                      (u) => u.id === project.teacherId
-                    );
+                    const isEnrolled = myProjectIds.includes(project.id);
+                    const isOpen = project.status === "open";
 
                     return (
                       <Card
@@ -173,7 +194,9 @@ export default function StudentProjectsPage() {
                                   <p className="text-sm text-muted-foreground">
                                     Giáo viên
                                   </p>
-                                  <p className="font-medium">{teacher?.name}</p>
+                                  <p className="font-medium">
+                                    {project.teacher.fullName}
+                                  </p>
                                 </div>
                                 <div>
                                   <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -181,30 +204,31 @@ export default function StudentProjectsPage() {
                                     Sinh viên
                                   </p>
                                   <p className="font-medium">
-                                    {project.enrolledStudents.length}/
-                                    {project.maxStudents}
+                                    {project.studentCount}
                                   </p>
                                 </div>
                                 <div>
                                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                                     <Calendar className="w-3 h-3" />
-                                    Bắt đầu
+                                    Tạo lúc
                                   </p>
                                   <p className="font-medium">
                                     {new Date(
-                                      project.startDate
+                                      project.createdAt
                                     ).toLocaleDateString("vi-VN")}
                                   </p>
                                 </div>
                                 <div>
                                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                                     <Calendar className="w-3 h-3" />
-                                    Kết thúc
+                                    Hết hạn
                                   </p>
                                   <p className="font-medium">
-                                    {new Date(
-                                      project.endDate
-                                    ).toLocaleDateString("vi-VN")}
+                                    {project.expiredAt
+                                      ? new Date(
+                                          project.expiredAt
+                                        ).toLocaleDateString("vi-VN")
+                                      : "Không giới hạn"}
                                   </p>
                                 </div>
                               </div>
@@ -212,11 +236,27 @@ export default function StudentProjectsPage() {
 
                             <div className="flex flex-col gap-2">
                               {isEnrolled ? (
-                                <Link href={`/student/projects/${project.id}`}>
-                                  <Button variant="outline">
-                                    Xem chi tiết
+                                <>
+                                  <Link
+                                    href={`/student/projects/${project.id}`}
+                                  >
+                                    <Button
+                                      variant="outline"
+                                      className="w-full"
+                                    >
+                                      Xem chi tiết
+                                    </Button>
+                                  </Link>
+                                  <Button
+                                    variant="destructive"
+                                    onClick={() =>
+                                      handleLeaveProject(project.id)
+                                    }
+                                    disabled={joinLoading}
+                                  >
+                                    {joinLoading ? "Đang xử lý..." : "Rời khỏi"}
                                   </Button>
-                                </Link>
+                                </>
                               ) : (
                                 <>
                                   <Link
@@ -230,13 +270,14 @@ export default function StudentProjectsPage() {
                                     </Button>
                                   </Link>
                                   <Button
-                                    disabled={
-                                      isFull || project.status !== "open"
+                                    disabled={!isOpen || joinLoading}
+                                    onClick={() =>
+                                      handleJoinProject(project.id)
                                     }
                                   >
-                                    {isFull
-                                      ? "Đã đầy"
-                                      : project.status !== "open"
+                                    {joinLoading
+                                      ? "Đang xử lý..."
+                                      : !isOpen
                                       ? "Đã đóng"
                                       : "Tham gia"}
                                   </Button>

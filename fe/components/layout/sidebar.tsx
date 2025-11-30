@@ -51,7 +51,6 @@ export function Sidebar() {
         ...baseItems,
         { href: "/teacher/projects", label: "Đề tài", icon: BookOpen },
         { href: "/teacher/submissions", label: "Bài nộp", icon: FileText },
-        { href: "/teacher/grading", label: "Chấm điểm", icon: BarChart3 },
         { href: "/settings", label: "Cài đặt", icon: Settings },
       ];
     }

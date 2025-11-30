@@ -69,3 +69,22 @@ export const getSubmissions = async () => {
     throw error;
   }
 };
+
+export const teacherGradeSubmission = async (
+  submissionId: number,
+  gradeData: {
+    score: number;
+    feedback?: string;
+  }
+) => {
+  try {
+    const response = await api.patch(
+      `${TEACHER.GRADE_SUBMISSION}/${submissionId}`,
+      gradeData
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Grade submission failed", error);
+    throw error;
+  }
+};
