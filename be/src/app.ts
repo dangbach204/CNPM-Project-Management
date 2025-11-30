@@ -10,7 +10,10 @@ import studentRoutes from "./routes/studentRoutes";
 const app = express();
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: [
+      "http://localhost:3000",
+      "https://cnpm-project-management.vercel.app/",
+    ],
     credentials: true,
   })
 );
