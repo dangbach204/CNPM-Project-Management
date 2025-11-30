@@ -27,10 +27,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Search, Loader2, FileText, User, Calendar, Award } from "lucide-react";
 import Link from "next/link";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useGetSubmissions } from "@/hooks/useGetSubmissions";
+import { teacherGradeSubmission } from "@/service/teacher-service";
+import { useToast } from "@/hooks/use-toast";
 
 type Submission = {
   id: number;
@@ -39,17 +43,27 @@ type Submission = {
   studentEmail: string;
   submittedAt: string;
   reportLink: string;
-  score: string | null;
+  score: number | null;
   feedback: string | null;
 };
 
 export default function TeacherSubmissionsPage() {
-  const { submissions: submissionsResponse, isLoading } = useGetSubmissions();
+  const {
+    submissions: submissionsResponse,
+    isLoading,
+    refetch,
+  } = useGetSubmissions();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedSubmission, setSelectedSubmission] =
     useState<Submission | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isGrading, setIsGrading] = useState(false);
+  const [gradeData, setGradeData] = useState({
+    score: 0,
+    feedback: "",
+  });
 
   const submissions: Submission[] = Array.isArray(submissionsResponse)
     ? submissionsResponse
@@ -82,7 +96,50 @@ export default function TeacherSubmissionsPage() {
 
   const handleViewDetails = (submission: Submission) => {
     setSelectedSubmission(submission);
+    setGradeData({
+      score: submission.score ?? 0,
+      feedback: submission.feedback || "",
+    });
     setIsDialogOpen(true);
+  };
+
+  const handleSubmitGrade = async () => {
+    if (!selectedSubmission) return;
+
+    const scoreValue = gradeData.score;
+    if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 10) {
+      toast({
+        title: "Lỗi",
+        description: "Điểm phải là số từ 0 đến 10",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsGrading(true);
+      await teacherGradeSubmission(selectedSubmission.id, {
+        score: scoreValue,
+        feedback: gradeData.feedback,
+      });
+
+      toast({
+        title: "Thành công",
+        description: "Đã chấm điểm thành công",
+      });
+
+      // Refresh data
+      refetch();
+      setIsDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể chấm điểm. Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGrading(false);
+    }
   };
 
   const getStatusBadge = (submission: Submission) => {
@@ -301,46 +358,69 @@ export default function TeacherSubmissionsPage() {
               </div>
 
               {/* Grade Info */}
-              {selectedSubmission.score && (
-                <div className="space-y-2 border-t pt-4">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <Award className="h-4 w-4" />
-                    Đánh giá
-                  </h3>
-                  <div className="bg-green-50 p-4 rounded-lg space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">Điểm số:</span>
-                      <span className="text-2xl font-bold text-green-600">
-                        {selectedSubmission.score}
-                      </span>
-                    </div>
-                    {selectedSubmission.feedback && (
-                      <div>
-                        <span className="font-semibold">Nhận xét:</span>
-                        <p className="mt-1 text-muted-foreground">
-                          {selectedSubmission.feedback}
-                        </p>
-                      </div>
-                    )}
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Award className="h-4 w-4" />
+                  Chấm điểm
+                </h3>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="grade">Điểm số (0-10)</Label>
+                    <Input
+                      id="grade"
+                      type="number"
+                      min="0"
+                      max="10"
+                      step="0.1"
+                      placeholder="Nhập điểm..."
+                      value={gradeData.score}
+                      onChange={(e) =>
+                        setGradeData({
+                          ...gradeData,
+                          score: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="feedback">Nhận xét</Label>
+                    <Textarea
+                      id="feedback"
+                      placeholder="Nhập nhận xét về bài làm của sinh viên..."
+                      rows={4}
+                      value={gradeData.feedback}
+                      onChange={(e) =>
+                        setGradeData({ ...gradeData, feedback: e.target.value })
+                      }
+                    />
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
                 <Button
                   className="flex-1"
-                  onClick={() => {
-                    // Navigate to grading page or open grading form
-                    window.location.href = `/teacher/submissions/${selectedSubmission.id}/grade`;
-                  }}
+                  onClick={handleSubmitGrade}
+                  disabled={isGrading || !gradeData.score}
                 >
-                  {selectedSubmission.score ? "Chỉnh sửa điểm" : "Chấm điểm"}
+                  {isGrading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang lưu...
+                    </>
+                  ) : selectedSubmission?.score ? (
+                    "Cập nhật điểm"
+                  ) : (
+                    "Lưu điểm"
+                  )}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() =>
-                    window.open(selectedSubmission.reportLink, "_blank")
+                    window.open(selectedSubmission?.reportLink, "_blank")
                   }
                 >
                   Xem báo cáo

@@ -30,4 +30,12 @@ export const TEACHER = {
   DELETE_PROJECT: "/teacher/delete-project",
 
   SUBMISSIONS: "/teacher/submissions",
+  GRADE_SUBMISSION: "/teacher/grade-submission",
+};
+
+export const STUDENT = {
+  OVERVIEW: "/student/overview",
+  GET_ALL_PROJECTS: "/student/all-projects",
+  JOIN_PROJECT: "/student/join-project",
+  LEAVE_PROJECT: "/student/leave-project",
 };
