@@ -3,18 +3,16 @@
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
-import { mockSubmissions, mockProjects, mockGrades } from "@/lib/mock-data";
 import { FileText, Calendar, CheckCircle, Clock, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/user";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useStudentSubmission } from "@/hooks/useStudentSubmission";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StudentSubmissionsPage() {
   const { user } = useAuthStore();
-
-  const mySubmissions = user
-    ? mockSubmissions.filter((s) => s.studentId === user.id.toString())
-    : [];
+  const { submissions, isLoading } = useStudentSubmission();
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -33,10 +31,14 @@ export default function StudentSubmissionsPage() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
+      case "pending":
+        return "Đang chờ";
       case "submitted":
         return "Đã nộp";
       case "reviewed":
         return "Đã xem";
+      case "graded":
+        return "Đã chấm điểm";
       case "approved":
         return "Chấp nhận";
       case "rejected":
@@ -48,10 +50,14 @@ export default function StudentSubmissionsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case "pending":
+        return "bg-gray-100 text-gray-700";
       case "submitted":
         return "bg-yellow-100 text-yellow-700";
       case "reviewed":
         return "bg-blue-100 text-blue-700";
+      case "graded":
+        return "bg-green-100 text-green-700";
       case "approved":
         return "bg-green-100 text-green-700";
       case "rejected":
@@ -76,7 +82,17 @@ export default function StudentSubmissionsPage() {
                 </p>
               </div>
 
-              {mySubmissions.length === 0 ? (
+              {isLoading ? (
+                <div className="grid gap-6">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i}>
+                      <CardContent className="pt-6">
+                        <Skeleton className="h-24 w-full" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : submissions.length === 0 ? (
                 <Card>
                   <CardContent className="pt-12 pb-12 text-center">
                     <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
@@ -87,14 +103,7 @@ export default function StudentSubmissionsPage() {
                 </Card>
               ) : (
                 <div className="grid gap-6">
-                  {mySubmissions.map((submission) => {
-                    const project = mockProjects.find(
-                      (p) => p.id === submission.projectId
-                    );
-                    const grade = mockGrades.find(
-                      (g) => g.submissionId === submission.id
-                    );
-
+                  {submissions.map((submission) => {
                     return (
                       <Card
                         key={submission.id}
@@ -105,29 +114,34 @@ export default function StudentSubmissionsPage() {
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
                                 <h3 className="text-lg font-semibold">
-                                  {submission.title}
+                                  {submission.project.title}
                                 </h3>
                                 <span
                                   className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(
-                                    submission.status
+                                    submission.project.status
                                   )}`}
                                 >
-                                  {getStatusLabel(submission.status)}
+                                  {getStatusLabel(submission.project.status)}
                                 </span>
                               </div>
 
                               <p className="text-muted-foreground mb-3">
-                                {submission.description}
+                                {submission.project.description}
                               </p>
 
                               <div className="grid grid-cols-3 gap-4 mb-4">
                                 <div>
                                   <p className="text-sm text-muted-foreground">
-                                    Đề tài
+                                    Link báo cáo
                                   </p>
-                                  <p className="font-medium">
-                                    {project?.title}
-                                  </p>
+                                  <a
+                                    href={submission.reportLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="font-medium text-primary hover:underline"
+                                  >
+                                    Xem báo cáo
+                                  </a>
                                 </div>
                                 <div>
                                   <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -140,32 +154,32 @@ export default function StudentSubmissionsPage() {
                                     ).toLocaleDateString("vi-VN")}
                                   </p>
                                 </div>
-                                {grade && (
+                                {submission.score !== null && (
                                   <div>
                                     <p className="text-sm text-muted-foreground">
                                       Điểm
                                     </p>
                                     <p className="font-medium text-lg text-primary">
-                                      {grade.score}/{grade.maxScore}
+                                      {submission.score}/100
                                     </p>
                                   </div>
                                 )}
                               </div>
 
-                              {grade && (
+                              {submission.feedback && (
                                 <div className="bg-muted p-4 rounded-lg">
                                   <p className="text-sm font-medium mb-2">
                                     Nhận xét từ giáo viên:
                                   </p>
                                   <p className="text-sm text-muted-foreground">
-                                    {grade.feedback}
+                                    {submission.feedback}
                                   </p>
                                 </div>
                               )}
                             </div>
 
                             <div className="flex flex-col items-end gap-2">
-                              {getStatusIcon(submission.status)}
+                              {getStatusIcon(submission.project.status)}
                               <Link
                                 href={`/student/submissions/${submission.id}`}
                               >

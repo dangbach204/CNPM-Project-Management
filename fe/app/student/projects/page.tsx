@@ -15,60 +15,33 @@ export default function StudentProjectsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const {
-    isLoading,
-    projects,
-    myProjectIds,
-    joinLoading,
-    handleJoinProject,
-    handleLeaveProject,
-  } = useStudentProjects();
+  const { isLoading, projects, myProjectIds, joinLoading, handleJoinProject } =
+    useStudentProjects();
 
   const filteredProjects = useMemo(() => {
+    if (!projects || !Array.isArray(projects)) {
+      return [];
+    }
+
     return projects.filter((p) => {
+      const teacherName = p.teacherName || "";
       const matchesSearch =
         p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.teacher.fullName.toLowerCase().includes(searchTerm.toLowerCase());
+        teacherName.toLowerCase().includes(searchTerm.toLowerCase());
 
       if (filterStatus === "enrolled") {
         return matchesSearch && myProjectIds.includes(p.id);
       } else if (filterStatus === "available") {
-        return (
-          matchesSearch && !myProjectIds.includes(p.id) && p.status === "open"
-        );
+        return matchesSearch && !myProjectIds.includes(p.id);
       }
 
       return matchesSearch;
     });
   }, [projects, myProjectIds, searchTerm, filterStatus]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "open":
-        return "bg-green-100 text-green-700";
-      case "in-progress":
-        return "bg-blue-100 text-blue-700";
-      case "completed":
-        return "bg-gray-100 text-gray-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "open":
-        return "Mở";
-      case "in-progress":
-        return "Đang thực hiện";
-      case "completed":
-        return "Hoàn thành";
-      case "closed":
-        return "Đã đóng";
-      default:
-        return status;
-    }
+  const isExpired = (expiredAt: string) => {
+    return new Date(expiredAt) < new Date();
   };
 
   if (isLoading) {
@@ -131,7 +104,7 @@ export default function StudentProjectsPage() {
                     }
                     onClick={() => setFilterStatus("enrolled")}
                   >
-                    Đã tham gia ({myProjectIds.length})
+                    Đã tham gia ({myProjectIds?.length || 0})
                   </Button>
                   <Button
                     variant={
@@ -156,8 +129,9 @@ export default function StudentProjectsPage() {
               ) : (
                 <div className="grid gap-6">
                   {filteredProjects.map((project) => {
-                    const isEnrolled = myProjectIds.includes(project.id);
-                    const isOpen = project.status === "open";
+                    const isEnrolled =
+                      myProjectIds?.includes(project.id) || false;
+                    const expired = isExpired(project.expiredAt);
 
                     return (
                       <Card
@@ -171,13 +145,11 @@ export default function StudentProjectsPage() {
                                 <h3 className="text-xl font-semibold">
                                   {project.title}
                                 </h3>
-                                <span
-                                  className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(
-                                    project.status
-                                  )}`}
-                                >
-                                  {getStatusLabel(project.status)}
-                                </span>
+                                {expired && (
+                                  <span className="text-xs px-3 py-1 rounded-full font-medium bg-red-100 text-red-700">
+                                    Đã hết hạn
+                                  </span>
+                                )}
                                 {isEnrolled && (
                                   <span className="text-xs px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
                                     Đã tham gia
@@ -195,7 +167,7 @@ export default function StudentProjectsPage() {
                                     Giáo viên
                                   </p>
                                   <p className="font-medium">
-                                    {project.teacher.fullName}
+                                    {project.teacherName || "Chưa có"}
                                   </p>
                                 </div>
                                 <div>
@@ -247,15 +219,6 @@ export default function StudentProjectsPage() {
                                       Xem chi tiết
                                     </Button>
                                   </Link>
-                                  <Button
-                                    variant="destructive"
-                                    onClick={() =>
-                                      handleLeaveProject(project.id)
-                                    }
-                                    disabled={joinLoading}
-                                  >
-                                    {joinLoading ? "Đang xử lý..." : "Rời khỏi"}
-                                  </Button>
                                 </>
                               ) : (
                                 <>
@@ -270,15 +233,15 @@ export default function StudentProjectsPage() {
                                     </Button>
                                   </Link>
                                   <Button
-                                    disabled={!isOpen || joinLoading}
+                                    disabled={expired || joinLoading}
                                     onClick={() =>
                                       handleJoinProject(project.id)
                                     }
                                   >
                                     {joinLoading
                                       ? "Đang xử lý..."
-                                      : !isOpen
-                                      ? "Đã đóng"
+                                      : expired
+                                      ? "Đã hết hạn"
                                       : "Tham gia"}
                                   </Button>
                                 </>
