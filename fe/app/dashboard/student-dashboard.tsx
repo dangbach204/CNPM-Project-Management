@@ -19,7 +19,7 @@ export default function StudentDashboard() {
   const { isLoading, overview } = useStudentOverview();
 
   const myProject = overview?.myProject || [];
-  const mySubmissions: any[] = [];
+  const mySubmissions = overview?.mySubmissions || [];
 
   const stats = [
     {
@@ -46,10 +46,19 @@ export default function StudentDashboard() {
     );
   };
 
-  const getSubmissionStatusBadge = (status: string) => {
+  const getSubmissionStatusBadge = (
+    grade: { score: number; feedback: string } | null
+  ) => {
+    if (!grade) {
+      return (
+        <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700">
+          Chờ chấm điểm
+        </span>
+      );
+    }
     return (
       <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
-        Đã nộp
+        Đã chấm: {grade.score}/10
       </span>
     );
   };
@@ -220,8 +229,8 @@ export default function StudentDashboard() {
             ) : (
               mySubmissions.slice(0, 3).map((submission) => (
                 <Link
-                  key={submission.id}
-                  href={`/student/submissions/${submission.id}`}
+                  key={submission.submissionId}
+                  href={`/student/projects/${submission.projectId}`}
                   className="block"
                 >
                   <div className="p-4 border rounded-lg hover:bg-green-50/50 hover:border-green-300 transition-all cursor-pointer group">
@@ -229,10 +238,9 @@ export default function StudentDashboard() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 flex-1">
                           <p className="font-medium group-hover:text-green-600 transition-colors">
-                            {submission.projectTitle}
+                            {submission.title}
                           </p>
-                          {submission.status &&
-                            getSubmissionStatusBadge(submission.status)}
+                          {getSubmissionStatusBadge(submission.grade)}
                         </div>
                         <Button
                           variant="ghost"
@@ -242,6 +250,9 @@ export default function StudentDashboard() {
                           Chi tiết →
                         </Button>
                       </div>
+                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                        {submission.description}
+                      </p>
                       <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
@@ -260,9 +271,23 @@ export default function StudentDashboard() {
                       </div>
                       {submission.reportLink && (
                         <div className="mt-2">
-                          <span className="text-xs text-blue-600 hover:underline">
-                            📎 Có file đính kèm
-                          </span>
+                          <a
+                            href={submission.reportLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            📎 Xem báo cáo
+                          </a>
+                        </div>
+                      )}
+                      {submission.grade && submission.grade.feedback && (
+                        <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
+                          <p className="font-medium text-gray-700">Nhận xét:</p>
+                          <p className="text-gray-600 mt-1">
+                            {submission.grade.feedback}
+                          </p>
                         </div>
                       )}
                     </div>

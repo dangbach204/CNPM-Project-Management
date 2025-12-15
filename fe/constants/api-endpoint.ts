@@ -35,7 +35,9 @@ export const TEACHER = {
 
 export const STUDENT = {
   OVERVIEW: "/student/overview",
-  GET_ALL_PROJECTS: "/student/all-projects",
+  PROJECTS: "/student/projects",
+  MY_PROJECT: "/student/my-project",
   JOIN_PROJECT: "/student/join-project",
-  LEAVE_PROJECT: "/student/leave-project",
+  SUBMIT_PROJECT: "/student/submit-project",
+  MY_SUBMISSIONS: "/student/my-submissions",
 };

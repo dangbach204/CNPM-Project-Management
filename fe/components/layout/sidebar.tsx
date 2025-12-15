@@ -13,6 +13,7 @@ import {
   LogOut,
   FileText,
   BarChart3,
+  FolderOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/user";
@@ -59,6 +60,11 @@ export function Sidebar() {
       return [
         ...baseItems,
         { href: "/student/projects", label: "Đề tài", icon: BookOpen },
+        {
+          href: "/student/my-project",
+          label: "Đề tài của tôi",
+          icon: FolderOpen,
+        },
         {
           href: "/student/submissions",
           label: "Bài nộp của tôi",

@@ -45,7 +45,5 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/teacher", teacherRoutes);
 app.use("/api/student", studentRoutes);
-// test endpoint
-app.get("/", async (req, res) => {});
 
 export default app;

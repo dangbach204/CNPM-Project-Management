@@ -3,9 +3,10 @@ import { authMiddleware, authorize } from "../middlewares/authMiddleware";
 import {
   getMyProject,
   getStundentOverview,
-  studentGetAllProjects,
   studentJoinProject,
   submitProject,
+  studentGetProjects,
+  getMySubmissions,
 } from "../controllers/studentController";
 
 const router = express.Router();
@@ -13,10 +14,16 @@ const router = express.Router();
 router.use(authMiddleware);
 router.use(authorize("student"));
 
+// Overview & Projects
 router.get("/overview", getStundentOverview);
-router.get("/projects", studentGetAllProjects);
+router.get("/projects", studentGetProjects);
+router.get("/my-project", getMyProject);
+
+// Project Actions
 router.patch("/join-project/:projectId", studentJoinProject);
-router.patch("/submit-project/:projectId", submitProject);
-router.get("/get-my-project", getMyProject);
+
+// Submissions
+router.post("/submit-project/:projectId", submitProject);
+router.get("/my-submissions", getMySubmissions);
 
 export default router;
