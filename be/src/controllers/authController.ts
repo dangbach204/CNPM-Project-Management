@@ -62,6 +62,7 @@ export const loginUser = async (req: Request, res: Response) => {
         role: user.role,
         fullName: user.full_name,
         createAt: user.created_at,
+        avatar: user.avatar,
       },
     });
   } catch (error) {

@@ -68,7 +68,15 @@ export default function AdminProjectsPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto">
+          <main 
+            className="flex-1 overflow-y-auto"
+            style={{
+              backgroundImage: 'url(/bkhoa1.jpg)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
+          >
             <div className="p-8 space-y-8">
               <div className="flex items-center justify-between">
                 <div>
@@ -116,7 +124,7 @@ export default function AdminProjectsPage() {
               />
 
               {/* Projects List */}
-              <Card>
+              <Card className="bg-white/90 backdrop-blur-sm shadow-lg">
                 <CardContent className="pt-6">
                   {filteredProjects.length === 0 ? (
                     <div className="text-center py-8">

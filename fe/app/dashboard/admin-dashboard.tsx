@@ -8,6 +8,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, BookOpen, FileText, Inbox } from "lucide-react";
 import { useAdminOverView } from "@/hooks/useAdminOverView";
 
@@ -35,7 +36,16 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="p-8 space-y-10">
+    <div 
+      className="p-8 space-y-10"
+      style={{
+        backgroundImage: 'url(/hello2.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        minHeight: '100vh'
+      }}
+    >
       {/* Header */}
       <header className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight">Bảng điều khiển</h1>
@@ -50,47 +60,51 @@ export default function AdminDashboard() {
           {
             title: "Tổng Giáo viên",
             value: overview?.teachers.length ?? 0,
-            icon: <Users className="w-6 h-6" />,
-            color: "blue",
+            icon: <Users className="w-5 h-5" />,
+            bgColor: "bg-blue-50",
+            iconColor: "text-blue-600",
             role: "teacher",
           },
           {
             title: "Tổng Sinh viên",
             value: overview?.students.length ?? 0,
-            icon: <Users className="w-6 h-6" />,
-            color: "green",
+            icon: <Users className="w-5 h-5" />,
+            bgColor: "bg-green-50",
+            iconColor: "text-green-600",
             role: "student",
           },
           {
             title: "Tổng Đề tài",
             value: overview?.totalProjects ?? 0,
-            icon: <BookOpen className="w-6 h-6" />,
-            color: "purple",
+            icon: <BookOpen className="w-5 h-5" />,
+            bgColor: "bg-purple-50",
+            iconColor: "text-purple-600",
             role: "project",
           },
           {
             title: "Bài Nộp",
             value: overview?.totalSubmissions ?? 0,
-            icon: <FileText className="w-6 h-6" />,
-            color: "orange",
+            icon: <FileText className="w-5 h-5" />,
+            bgColor: "bg-orange-50",
+            iconColor: "text-orange-600",
             role: "submission",
           },
         ].map((card, idx) => (
           <Card
             key={idx}
             onClick={() => handleCardClick(card.role as any)}
-            className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+            className="cursor-pointer hover:shadow-xl transition-all hover:scale-[1.03] border-0 bg-white/90 backdrop-blur-sm"
           >
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{card.title}</p>
-                  <p className="text-3xl font-bold mt-2">{card.value}</p>
+            <CardContent className="pt-6 pb-6">
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${card.bgColor}`}>
+                  <div className={card.iconColor}>
+                    {card.icon}
+                  </div>
                 </div>
-                <div
-                  className={`p-3 rounded-lg bg-${card.color}-100 text-${card.color}-600`}
-                >
-                  {card.icon}
+                <div>
+                  <p className="text-sm font-medium text-gray-600">{card.title}</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">{card.value}</p>
                 </div>
               </div>
             </CardContent>
@@ -100,9 +114,9 @@ export default function AdminDashboard() {
 
       {/* Data Table */}
       {selectedRole && (
-        <Card className="overflow-hidden border border-gray-200 shadow-sm">
-          <CardHeader className="bg-gray-50 border-b">
-            <CardTitle className="text-lg font-semibold">
+        <Card className="overflow-hidden border-0 shadow-xl bg-white/90 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+            <CardTitle className="text-lg font-bold">
               {selectedRole === "teacher"
                 ? "Danh sách Giáo viên"
                 : selectedRole === "student"
@@ -133,14 +147,14 @@ export default function AdminDashboard() {
                     <tr>
                       {selectedRole === "teacher" && (
                         <>
-                          <th className="px-4 py-3 font-semibold">Họ và tên</th>
+                          <th className="px-4 py-3 font-semibold">Giáo viên</th>
                           <th className="px-4 py-3 font-semibold">Email</th>
                         </>
                       )}
 
                       {selectedRole === "student" && (
                         <>
-                          <th className="px-4 py-3 font-semibold">Họ và tên</th>
+                          <th className="px-4 py-3 font-semibold">Sinh viên</th>
                           <th className="px-4 py-3 font-semibold">Email</th>
                         </>
                       )}
@@ -179,7 +193,17 @@ export default function AdminDashboard() {
                           key={teacher.id}
                           className="border-b last:border-0 hover:bg-gray-50 transition"
                         >
-                          <td className="px-4 py-3">{teacher.fullName}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-9 h-9">
+                                <AvatarImage src={teacher.avatar} alt={teacher.fullName} />
+                                <AvatarFallback className="bg-blue-100 text-blue-700">
+                                  {teacher.fullName.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium">{teacher.fullName}</span>
+                            </div>
+                          </td>
                           <td className="px-4 py-3">{teacher.email}</td>
                         </tr>
                       ))}
@@ -190,7 +214,17 @@ export default function AdminDashboard() {
                           key={student.id}
                           className="border-b last:border-0 hover:bg-gray-50 transition"
                         >
-                          <td className="px-4 py-3">{student.fullName}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-9 h-9">
+                                <AvatarImage src={student.avatar} alt={student.fullName} />
+                                <AvatarFallback className="bg-green-100 text-green-700">
+                                  {student.fullName.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium">{student.fullName}</span>
+                            </div>
+                          </td>
                           <td className="px-4 py-3">{student.email}</td>
                         </tr>
                       ))}
@@ -249,32 +283,33 @@ export default function AdminDashboard() {
       {/* Recent Activity */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Projects */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Đề tài gần đây</CardTitle>
-            <CardDescription>Các đề tài được tạo gần đây nhất</CardDescription>
+        <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-bold">Đề tài gần đây</CardTitle>
+            <CardDescription className="text-sm">Các đề tài được tạo gần đây nhất</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {overview?.latestProjects.slice(0, 3).map((project) => (
                 <div
                   key={project.id}
-                  className="flex items-start justify-between pb-4 border-b last:border-0"
+                  className="flex items-start gap-3 p-4 rounded-lg bg-gray-50/50 hover:bg-gray-100/50 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
                 >
-                  <div className="flex-1">
-                    <p className="font-medium">{project.title}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                  <div className="p-2 rounded-lg bg-purple-100">
+                    <BookOpen className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{project.title}</p>
+                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">
                       {project.description}
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Tạo lúc {project.createdAt}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Số sinh viên tham gia: {project.studentCount || 0}
-                    </p>
+                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-600">
+                      <span>Tạo lúc: {project.createdAt}</span>
+                      <span>Số SV: {project.studentCount || 0}</span>
+                    </div>
                   </div>
                   <span
-                    className={`text-xs px-2 py-1 rounded-full capitalize ${
+                    className={`text-xs px-3 py-1 rounded-full font-medium whitespace-nowrap ${
                       project.status === "approved"
                         ? "bg-green-100 text-green-700"
                         : project.status === "pending"
@@ -303,34 +338,37 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Recent Submissions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Bài nộp gần đây</CardTitle>
-            <CardDescription>Các bài nộp mới nhất</CardDescription>
+        <Card className="border-0 bg-white/90 backdrop-blur-sm shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-bold">Bài nộp gần đây</CardTitle>
+            <CardDescription className="text-sm">Các bài nộp mới nhất</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {overview?.latestSubmissions.slice(0, 3).map((submission) => (
                 <div
                   key={submission.id}
-                  className="flex items-start justify-between pb-4 border-b last:border-0"
+                  className="flex items-start gap-3 p-4 rounded-lg bg-gray-50/50 hover:bg-gray-100/50 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
                 >
-                  <div className="flex-1">
-                    <p className="font-medium">{submission.projectTitle}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
+                  <div className="p-2 rounded-lg bg-orange-100">
+                    <FileText className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{submission.projectTitle}</p>
+                    <p className="text-xs text-gray-600 mt-1">
                       Nộp bài lúc: {submission.submittedAt}
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Báo cáo:{" "}
-                      <a
-                        href={submission.reportLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
-                      >
-                        Tại đây
-                      </a>
-                    </p>
+                    <a
+                      href={submission.reportLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 hover:underline mt-2"
+                    >
+                      <span>Xem báo cáo</span>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
                   </div>
                 </div>
               ))}

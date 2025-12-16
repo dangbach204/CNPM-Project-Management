@@ -92,7 +92,7 @@ export default function StudentDashboard() {
           return (
             <Card
               key={stat.title}
-              className="hover:shadow-lg transition-shadow"
+              className="hover:shadow-xl transition-all duration-200 hover:scale-[1.03]"
             >
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">

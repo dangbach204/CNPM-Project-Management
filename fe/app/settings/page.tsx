@@ -196,7 +196,15 @@ export default function SettingsPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto flex justify-center items-start">
+          <main 
+            className="flex-1 overflow-y-auto flex justify-center items-start"
+            style={{
+              backgroundImage: 'url(/bkhoa1.jpg)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
+          >
             <div className="p-8 max-w-2xl space-y-8">
               <div>
                 <h1 className="text-3xl font-bold text-center">Cài đặt</h1>
@@ -206,7 +214,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Profile Settings */}
-              <Card>
+              <Card className="bg-white/90 backdrop-blur-sm shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="w-5 h-5" />
@@ -290,7 +298,7 @@ export default function SettingsPage() {
               </Card>
 
               {/* Change Password */}
-              <Card>
+              <Card className="bg-white/90 backdrop-blur-sm shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Lock className="w-5 h-5" />
