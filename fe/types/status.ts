@@ -1,4 +1,5 @@
 export type ProjectStatus =
+  | "open"
   | "available"
   | "pending"
   | "completed"
@@ -13,6 +14,7 @@ export type SubmissionStatus =
   | "rejected";
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  open: "Trống",
   available: "Mở",
   pending: "Đang thực hiện",
   completed: "Hoàn thành",
@@ -22,6 +24,7 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
 };
 
 export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
+  open: "bg-gray-100 text-gray-700",
   available: "bg-cyan-100 text-cyan-700",
   pending: "bg-yellow-100 text-yellow-700",
   completed: "bg-green-100 text-green-700",
@@ -45,6 +48,7 @@ export const SUBMISSION_STATUS_COLORS: Record<SubmissionStatus, string> = {
 };
 
 export const PROJECT_STATUS_OPTIONS = [
+  { value: "open", label: "Trống" },
   { value: "available", label: "Mở" },
   { value: "pending", label: "Đang thực hiện" },
   { value: "completed", label: "Hoàn thành" },
