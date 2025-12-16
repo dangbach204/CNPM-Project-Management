@@ -165,13 +165,6 @@ export default function StudentDashboard() {
                             </p>
                             {getProjectStatusBadge("")}
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            Xem chi tiết →
-                          </Button>
                         </div>
                         <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                           {project.description}
@@ -230,7 +223,7 @@ export default function StudentDashboard() {
               mySubmissions.slice(0, 3).map((submission) => (
                 <Link
                   key={submission.submissionId}
-                  href={`/student/projects/${submission.projectId}`}
+                  href={`/student/submissions/${submission.submissionId}`}
                   className="block"
                 >
                   <div className="p-4 border rounded-lg hover:bg-green-50/50 hover:border-green-300 transition-all cursor-pointer group">
