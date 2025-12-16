@@ -30,7 +30,6 @@ class LogService {
       const userId = (req as any).user?.id || null;
       const ipAddress = this.getIpAddress(req);
 
-      // Tạo timestamp theo local time (UTC+7)
       const now = new Date();
 
       await Log.create({

@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  getStudentSubmissions,
-  submitProject,
-} from "@/service/student-service";
+import { getMySubmissions, submitProject } from "@/service/student-service";
 import { useToast } from "@/hooks/use-toast";
 import { MySubmission } from "@/types/student";
 
@@ -15,9 +12,9 @@ export const useStudentSubmission = () => {
   const fetchSubmissions = async () => {
     try {
       setIsLoading(true);
-      const response = await getStudentSubmissions();
-      if (response) {
-        setSubmissions(response);
+      const response = await getMySubmissions();
+      if (response && response.submissions) {
+        setSubmissions(response.submissions);
       }
     } catch (error) {
       console.error("Error fetching submissions:", error);
@@ -40,7 +37,7 @@ export const useStudentSubmission = () => {
           title: "Thành công",
           description: "Nộp bài thành công",
         });
-        await fetchSubmissions(); // Refresh submissions list
+        await fetchSubmissions();
         return true;
       }
       return false;

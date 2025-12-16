@@ -62,5 +62,16 @@ export interface MySubmission {
   projectDescription: string | null;
   reportLink: string;
   submittedAt: string;
-  grade: string | null;
+  grade: {
+    id: number;
+    score: number;
+    feedback: string;
+    gradedAt: string;
+  } | null;
+}
+
+export interface MySubmissionsResponse {
+  message: string;
+  submissionCount: number;
+  submissions: MySubmission[];
 }

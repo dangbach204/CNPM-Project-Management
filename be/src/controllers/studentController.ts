@@ -227,6 +227,8 @@ export const submitProject = async (req: Request, res: Response) => {
 
 export const studentGetProjects = async (req: Request, res: Response) => {
   try {
+    const studentId = req.user?.id;
+
     const projects = await Project.findAll({
       include: [
         {
@@ -269,11 +271,23 @@ export const studentGetProjects = async (req: Request, res: Response) => {
         studentCount: `${currentStudentCount}/${maxStudents}`,
         students: project.students || [],
         createdAt: project.created_at,
-        expireAt: project.expire_at,
+        expiredAt: project.expire_at,
       };
     });
 
-    return res.status(200).json(formattedProjects);
+    const myProjects = await ProjectStudents.findAll({
+      where: {
+        student_id: studentId,
+      },
+      attributes: ["project_id"],
+    });
+
+    const myProjectIds = myProjects.map((p: any) => p.project_id);
+
+    return res.status(200).json({
+      projects: formattedProjects,
+      myProjectIds: myProjectIds,
+    });
   } catch (error: any) {
     console.error("Error fetching all projects:", error);
     return res.status(500).json({
@@ -282,44 +296,6 @@ export const studentGetProjects = async (req: Request, res: Response) => {
     });
   }
 };
-
-// export const studentLeaveProject = async (req: Request, res: Response) => {
-//   try {
-//     const studentId = req.user?.id;
-//     const { projectId } = req.params;
-
-//     if (!studentId) {
-//       return res.status(401).json({
-//         message: "Unauthorized: Student ID not found",
-//       });
-//     }
-
-//     const projectEntry = await ProjectStudents.findOne({
-//       where: {
-//         student_id: studentId,
-//         project_id: projectId,
-//       },
-//     });
-
-//     if (!projectEntry) {
-//       return res.status(404).json({
-//         message: "Bạn chưa tham gia đề tài này",
-//       });
-//     }
-
-//     await projectEntry.destroy();
-
-//     return res.status(200).json({
-//       message: "Rời khỏi đề tài thành công",
-//     });
-//   } catch (error: any) {
-//     console.error("Error leaving project:", error);
-//     return res.status(500).json({
-//       message: "Lỗi máy chủ khi rời khỏi đề tài",
-//       error: error.message,
-//     });
-//   }
-// };
 
 export const getMySubmissions = async (req: Request, res: Response) => {
   try {
@@ -350,6 +326,8 @@ export const getMySubmissions = async (req: Request, res: Response) => {
       order: [["submitted_at", "DESC"]],
     });
 
+    const submissionCount = submissions.length;
+
     const formattedSubmissions = submissions.map((submission: any) => ({
       id: submission.id,
       projectId: submission.project_id,
@@ -370,6 +348,7 @@ export const getMySubmissions = async (req: Request, res: Response) => {
 
     return res.status(200).json({
       message: "Successfully fetched submissions",
+      submissionCount,
       submissions: formattedSubmissions,
     });
   } catch (error: any) {

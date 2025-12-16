@@ -171,7 +171,7 @@ export const createProject = async (req: Request, res: Response) => {
         id: newProject.id,
         title: newProject.title,
         description: newProject.description,
-        expireAt: newProject.expireAt,
+        expire_at: newProject.expire_at,
       },
     });
   } catch (error) {
@@ -526,20 +526,27 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid score" });
     }
 
-    const grade = await Grade.findOne({
+    const submission = await Submission.findByPk(submissionId);
+    if (!submission) {
+      return res.status(404).json({ message: "Submission not found" });
+    }
+
+    let grade = await Grade.findOne({
       where: { submission_id: submissionId },
     });
 
     if (!grade) {
-      return res
-        .status(404)
-        .json({ message: "Grade not found for this submission" });
+      grade = await Grade.create({
+        teacher_id: req.user?.id,
+        submission_id: submissionId,
+        score: score,
+        feedback: feedback || null,
+      });
+    } else {
+      grade.score = score;
+      grade.feedback = feedback ?? grade.feedback;
+      await grade.save();
     }
-
-    grade.score = score;
-    grade.feedback = feedback ?? grade.feedback;
-
-    await grade.save();
 
     return res.status(200).json({
       message: "Grading successful",

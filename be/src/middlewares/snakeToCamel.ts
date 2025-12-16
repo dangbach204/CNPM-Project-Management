@@ -6,7 +6,12 @@ const toCamelCase = (str: string) =>
 const convertKeysToCamel = (obj: any): any => {
   if (Array.isArray(obj)) {
     return obj.map(convertKeysToCamel);
-  } else if (obj !== null && obj.constructor === Object) {
+  } else if (
+    obj !== null &&
+    obj !== undefined &&
+    typeof obj === "object" &&
+    obj.constructor === Object
+  ) {
     return Object.keys(obj).reduce((acc, key) => {
       acc[toCamelCase(key)] = convertKeysToCamel(obj[key]);
       return acc;

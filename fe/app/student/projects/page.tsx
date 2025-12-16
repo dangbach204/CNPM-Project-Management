@@ -205,48 +205,6 @@ export default function StudentProjectsPage() {
                                 </div>
                               </div>
                             </div>
-
-                            <div className="flex flex-col gap-2">
-                              {isEnrolled ? (
-                                <>
-                                  <Link
-                                    href={`/student/projects/${project.id}`}
-                                  >
-                                    <Button
-                                      variant="outline"
-                                      className="w-full"
-                                    >
-                                      Xem chi tiết
-                                    </Button>
-                                  </Link>
-                                </>
-                              ) : (
-                                <>
-                                  <Link
-                                    href={`/student/projects/${project.id}`}
-                                  >
-                                    <Button
-                                      variant="outline"
-                                      className="w-full bg-transparent"
-                                    >
-                                      Xem chi tiết
-                                    </Button>
-                                  </Link>
-                                  <Button
-                                    disabled={expired || joinLoading}
-                                    onClick={() =>
-                                      handleJoinProject(project.id)
-                                    }
-                                  >
-                                    {joinLoading
-                                      ? "Đang xử lý..."
-                                      : expired
-                                      ? "Đã hết hạn"
-                                      : "Tham gia"}
-                                  </Button>
-                                </>
-                              )}
-                            </div>
                           </div>
                         </CardContent>
                       </Card>

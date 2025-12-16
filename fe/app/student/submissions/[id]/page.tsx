@@ -1,188 +1,301 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { Sidebar } from "@/components/layout/sidebar"
-import { Header } from "@/components/layout/header"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { mockSubmissions, mockProjects, mockGrades, mockComments, mockUsers } from "@/lib/mock-data"
-import { ArrowLeft, MessageSquare, Download } from "lucide-react"
-import Link from "next/link"
-import { redirect, useParams } from "next/navigation"
-import { useState } from "react"
-import { useAuthStore } from "@/stores/user"
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  FileText,
+  Calendar,
+  CheckCircle,
+  Clock,
+  ArrowLeft,
+  Star,
+  MessageSquare,
+  ExternalLink,
+} from "lucide-react";
+import { useAuthStore } from "@/stores/user";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useStudentSubmission } from "@/hooks/useStudentSubmission";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useParams, useRouter } from "next/navigation";
+import { useMemo } from "react";
 
 export default function SubmissionDetailPage() {
-  const { user } = useAuthStore()
-  const params = useParams()
-  const submissionId = params.id as string
-  const [newComment, setNewComment] = useState("")
+  const { user } = useAuthStore();
+  const { submissions, isLoading } = useStudentSubmission();
+  const params = useParams();
+  const router = useRouter();
+  const submissionId = params.id as string;
 
-  if (!user || user.role !== "student") redirect("/login")
+  const submission = useMemo(() => {
+    return submissions.find((s) => s.id === parseInt(submissionId));
+  }, [submissions, submissionId]);
 
-  const submission = mockSubmissions.find((s) => s.id === submissionId)
-  if (!submission || submission.studentId !== user.id.toString()) redirect("/student/submissions")
-
-  const project = mockProjects.find((p) => p.id === submission.projectId)
-  const grade = mockGrades.find((g) => g.submissionId === submissionId)
-  const comments = mockComments.filter((c) => c.submissionId === submissionId)
-
-  const handleAddComment = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (newComment.trim()) {
-      alert("Bình luận đã được gửi!")
-      setNewComment("")
+  const getStatusIcon = (hasGrade: boolean) => {
+    if (hasGrade) {
+      return <CheckCircle className="w-5 h-5 text-green-600" />;
     }
+    return <Clock className="w-5 h-5 text-yellow-600" />;
+  };
+
+  const getStatusLabel = (hasGrade: boolean) => {
+    if (hasGrade) {
+      return "Đã chấm điểm";
+    }
+    return "Đang chờ chấm";
+  };
+
+  const getStatusColor = (hasGrade: boolean) => {
+    if (hasGrade) {
+      return "bg-green-100 text-green-700";
+    }
+    return "bg-yellow-100 text-yellow-700";
+  };
+
+  if (isLoading) {
+    return (
+      <ProtectedRoute allowedRoles={["student"]}>
+        <div className="flex h-screen bg-background">
+          <Sidebar />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <Header />
+            <main className="flex-1 overflow-y-auto">
+              <div className="p-8 space-y-8">
+                <Skeleton className="h-10 w-64" />
+                <Card>
+                  <CardContent className="pt-6">
+                    <Skeleton className="h-64 w-full" />
+                  </CardContent>
+                </Card>
+              </div>
+            </main>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
+
+  if (!submission) {
+    return (
+      <ProtectedRoute allowedRoles={["student"]}>
+        <div className="flex h-screen bg-background">
+          <Sidebar />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <Header />
+            <main className="flex-1 overflow-y-auto">
+              <div className="p-8 space-y-8">
+                <Button
+                  variant="ghost"
+                  onClick={() => router.push("/student/submissions")}
+                  className="mb-4"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Quay lại
+                </Button>
+                <Card>
+                  <CardContent className="pt-12 pb-12 text-center">
+                    <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground mb-4">
+                      Không tìm thấy bài nộp
+                    </p>
+                    <Button onClick={() => router.push("/student/submissions")}>
+                      Quay lại danh sách
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </main>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-8 space-y-8">
-            <Link href="/student/submissions" className="inline-flex items-center gap-2 text-primary hover:underline">
-              <ArrowLeft className="w-4 h-4" />
-              Quay lại
-            </Link>
+    <ProtectedRoute allowedRoles={["student"]}>
+      <div className="flex h-screen bg-background">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-y-auto">
+            <div className="p-8 space-y-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="ghost"
+                    onClick={() => router.push("/student/submissions")}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Quay lại
+                  </Button>
+                  <div>
+                    <h1 className="text-3xl font-bold">Chi tiết bài nộp</h1>
+                    <p className="text-muted-foreground mt-2">
+                      Xem thông tin và kết quả chấm điểm
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(!!submission.grade)}
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                      !!submission.grade
+                    )}`}
+                  >
+                    {getStatusLabel(!!submission.grade)}
+                  </span>
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Content */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Submission Info */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{submission.title}</CardTitle>
-                    <CardDescription>{project?.title}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-2">Mô tả</p>
-                      <p className="text-sm">{submission.description}</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Ngày nộp</p>
-                        <p className="font-medium">{new Date(submission.submittedAt).toLocaleDateString("vi-VN")}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Trạng thái</p>
-                        <p className="font-medium capitalize">{submission.status}</p>
-                      </div>
-                    </div>
-
-                    <div className="pt-4">
-                      <Button variant="outline" className="gap-2 bg-transparent">
-                        <Download className="w-4 h-4" />
-                        Tải xuống Tệp
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Grade */}
-                {grade && (
-                  <Card className="border-green-200 bg-green-50">
-                    <CardHeader>
-                      <CardTitle className="text-green-900">Điểm số</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-medium text-green-900">Điểm của bạn</span>
-                        <span className="text-4xl font-bold text-green-600">
-                          {grade.score}/{grade.maxScore}
-                        </span>
-                      </div>
-
-                      <div className="pt-4 border-t border-green-200">
-                        <p className="text-sm font-medium text-green-900 mb-2">Nhận xét:</p>
-                        <p className="text-sm text-green-800">{grade.feedback}</p>
-                      </div>
-
-                      <div className="text-xs text-green-700 pt-2">
-                        Chấm điểm vào: {new Date(grade.gradedAt).toLocaleDateString("vi-VN")}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Comments */}
+              <div className="grid gap-6">
+                {/* Project Information */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <MessageSquare className="w-5 h-5" />
-                      Bình luận ({comments.length})
+                      <FileText className="w-5 h-5" />
+                      Thông tin đồ án
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Comment List */}
-                    <div className="space-y-4">
-                      {comments.length === 0 ? (
-                        <p className="text-muted-foreground text-sm">Chưa có bình luận nào</p>
-                      ) : (
-                        comments.map((comment) => (
-                          <div key={comment.id} className="flex gap-3 pb-4 border-b last:border-0">
-                            <img
-                              src={mockUsers.find((u) => u.id === comment.userId)?.avatar || "/placeholder.svg"}
-                              alt={comment.userName}
-                              className="w-8 h-8 rounded-full"
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium text-sm">{comment.userName}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {new Date(comment.createdAt).toLocaleDateString("vi-VN")}
-                                </p>
-                              </div>
-                              <p className="text-sm text-muted-foreground mt-1">{comment.content}</p>
-                            </div>
-                          </div>
-                        ))
-                      )}
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Tên đồ án
+                      </p>
+                      <p className="text-lg font-semibold">
+                        {submission.projectTitle || "Không có tiêu đề"}
+                      </p>
                     </div>
-
-                    {/* Add Comment */}
-                    <form onSubmit={handleAddComment} className="pt-4 border-t space-y-3">
-                      <textarea
-                        placeholder="Viết bình luận..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-                        rows={3}
-                      />
-                      <Button type="submit" size="sm">
-                        Gửi Bình luận
-                      </Button>
-                    </form>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Mô tả
+                      </p>
+                      <p className="text-base">
+                        {submission.projectDescription || "Không có mô tả"}
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
-              </div>
 
-              {/* Sidebar */}
-              <div className="space-y-4">
+                {/* Submission Information */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">Thông tin Đề tài</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      Thông tin bài nộp
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Tiêu đề</p>
-                      <p className="font-medium">{project?.title}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Hạn chót</p>
-                      <p className="font-medium">{new Date(project?.endDate || "").toLocaleDateString("vi-VN")}</p>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Link báo cáo
+                        </p>
+                        <a
+                          href={submission.reportLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-primary hover:underline inline-flex items-center gap-1"
+                        >
+                          Xem báo cáo
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Ngày nộp
+                        </p>
+                        <p className="font-medium">
+                          {new Date(submission.submittedAt).toLocaleString(
+                            "vi-VN",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                        </p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Grade and Feedback */}
+                {submission.grade ? (
+                  <Card className="border-2 border-primary/20">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Star className="w-5 h-5 text-yellow-500" />
+                        Kết quả chấm điểm
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="flex items-center gap-6">
+                        <div className="bg-primary/10 rounded-lg p-6 text-center">
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Điểm số
+                          </p>
+                          <p className="text-5xl font-bold text-primary">
+                            {submission.grade.score}
+                          </p>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Ngày chấm điểm
+                          </p>
+                          <p className="font-medium">
+                            {new Date(submission.grade.gradedAt).toLocaleString(
+                              "vi-VN",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      {submission.grade.feedback && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <MessageSquare className="w-5 h-5 text-primary" />
+                            <p className="font-semibold">
+                              Nhận xét từ giảng viên
+                            </p>
+                          </div>
+                          <div className="bg-muted rounded-lg p-4">
+                            <p className="text-base whitespace-pre-wrap">
+                              {submission.grade.feedback}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="border-2 border-yellow-200">
+                    <CardContent className="pt-12 pb-12 text-center">
+                      <Clock className="w-12 h-12 mx-auto mb-4 text-yellow-600" />
+                      <p className="text-lg font-semibold mb-2">
+                        Đang chờ chấm điểm
+                      </p>
+                      <p className="text-muted-foreground">
+                        Bài nộp của bạn đang được giảng viên xem xét. Vui lòng
+                        quay lại sau.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
-  )
+    </ProtectedRoute>
+  );
 }

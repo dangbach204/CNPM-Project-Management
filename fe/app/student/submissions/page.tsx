@@ -114,19 +114,14 @@ export default function StudentSubmissionsPage() {
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
                                 <h3 className="text-lg font-semibold">
-                                  {submission.project.title}
+                                  {submission.projectTitle ||
+                                    "Không có tiêu đề"}
                                 </h3>
-                                <span
-                                  className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(
-                                    submission.project.status
-                                  )}`}
-                                >
-                                  {getStatusLabel(submission.project.status)}
-                                </span>
                               </div>
 
                               <p className="text-muted-foreground mb-3">
-                                {submission.project.description}
+                                {submission.projectDescription ||
+                                  "Không có mô tả"}
                               </p>
 
                               <div className="grid grid-cols-3 gap-4 mb-4">
@@ -154,32 +149,20 @@ export default function StudentSubmissionsPage() {
                                     ).toLocaleDateString("vi-VN")}
                                   </p>
                                 </div>
-                                {submission.score !== null && (
+                                {submission.grade && (
                                   <div>
                                     <p className="text-sm text-muted-foreground">
                                       Điểm
                                     </p>
                                     <p className="font-medium text-lg text-primary">
-                                      {submission.score}/100
+                                      {submission.grade.score}
                                     </p>
                                   </div>
                                 )}
                               </div>
-
-                              {submission.feedback && (
-                                <div className="bg-muted p-4 rounded-lg">
-                                  <p className="text-sm font-medium mb-2">
-                                    Nhận xét từ giáo viên:
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {submission.feedback}
-                                  </p>
-                                </div>
-                              )}
                             </div>
 
                             <div className="flex flex-col items-end gap-2">
-                              {getStatusIcon(submission.project.status)}
                               <Link
                                 href={`/student/submissions/${submission.id}`}
                               >

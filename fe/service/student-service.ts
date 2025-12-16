@@ -11,7 +11,7 @@ export const getStudentOverview = async () => {
   }
 };
 
-export const getAllProjects = async () => {
+export const getProjects = async () => {
   try {
     const response = await api.get(STUDENT.PROJECTS);
     return response.data;
@@ -53,7 +53,7 @@ export const submitProject = async (projectId: number, reportLink: string) => {
   }
 };
 
-export const getStudentSubmissions = async () => {
+export const getMySubmissions = async () => {
   try {
     const response = await api.get(STUDENT.MY_SUBMISSIONS);
     return response.data;

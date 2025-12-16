@@ -4,12 +4,28 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, User, FileText, Clock } from "lucide-react";
+import { Calendar, User, FileText, Clock, Send } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useMyProject } from "@/hooks/useMyProject";
+import { useStudentSubmission } from "@/hooks/useStudentSubmission";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 export default function MyProjectPage() {
   const { isLoading, myProject } = useMyProject();
+  const { submitLoading, handleSubmitProject } = useStudentSubmission();
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+  const [reportLink, setReportLink] = useState("");
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -94,6 +110,13 @@ export default function MyProjectPage() {
                             )}
                           </div>
                         </div>
+                        <Button
+                          onClick={() => setSubmitDialogOpen(true)}
+                          disabled={isExpired(myProject.expireAt)}
+                        >
+                          <Send className="w-4 h-4 mr-2" />
+                          Nộp báo cáo hoặc báo cáo tiến độ
+                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
@@ -147,6 +170,61 @@ export default function MyProjectPage() {
                   </Card>
                 </div>
               )}
+
+              {/* Submit Report Dialog */}
+              <Dialog
+                open={submitDialogOpen}
+                onOpenChange={setSubmitDialogOpen}
+              >
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Nộp báo cáo hoặc báo cáo tiến độ</DialogTitle>
+                    <DialogDescription>
+                      Nhập link báo cáo tiến độ của bạn (Google Drive, OneDrive,
+                      GitHub, ...)
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="reportLink">Link báo cáo</Label>
+                      <Input
+                        id="reportLink"
+                        placeholder="https://drive.google.com/..."
+                        value={reportLink}
+                        onChange={(e) => setReportLink(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSubmitDialogOpen(false);
+                        setReportLink("");
+                      }}
+                    >
+                      Hủy
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        if (myProject && reportLink.trim()) {
+                          const success = await handleSubmitProject(
+                            myProject.projectId,
+                            reportLink.trim()
+                          );
+                          if (success) {
+                            setSubmitDialogOpen(false);
+                            setReportLink("");
+                          }
+                        }
+                      }}
+                      disabled={submitLoading || !reportLink.trim()}
+                    >
+                      {submitLoading ? "Đang nộp..." : "Nộp báo cáo"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </main>
         </div>

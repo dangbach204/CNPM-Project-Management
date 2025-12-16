@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getAllProjects, joinProject } from "@/service/student-service";
+import { getProjects, joinProject } from "@/service/student-service";
 import { useToast } from "@/hooks/use-toast";
 import { Project } from "@/types/student";
 
@@ -20,7 +20,7 @@ export const useStudentProjects = () => {
   const fetchProjects = async () => {
     try {
       setIsLoading(true);
-      const response = await getAllProjects();
+      const response = await getProjects();
       if (response) {
         setProjectsData(response);
       }
@@ -71,4 +71,3 @@ export const useStudentProjects = () => {
     refreshProjects: fetchProjects,
   };
 };
-
