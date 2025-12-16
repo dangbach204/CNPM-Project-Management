@@ -37,13 +37,23 @@ export default function TeacherDashboard() {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto">
+    <div 
+      className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto min-h-screen relative"
+      style={{
+        backgroundImage: 'url(/bkhoa2.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center bottom',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+      }}
+    >
+      <div className="absolute inset-0 bg-white/15 backdrop-blur-[1px] -z-10"></div>
       {/* Header */}
       <header className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-3xl font-bold tracking-tight text-black">
           Bảng điều khiển Giáo viên
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-black">
           Chào mừng {user?.fullName}, quản lý đề tài và bài nộp của sinh viên
         </p>
       </header>
@@ -52,7 +62,7 @@ export default function TeacherDashboard() {
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Đề tài Card */}
         <Card 
-          className="bg-blue-600 text-white border-0 hover:shadow-xl transition-all duration-200 hover:scale-[1.03] cursor-pointer"
+          className="bg-gradient-to-br from-blue-400 to-blue-500 text-white border-0 hover:shadow-xl transition-all duration-200 hover:scale-[1.03] cursor-pointer"
           onClick={() => handleCardClick("project")}
         >
           <CardContent className="pt-6 pb-6">
@@ -61,7 +71,7 @@ export default function TeacherDashboard() {
                 <p className="text-6xl font-bold mb-2">
                   {overview?.totalProjects ?? 0}
                 </p>
-                <p className="text-blue-100 text-base">Đề tài của tôi</p>
+                <p className="text-blue-50 text-base">Đề tài của tôi</p>
               </div>
               <div className="p-3 bg-white/20 rounded-lg">
                 <FolderOpen className="w-7 h-7" />
@@ -72,7 +82,7 @@ export default function TeacherDashboard() {
 
         {/* Bài nộp Card */}
         <Card 
-          className="bg-green-600 text-white border-0 hover:shadow-xl transition-all duration-200 hover:scale-[1.03] cursor-pointer"
+          className="bg-gradient-to-br from-emerald-400 to-green-500 text-white border-0 hover:shadow-xl transition-all duration-200 hover:scale-[1.03] cursor-pointer"
           onClick={() => handleCardClick("submission")}
         >
           <CardContent className="pt-6 pb-6">
@@ -81,7 +91,7 @@ export default function TeacherDashboard() {
                 <p className="text-6xl font-bold mb-2">
                   {overview?.totalSubmissions ?? 0}
                 </p>
-                <p className="text-green-100 text-base">Bài nộp chờ duyệt</p>
+                <p className="text-green-50 text-base">Bài nộp chờ duyệt</p>
               </div>
               <div className="p-3 bg-white/20 rounded-lg">
                 <FileText className="w-7 h-7" />

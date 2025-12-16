@@ -45,14 +45,18 @@ export default function TeacherProjectsPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto relative" style={{
+            backgroundImage: 'url(/bkhoa2.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center bottom',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed',
+          }}>
+            <div className="absolute inset-0 bg-white/15 backdrop-blur-[1px] -z-10"></div>
             <div className="p-8 space-y-8">
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold">Danh sách đề tài</h1>
-                  <p className="text-muted-foreground mt-2">
-                    Quản lý các đề tài bạn đang giảng dạy
-                  </p>
                 </div>
                 <Link href="/teacher/projects/new">
                   <Button className="gap-2">

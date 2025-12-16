@@ -84,26 +84,36 @@ export function Sidebar() {
     <aside className="w-64 bg-sidebar border-r border-sidebar-border h-screen flex flex-col">
       {/* Logo */}
       <div className="p-6 border-b border-sidebar-border">
-        <h1 className="text-2xl font-bold text-sidebar-primary">
-          Quản lý đồ án
-        </h1>
-        <p className="text-xs text-sidebar-foreground/60 mt-1">
-          Quản lý các đề tài
-        </p>
+        <div className="flex items-center gap-3">
+          <img 
+            src="/logobk.png" 
+            alt="Logo Bách Khoa" 
+            className="w-10 h-10 object-contain flex-shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-bold text-sidebar-primary leading-tight">
+              Bách Khoa Đà Nẵng
+            </h1>
+            <p className="text-xs text-sidebar-foreground/60 mt-1">
+              Quản lý đồ án
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-2">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href;
-          return (
-            <Link key={item.href} href={item.href}>
-              <Button
-                variant={isActive ? "default" : "ghost"}
-                className={cn(
-                  "w-full justify-start gap-3 transition-all duration-200",
-                  isActive
+      <nav className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="space-y-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+            return (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant={isActive ? "default" : "ghost"}
+                  className={cn(
+                    "w-full justify-start gap-3 transition-all duration-200",
+                    isActive
                     ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg scale-105"
                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:shadow-md hover:scale-105"
                 )}
@@ -114,6 +124,7 @@ export function Sidebar() {
             </Link>
           );
         })}
+        </div>
       </nav>
 
       {/* User Info & Logout */}

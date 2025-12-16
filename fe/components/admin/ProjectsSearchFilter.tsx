@@ -28,13 +28,13 @@ export function ProjectsSearchFilter({
 }: ProjectsSearchFilterProps) {
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <div className="relative bg-white rounded-lg p-3 shadow-sm">
+        <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           placeholder="Tìm kiếm theo tên, mô tả hoặc giảng viên..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10"
+          className="pl-10 border-0 bg-transparent focus-visible:ring-0"
         />
       </div>
 
