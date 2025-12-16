@@ -47,7 +47,7 @@ export default function TeacherDashboard() {
         backgroundAttachment: 'fixed',
       }}
     >
-      <div className="absolute inset-0 bg-white/15 backdrop-blur-[1px] -z-10"></div>
+      <div className="absolute inset-0 bg-white/90 backdrop-blur-xl -z-10"></div>
       {/* Header */}
       <header className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight text-black">

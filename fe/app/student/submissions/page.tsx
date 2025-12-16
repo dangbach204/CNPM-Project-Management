@@ -48,6 +48,16 @@ export default function StudentSubmissionsPage() {
     }
   };
 
+  const getScoreColor = (score: number) => {
+    if (score > 8.5) {
+      return "text-green-600";
+    } else if (score >= 7) {
+      return "text-yellow-600";
+    } else {
+      return "text-red-600";
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
@@ -73,11 +83,18 @@ export default function StudentSubmissionsPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto relative" style={{
+            backgroundImage: 'url(/bkhoa2.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center bottom',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed',
+          }}>
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-xl -z-10"></div>
             <div className="p-8 space-y-8">
               <div>
                 <h1 className="text-3xl font-bold">Bài nộp của tôi</h1>
-                <p className="text-muted-foreground mt-2">
+                <p className="text-gray-900 mt-2">
                   Theo dõi tất cả bài nộp và điểm số
                 </p>
               </div>
@@ -154,7 +171,7 @@ export default function StudentSubmissionsPage() {
                                     <p className="text-sm text-muted-foreground">
                                       Điểm
                                     </p>
-                                    <p className="font-medium text-lg text-primary">
+                                    <p className={`font-medium text-lg ${getScoreColor(submission.grade.score)}`}>
                                       {submission.grade.score}
                                     </p>
                                   </div>

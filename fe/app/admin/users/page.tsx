@@ -138,7 +138,7 @@ export default function AdminUsersPage() {
               <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg p-4 shadow-lg">
                 <div className="flex flex-col md:flex-row gap-3 items-center">
                   {/* Search */}
-                  <div className="w-full md:w-96 relative">
+                  <div className="w-full md:flex-1 relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       placeholder="Tìm kiếm theo tên, email..."
@@ -164,23 +164,8 @@ export default function AdminUsersPage() {
                     </Select>
                   </div>
 
-                  {/* Status Filter */}
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium whitespace-nowrap">Trạng thái:</label>
-                    <Select defaultValue="all">
-                      <SelectTrigger className="h-10 w-40">
-                        <SelectValue placeholder="Trạng thái" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Tất cả</SelectItem>
-                        <SelectItem value="active">Hoạt động</SelectItem>
-                        <SelectItem value="inactive">Khóa</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
                   {/* Add User Button */}
-                  <Link href="/admin/users/new" className="ml-auto">
+                  <Link href="/admin/users/new">
                     <Button className="gap-2 bg-blue-600 hover:bg-blue-700 h-10">
                       <Plus className="w-4 h-4" />
                       Thêm người dùng mới

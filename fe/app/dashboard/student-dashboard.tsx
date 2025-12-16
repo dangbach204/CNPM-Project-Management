@@ -46,6 +46,12 @@ export default function StudentDashboard() {
     );
   };
 
+  const getScoreColor = (score: number) => {
+    if (score > 8.5) return { bg: "bg-green-100", text: "text-green-700" };
+    if (score >= 7) return { bg: "bg-yellow-100", text: "text-yellow-700" };
+    return { bg: "bg-red-100", text: "text-red-700" };
+  };
+
   const getSubmissionStatusBadge = (
     grade: { score: number; feedback: string } | null
   ) => {
@@ -56,8 +62,9 @@ export default function StudentDashboard() {
         </span>
       );
     }
+    const colors = getScoreColor(grade.score);
     return (
-      <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+      <span className={`text-xs px-2 py-1 rounded-full ${colors.bg} ${colors.text}`}>
         Đã chấm: {grade.score}/10
       </span>
     );
@@ -74,11 +81,18 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-8 space-y-8 min-h-screen relative" style={{
+      backgroundImage: 'url(/bkhoa1.jpg)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center 30%',
+      backgroundRepeat: 'no-repeat',
+      backgroundAttachment: 'fixed',
+    }}>
+      <div className="absolute inset-0 bg-white/90 backdrop-blur-xl -z-10"></div>
       {/* Header */}
       <header className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight">
-          Dashboard Sinh viên
+          Trang Chủ Sinh Viên
         </h1>
         <p className="text-muted-foreground">
           Chào mừng {user?.fullName}, theo dõi tiến độ học tập của bạn
@@ -97,16 +111,16 @@ export default function StudentDashboard() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xl text-black font-bold">
                       {stat.title}
                     </p>
-                    <p className="text-3xl font-bold mt-2">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-5xl font-bold mt-2">{stat.value}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
                       {stat.description}
                     </p>
                   </div>
                   <div className={`p-3 rounded-lg ${stat.color}`}>
-                    <Icon className="w-6 h-6" />
+                    <Icon className="w-7 h-7" />
                   </div>
                 </div>
               </CardContent>

@@ -52,7 +52,7 @@ export default function TeacherProjectsPage() {
             backgroundRepeat: 'no-repeat',
             backgroundAttachment: 'fixed',
           }}>
-            <div className="absolute inset-0 bg-white/15 backdrop-blur-[1px] -z-10"></div>
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-xl -z-10"></div>
             <div className="p-8 space-y-8">
               <div className="flex items-center justify-between">
                 <div>

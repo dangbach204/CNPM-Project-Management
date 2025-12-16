@@ -70,7 +70,14 @@ export default function StudentProjectsPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto relative" style={{
+            backgroundImage: 'url(/bkhoa2.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center bottom',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed',
+          }}>
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-xl -z-10"></div>
             <div className="p-8 space-y-8">
               <div>
                 <h1 className="text-3xl font-bold">Tìm Đề tài</h1>
@@ -81,13 +88,13 @@ export default function StudentProjectsPage() {
 
               {/* Search and Filter */}
               <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <div className="relative bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-sm">
+                  <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Tìm kiếm đề tài..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 bg-transparent border-0"
                   />
                 </div>
 
@@ -145,6 +152,11 @@ export default function StudentProjectsPage() {
                                 <h3 className="text-xl font-semibold">
                                   {project.title}
                                 </h3>
+                                {!expired && !isEnrolled && (
+                                  <span className="text-xs px-3 py-1 rounded-full font-medium bg-green-100 text-green-700">
+                                    Đang mở
+                                  </span>
+                                )}
                                 {expired && (
                                   <span className="text-xs px-3 py-1 rounded-full font-medium bg-red-100 text-red-700">
                                     Đã hết hạn

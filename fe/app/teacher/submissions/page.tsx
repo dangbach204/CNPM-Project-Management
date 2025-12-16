@@ -194,7 +194,7 @@ export default function TeacherSubmissionsPage() {
             backgroundRepeat: 'no-repeat',
             backgroundAttachment: 'fixed',
           }}>
-            <div className="absolute inset-0 bg-white/15 backdrop-blur-[1px] -z-10"></div>
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-xl -z-10"></div>
             <div className="p-8 space-y-8">
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
