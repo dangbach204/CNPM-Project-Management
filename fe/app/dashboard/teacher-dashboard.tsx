@@ -40,9 +40,9 @@ export default function TeacherDashboard() {
     <div 
       className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto min-h-screen relative"
       style={{
-        backgroundImage: 'url(/bkhoa2.jpg)',
+        backgroundImage: 'url(/bkhoa1.jpg)',
         backgroundSize: 'cover',
-        backgroundPosition: 'center bottom',
+        backgroundPosition: 'center 30%',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
       }}

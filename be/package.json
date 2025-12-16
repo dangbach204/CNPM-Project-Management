@@ -36,7 +36,7 @@
     "mailtrap": "^4.3.1",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
-    "nodemailer": "^7.0.10",
+    "nodemailer": "^7.0.11",
     "pg": "^8.16.3",
     "sequelize": "^6.37.7",
     "zustand": "^5.0.8"

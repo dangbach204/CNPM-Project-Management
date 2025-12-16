@@ -142,6 +142,12 @@ export default function TeacherSubmissionsPage() {
     }
   };
 
+  const getScoreColor = (score: number) => {
+    if (score > 8.5) return "text-green-600";
+    if (score >= 7) return "text-yellow-600";
+    return "text-red-600";
+  };
+
   const getStatusBadge = (submission: Submission) => {
     const isGraded =
       submission.score !== null && submission.score !== undefined;
@@ -181,63 +187,93 @@ export default function TeacherSubmissionsPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto bg-gray-50/50">
+          <main className="flex-1 overflow-y-auto relative" style={{
+            backgroundImage: 'url(/bkhoa1.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 30%',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed',
+          }}>
+            <div className="absolute inset-0 bg-white/15 backdrop-blur-[1px] -z-10"></div>
             <div className="p-8 space-y-8">
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
+                <Card className="bg-white/90 backdrop-blur-sm border-0">
                   <CardContent className="pt-6">
-                    <p className="text-sm text-muted-foreground font-medium">
-                      Tổng bài nộp
-                    </p>
-                    <p className="text-3xl font-bold mt-2">
-                      {totalSubmissions}
-                    </p>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-xl text-black font-bold">
+                          Tổng bài nộp
+                        </p>
+                        <p className="text-4xl font-bold mt-2">
+                          {totalSubmissions}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <FileText className="w-7 h-7 text-blue-600" />
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="bg-white/90 backdrop-blur-sm border-0">
                   <CardContent className="pt-6">
-                    <p className="text-sm text-muted-foreground font-medium">
-                      Đã chấm
-                    </p>
-                    <p className="text-3xl font-bold mt-2 text-green-600">
-                      {gradedCount}
-                    </p>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-xl text-black font-bold">
+                          Đã chấm
+                        </p>
+                        <p className="text-4xl font-bold mt-2 text-green-600">
+                          {gradedCount}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-green-50 rounded-lg">
+                        <Award className="w-7 h-7 text-green-600" />
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="bg-white/90 backdrop-blur-sm border-0">
                   <CardContent className="pt-6">
-                    <p className="text-sm text-muted-foreground font-medium">
-                      Chưa chấm
-                    </p>
-                    <p className="text-3xl font-bold mt-2 text-yellow-600">
-                      {notGradedCount}
-                    </p>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-xl text-black font-bold">
+                          Chưa chấm
+                        </p>
+                        <p className="text-4xl font-bold mt-2 text-yellow-600">
+                          {notGradedCount}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-yellow-50 rounded-lg">
+                        <FileText className="w-7 h-7 text-yellow-600" />
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Filters */}
               <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div className="relative w-full md:w-96">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <div className="relative w-full md:flex-1 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-sm">
+                  <Search className="absolute left-5 top-5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Tìm kiếm theo tên dự án hoặc sinh viên..."
-                    className="pl-8"
+                    className="pl-8 bg-transparent border-0"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Tất cả trạng thái" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                    <SelectItem value="graded">Đã chấm</SelectItem>
-                    <SelectItem value="not_graded">Chưa chấm</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-sm">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-[180px] bg-transparent border-0">
+                      <SelectValue placeholder="Tất cả trạng thái" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                      <SelectItem value="graded">Đã chấm</SelectItem>
+                      <SelectItem value="not_graded">Chưa chấm</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {/* Submission Cards */}
@@ -272,8 +308,8 @@ export default function TeacherSubmissionsPage() {
                             <Calendar className="h-4 w-4" />
                             <span>{submission.submittedAt}</span>
                           </div>
-                          {submission.score && (
-                            <div className="flex items-center gap-2 text-green-600 font-semibold">
+                          {submission.score !== null && submission.score !== undefined && (
+                            <div className={`flex items-center gap-2 font-semibold ${getScoreColor(submission.score)}`}>
                               <Award className="h-4 w-4" />
                               <span>Điểm: {submission.score}</span>
                             </div>
