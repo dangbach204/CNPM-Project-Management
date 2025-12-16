@@ -63,10 +63,10 @@ export default function ForgotPasswordPage() {
       <div className="absolute top-4 right-4 flex items-center space-x-3">
         <div className="hidden sm:block text-right">
           <p className="text-sm font-semibold text-blue-800 leading-tight">
-            KHOA
+            KHOA ĐIỆN TỬ - VIỄN THÔNG
           </p>
           <p className="text-base font-extrabold text-blue-900 leading-tight">
-            ĐIỆN TỬ - VIỄN THÔNG
+           KHOA ĐIỆN TỬ - VIỄN THÔNG
           </p>
         </div>
         <Image
