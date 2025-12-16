@@ -49,7 +49,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <header className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight">Bảng điều khiển</h1>
-        <p className="text-muted-foreground">
+        <p className="text-white">
           Tổng quan hệ thống quản lý đồ án
         </p>
       </header>

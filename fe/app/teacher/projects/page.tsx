@@ -4,21 +4,24 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { mockProjects, mockUsers } from "@/lib/mock-data";
 import { Plus, Edit2, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/user";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useTeacherOverview } from "@/hooks/useTeacherOverview";
 
 export default function TeacherProjectsPage() {
   const { user } = useAuthStore();
+  const { overview, isLoading } = useTeacherOverview();
 
-  const myProjects = user
-    ? mockProjects.filter((p) => p.teacherId === user.id.toString())
-    : [];
+  const myProjects = overview?.projects || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case "available":
+        return "bg-blue-100 text-blue-700";
+      case "approved":
+        return "bg-purple-100 text-purple-700";
       case "open":
         return "bg-green-100 text-green-700";
       case "in-progress":
@@ -34,6 +37,10 @@ export default function TeacherProjectsPage() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
+      case "available":
+        return "Có sẵn";
+      case "approved":
+        return "Đã Phê Duyệt";
       case "open":
         return "Mở";
       case "in-progress":
@@ -53,14 +60,18 @@ export default function TeacherProjectsPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto relative" style={{
+            backgroundImage: 'url(/bkhoa2.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center bottom',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed',
+          }}>
+            <div className="absolute inset-0 bg-white/15 backdrop-blur-[1px] -z-10"></div>
             <div className="p-8 space-y-8">
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold">Danh sách đề tài</h1>
-                  <p className="text-muted-foreground mt-2">
-                    Quản lý các đề tài bạn đang giảng dạy
-                  </p>
                 </div>
                 <Link href="/teacher/projects/new">
                   <Button className="gap-2">
@@ -70,7 +81,13 @@ export default function TeacherProjectsPage() {
                 </Link>
               </div>
 
-              {myProjects.length === 0 ? (
+              {isLoading ? (
+                <Card>
+                  <CardContent className="pt-12 pb-12 text-center">
+                    <p className="text-muted-foreground">Đang tải...</p>
+                  </CardContent>
+                </Card>
+              ) : myProjects.length === 0 ? (
                 <Card>
                   <CardContent className="pt-12 pb-12 text-center">
                     <p className="text-muted-foreground mb-4">
@@ -113,17 +130,16 @@ export default function TeacherProjectsPage() {
                                   Sinh viên
                                 </p>
                                 <p className="text-lg font-semibold">
-                                  {project.enrolledStudents.length}/
-                                  {project.maxStudents}
+                                  {project.studentCount || 0}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-sm text-muted-foreground">
-                                  Ngày bắt đầu
+                                  Ngày tạo
                                 </p>
                                 <p className="text-lg font-semibold">
                                   {new Date(
-                                    project.startDate
+                                    project.createdAt
                                   ).toLocaleDateString("vi-VN")}
                                 </p>
                               </div>
@@ -132,25 +148,24 @@ export default function TeacherProjectsPage() {
                                   Hạn chót
                                 </p>
                                 <p className="text-lg font-semibold">
-                                  {new Date(project.endDate).toLocaleDateString(
+                                  {new Date(project.expiredAt).toLocaleDateString(
                                     "vi-VN"
                                   )}
                                 </p>
                               </div>
                             </div>
 
-                            {project.enrolledStudents.length > 0 && (
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Users className="w-4 h-4" />
-                                <span>
-                                  {project.enrolledStudents
-                                    .map(
-                                      (id) =>
-                                        mockUsers.find((u) => u.id === id)?.name
-                                    )
-                                    .filter(Boolean)
-                                    .join(", ")}
+                            {project.studentCount && project.studentCount > 0 && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Users className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">
+                                  {project.studentCount} sinh viên đã đăng ký
                                 </span>
+                                <Link href={`/teacher/projects/${project.id}/students`}>
+                                  <span className="text-blue-600 hover:text-blue-700 hover:underline cursor-pointer ml-1">
+                                    Xem
+                                  </span>
+                                </Link>
                               </div>
                             )}
                           </div>

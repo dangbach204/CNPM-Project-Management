@@ -82,9 +82,6 @@ export default function AdminProjectsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold">Quản lý Đề tài</h1>
-                  <p className="text-muted-foreground mt-2">
-                    Quản lý tất cả đề tài trong hệ thống
-                  </p>
                 </div>
               </div>
 

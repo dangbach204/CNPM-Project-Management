@@ -22,12 +22,12 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
 };
 
 export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
-  available: "bg-green-100 text-green-700",
-  pending: "bg-blue-100 text-blue-700",
-  completed: "bg-gray-100 text-gray-700",
+  available: "bg-cyan-100 text-cyan-700",
+  pending: "bg-yellow-100 text-yellow-700",
+  completed: "bg-green-100 text-green-700",
   approved: "bg-purple-100 text-purple-700",
   rejected: "bg-red-100 text-red-700",
-  expired: "bg-orange-100 text-orange-700",
+  expired: "bg-gray-800 text-white",
 };
 
 export const SUBMISSION_STATUS_LABELS: Record<SubmissionStatus, string> = {

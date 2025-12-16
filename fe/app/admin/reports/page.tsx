@@ -11,7 +11,16 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState, useMemo } from "react";
 import { useAuthStore } from "@/stores/user";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAdminLogs } from "@/hooks/useAdminLogs";
@@ -23,16 +32,97 @@ import {
   Activity,
   Clock,
   Globe,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+
+const LOGS_PER_PAGE = 15;
 
 export default function AdminReportsPage() {
   const { user } = useAuthStore();
   const { logs, isLoading } = useAdminLogs();
   const [selectedLog, setSelectedLog] = useState<Log | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [actionFilter, setActionFilter] = useState<string>("all");
+  const [timeFilter, setTimeFilter] = useState<string>("all");
+  const [idFilter, setIdFilter] = useState<string>("");
 
   // Ensure logs is always an array
   const logsArray = Array.isArray(logs) ? logs : [];
+
+  // Get unique actions from logs
+  const uniqueActions = useMemo(() => {
+    const actions = new Set(logsArray.map(log => log.action));
+    return Array.from(actions).sort();
+  }, [logsArray]);
+
+  // Filter logs by action, time, and ID
+  const filteredLogs = useMemo(() => {
+    let filtered = logsArray;
+
+    // Filter by action
+    if (actionFilter !== "all") {
+      filtered = filtered.filter(log => log.action === actionFilter);
+    }
+
+    // Filter by time
+    if (timeFilter !== "all") {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      if (timeFilter === "today") {
+        filterDate.setHours(0, 0, 0, 0);
+      } else if (timeFilter === "week") {
+        filterDate.setDate(now.getDate() - 7);
+      } else if (timeFilter === "month") {
+        filterDate.setMonth(now.getMonth() - 1);
+      }
+      
+      filtered = filtered.filter(log => {
+        const logDate = new Date(log.createdAt);
+        return logDate >= filterDate;
+      });
+    }
+
+    // Filter by ID (search in entity ID only)
+    if (idFilter.trim() !== "") {
+      const searchId = idFilter.trim();
+      filtered = filtered.filter(log => 
+        log.entityId?.toString() === searchId
+      );
+    }
+
+    return filtered;
+  }, [logsArray, actionFilter, timeFilter, idFilter]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredLogs.length / LOGS_PER_PAGE);
+  const paginatedLogs = useMemo(() => {
+    const startIndex = (currentPage - 1) * LOGS_PER_PAGE;
+    const endIndex = startIndex + LOGS_PER_PAGE;
+    return filteredLogs.slice(startIndex, endIndex);
+  }, [filteredLogs, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleActionFilterChange = (action: string) => {
+    setActionFilter(action);
+    setCurrentPage(1);
+  };
+
+  const handleTimeFilterChange = (time: string) => {
+    setTimeFilter(time);
+    setCurrentPage(1);
+  };
+
+  const handleIdFilterChange = (id: string) => {
+    setIdFilter(id);
+    setCurrentPage(1);
+  };
 
   const handleLogClick = (log: Log) => {
     setSelectedLog(log);
@@ -101,9 +191,6 @@ export default function AdminReportsPage() {
             <div className="p-8 space-y-8">
               <div>
                 <h1 className="text-3xl font-bold">Nhật ký Hệ thống</h1>
-                <p className="text-muted-foreground mt-2">
-                  Theo dõi tất cả các hoạt động trong hệ thống
-                </p>
               </div>
 
               {/* Loading State */}
@@ -201,15 +288,79 @@ export default function AdminReportsPage() {
                 </div>
               )}
 
+              {/* Filter Bar */}
+              {!isLoading && logsArray.length > 0 && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Action Filter */}
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium whitespace-nowrap">Hành động:</label>
+                        <Select value={actionFilter} onValueChange={handleActionFilterChange}>
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Chọn hành động" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">
+                              Tất cả ({logsArray.length})
+                            </SelectItem>
+                            {uniqueActions.map((action) => {
+                              const count = logsArray.filter(log => log.action === action).length;
+                              return (
+                                <SelectItem key={action} value={action}>
+                                  {action} ({count})
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Time Filter */}
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium whitespace-nowrap">Thời gian:</label>
+                        <Select value={timeFilter} onValueChange={handleTimeFilterChange}>
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Chọn thời gian" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Tất cả</SelectItem>
+                            <SelectItem value="today">Hôm nay</SelectItem>
+                            <SelectItem value="week">7 ngày qua</SelectItem>
+                            <SelectItem value="month">30 ngày qua</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* ID Filter */}
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium whitespace-nowrap">ID:</label>
+                        <Input
+                          type="text"
+                          placeholder="Tìm theo ID..."
+                          value={idFilter}
+                          onChange={(e) => handleIdFilterChange(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Logs Table */}
               {!isLoading && logsArray.length > 0 && (
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Danh sách Nhật ký</CardTitle>
+                    <div className="text-sm text-muted-foreground">
+                      Hiển thị {((currentPage - 1) * LOGS_PER_PAGE) + 1} - {Math.min(currentPage * LOGS_PER_PAGE, filteredLogs.length)} trong tổng số {filteredLogs.length} nhật ký
+                      {actionFilter !== "all" && ` (lọc: ${actionFilter})`}
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {logsArray.map((log) => (
+                      {paginatedLogs.map((log) => (
                         <div
                           key={log.id}
                           onClick={() => handleLogClick(log)}
@@ -250,6 +401,57 @@ export default function AdminReportsPage() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-2 mt-6 pt-6 border-t">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 1}
+                        >
+                          <ChevronLeft className="h-4 w-4 mr-1" />
+                          Trước
+                        </Button>
+                        
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                            // Show first page, last page, current page, and pages around current
+                            if (
+                              page === 1 ||
+                              page === totalPages ||
+                              (page >= currentPage - 1 && page <= currentPage + 1)
+                            ) {
+                              return (
+                                <Button
+                                  key={page}
+                                  variant={currentPage === page ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => handlePageChange(page)}
+                                  className="w-10"
+                                >
+                                  {page}
+                                </Button>
+                              );
+                            } else if (page === currentPage - 2 || page === currentPage + 2) {
+                              return <span key={page} className="px-2">...</span>;
+                            }
+                            return null;
+                          })}
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                        >
+                          Sau
+                          <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
