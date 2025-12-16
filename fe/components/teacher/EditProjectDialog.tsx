@@ -45,6 +45,7 @@ interface Student {
   full_name?: string;
   email: string;
   avatar?: string;
+  joinedProjects?: { id: number; title: string }[];
 }
 
 interface Teacher {
@@ -180,22 +181,16 @@ export function EditProjectDialog({
     );
   };
 
-  // Get all student IDs that are in other projects (not current project)
-  const studentsInOtherProjects = new Set<number>();
-  allProjects.forEach((proj) => {
-    if (proj.id !== project?.id && (proj as any).students) {
-      (proj as any).students.forEach((student: Student) => {
-        studentsInOtherProjects.add(student.id);
-      });
-    }
-  });
-
   // Filter out students already in current project or in other projects
-  const availableStudents = allStudents.filter(
-    (student) =>
-      !projectStudents.some((ps) => ps.id === student.id) &&
-      !studentsInOtherProjects.has(student.id)
-  );
+  const availableStudents = allStudents.filter((student) => {
+    const isInCurrentProject = projectStudents.some(
+      (ps) => ps.id === student.id
+    );
+    const inOtherProject = student.joinedProjects?.some(
+      (p) => p.id !== project?.id
+    );
+    return !isInCurrentProject && !inOtherProject;
+  });
 
   const selectedTeacher = teachers.find((t) => t.id.toString() === teacherId);
   const selectedStudent = availableStudents.find(
@@ -233,66 +228,6 @@ export function EditProjectDialog({
               placeholder="Nhập mô tả đề tài"
               rows={4}
             />
-          </div>
-
-          {/* Teacher */}
-          <div className="space-y-2">
-            <Label htmlFor="teacher">Giảng viên hướng dẫn</Label>
-            <Popover
-              open={teacherOpen}
-              onOpenChange={setTeacherOpen}
-              modal={true}
-            >
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={teacherOpen}
-                  className="w-full justify-between"
-                >
-                  {selectedTeacher
-                    ? `${getFullName(selectedTeacher)} - ${
-                        selectedTeacher.email
-                      }`
-                    : "Chọn giảng viên"}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-[--radix-popover-trigger-width] p-0"
-                align="start"
-                sideOffset={5}
-              >
-                <Command shouldFilter={true}>
-                  <CommandInput placeholder="Tìm theo tên hoặc email..." />
-                  <CommandList className="max-h-[300px] overflow-y-auto rounded-r-xl">
-                    <CommandEmpty>Không tìm thấy giảng viên.</CommandEmpty>
-                    <CommandGroup>
-                      {teachers.map((teacher) => (
-                        <CommandItem
-                          key={teacher.id}
-                          value={`${getFullName(teacher)} ${teacher.email}`}
-                          onSelect={() => {
-                            setTeacherId(teacher.id.toString());
-                            setTeacherOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              teacherId === teacher.id.toString()
-                                ? "opacity-100"
-                                : "opacity-0"
-                            )}
-                          />
-                          {getFullName(teacher)} - {teacher.email}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
           </div>
 
           {/* Status */}
@@ -392,6 +327,7 @@ export function EditProjectDialog({
                     <PopoverContent
                       className="w-[--radix-popover-trigger-width] p-0"
                       align="start"
+                      side="bottom"
                       sideOffset={5}
                     >
                       <Command shouldFilter={true}>

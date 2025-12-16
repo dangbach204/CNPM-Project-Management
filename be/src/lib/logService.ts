@@ -85,6 +85,7 @@ export const LOG_ACTIONS = {
   // Authentication
   LOGIN: "LOGIN",
   LOGOUT: "LOGOUT",
+  RESET_PASSWORD: "RESET_PASSWORD",
   //   REGISTER: "REGISTER",
 
   // Project
