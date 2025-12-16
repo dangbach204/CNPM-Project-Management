@@ -85,10 +85,10 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <img 
-            src="/logobk.png" 
-            alt="Logo Bách Khoa" 
-            className="w-10 h-10 object-contain flex-shrink-0"
+          <img
+            src="/logobk.png"
+            alt="Logo Bách Khoa"
+            className="w-10 h-10 object-contain shrink-0"
           />
           <div className="flex-1 min-w-0">
             <h1 className="text-base font-bold text-sidebar-primary leading-tight">
@@ -114,16 +114,16 @@ export function Sidebar() {
                   className={cn(
                     "w-full justify-start gap-3 transition-all duration-200",
                     isActive
-                    ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg scale-105"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:shadow-md hover:scale-105"
-                )}
-              >
-                <Icon className="w-4 h-4" />
-                {item.label}
-              </Button>
-            </Link>
-          );
-        })}
+                      ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg scale-105"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:shadow-md hover:scale-105"
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  {item.label}
+                </Button>
+              </Link>
+            );
+          })}
         </div>
       </nav>
 
