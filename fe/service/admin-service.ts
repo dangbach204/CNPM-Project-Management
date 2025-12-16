@@ -129,9 +129,11 @@ export const updateProjectInfo = async (
   }
 };
 
-export const getLogs = async () => {
+export const getLogs = async (page: number = 1, limit: number = 10) => {
   try {
-    const response = await api.get(ADMIN.LOGS);
+    const response = await api.get(ADMIN.LOGS, {
+      params: { page, limit },
+    });
     return response.data;
   } catch (error) {
     throw error;

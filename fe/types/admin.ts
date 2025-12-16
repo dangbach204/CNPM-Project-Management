@@ -64,3 +64,13 @@ export interface Log {
   details: JSON;
   ipAddress: string;
 }
+
+export interface LogsResponse {
+  logs: Log[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalLogs: number;
+    logsPerPage: number;
+  };
+}
