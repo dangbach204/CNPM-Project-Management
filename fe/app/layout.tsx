@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   title: "Quản lý đồ án",
   description: "Hệ thống quản lý đồ án sinh viên",
   generator: "v0.app",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -32,4 +35,3 @@ export default function RootLayout({
     </html>
   );
 }
-
