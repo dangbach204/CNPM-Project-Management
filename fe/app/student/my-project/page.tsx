@@ -1,0 +1,156 @@
+"use client";
+
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, User, FileText, Clock } from "lucide-react";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useMyProject } from "@/hooks/useMyProject";
+
+export default function MyProjectPage() {
+  const { isLoading, myProject } = useMyProject();
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("vi-VN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const isExpired = (expireAt: string) => {
+    return new Date(expireAt) < new Date();
+  };
+
+  if (isLoading) {
+    return (
+      <ProtectedRoute allowedRoles={["student"]}>
+        <div className="flex h-screen bg-background">
+          <Sidebar />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <Header />
+            <main className="flex-1 overflow-y-auto">
+              <div className="container mx-auto p-6">
+                <div className="flex items-center justify-center h-64">
+                  <p className="text-muted-foreground">Đang tải...</p>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
+
+  return (
+    <ProtectedRoute allowedRoles={["student"]}>
+      <div className="flex h-screen bg-background">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-y-auto">
+            <div className="container mx-auto p-6 space-y-6">
+              {/* Header */}
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  Đề tài của tôi
+                </h1>
+                <p className="text-muted-foreground mt-2">
+                  Thông tin chi tiết về đề tài bạn đang tham gia
+                </p>
+              </div>
+
+              {/* Project Details */}
+              {!myProject ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <FileText className="w-16 h-16 text-muted-foreground mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">
+                      Chưa có đề tài
+                    </h3>
+                    <p className="text-muted-foreground text-center">
+                      Bạn chưa tham gia đề tài nào. Hãy vào trang Đề tài để chọn
+                      và tham gia một đề tài phù hợp.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-6">
+                  {/* Main Project Card */}
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2 flex-1">
+                          <CardTitle className="text-2xl">
+                            {myProject.title}
+                          </CardTitle>
+                          <div className="flex items-center gap-2">
+                            {isExpired(myProject.expireAt) ? (
+                              <Badge variant="destructive">Đã hết hạn</Badge>
+                            ) : (
+                              <Badge variant="default">Đang hoạt động</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {/* Description */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <FileText className="w-5 h-5" />
+                          Mô tả
+                        </h3>
+                        <p className="text-muted-foreground leading-relaxed">
+                          {myProject.description}
+                        </p>
+                      </div>
+
+                      {/* Details Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                        {/* Teacher */}
+                        <div className="space-y-2">
+                          <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Giảng viên hướng dẫn
+                          </h3>
+                          <p className="text-base font-medium">
+                            {myProject.teacher?.name || "Chưa có thông tin"}
+                          </p>
+                        </div>
+
+                        {/* Expiration Date */}
+                        <div className="space-y-2">
+                          <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            Ngày hết hạn
+                          </h3>
+                          <p className="text-base font-medium">
+                            {formatDate(myProject.expireAt)}
+                          </p>
+                        </div>
+
+                        {/* Joined Date */}
+                        <div className="space-y-2">
+                          <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            Ngày tham gia
+                          </h3>
+                          <p className="text-base font-medium">
+                            {formatDate(myProject.joinedAt)}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
+      </div>
+    </ProtectedRoute>
+  );
+}

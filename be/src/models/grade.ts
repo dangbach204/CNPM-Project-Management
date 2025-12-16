@@ -1,7 +1,7 @@
 import { DataTypes as GradeDataTypes } from 'sequelize';
-import dbConnection from '../config/db';
+import db from '../config/db';
 
-const Grade = dbConnection.define(
+const Grade = db.define(
   'Grade',
   {
     id: { 

@@ -19,7 +19,6 @@ import { EditProjectDialog } from "@/components/admin/EditProjectDialog";
 import { useAdminUserManagement } from "@/hooks/useAdminUserManagement";
 
 export default function AdminProjectsPage() {
-  const { user } = useAuthStore();
   const { isLoading, projectsManagement, refetch } =
     useAdminProjectsManagement() as any;
   const { adminUserManagement } = useAdminUserManagement();

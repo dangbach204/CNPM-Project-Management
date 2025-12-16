@@ -11,22 +11,58 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuthStore } from "@/stores/user";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { createProject } from "@/service/teacher-service";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 export default function NewProjectPage() {
   const { user } = useAuthStore();
   const router = useRouter();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    maxStudents: 3,
-    startDate: "",
-    endDate: "",
+    expireAt: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Đề tài đã được tạo thành công!");
-    router.push("/teacher/projects");
+
+    if (!formData.title.trim()) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng nhập tiêu đề đề tài",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await createProject({
+        title: formData.title,
+        description: formData.description,
+        expireAt: formData.expireAt || undefined,
+      });
+
+      toast({
+        title: "Thành công",
+        description: "Đề tài đã được tạo thành công!",
+      });
+
+      router.push("/teacher/projects");
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message || "Có lỗi xảy ra khi tạo đề tài";
+      toast({
+        title: "Tạo đề tài thất bại",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -74,74 +110,39 @@ export default function NewProjectPage() {
                             description: e.target.value,
                           })
                         }
-                        required
                         className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                         rows={5}
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">
-                          Số lượng sinh viên tối đa
-                        </label>
-                        <Input
-                          type="number"
-                          min="1"
-                          max="10"
-                          value={formData.maxStudents}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              maxStudents: Number.parseInt(e.target.value),
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">
-                          Ngày bắt đầu
-                        </label>
-                        <Input
-                          type="date"
-                          value={formData.startDate}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              startDate: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">
-                          Ngày kết thúc
-                        </label>
-                        <Input
-                          type="date"
-                          value={formData.endDate}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              endDate: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Ngày hết hạn (không bắt buộc)
+                      </label>
+                      <Input
+                        type="date"
+                        value={formData.expireAt}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            expireAt: e.target.value,
+                          })
+                        }
+                      />
                     </div>
 
                     <div className="flex gap-3 pt-4">
-                      <Button type="submit">Tạo Đề tài</Button>
+                      <Button type="submit" disabled={loading}>
+                        {loading && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Tạo Đề tài
+                      </Button>
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => router.push("/teacher/projects")}
+                        disabled={loading}
                       >
                         Hủy
                       </Button>

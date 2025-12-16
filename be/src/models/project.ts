@@ -1,7 +1,7 @@
 import { DataTypes as ProjectDataTypes } from "sequelize";
-import sequelizeDb from "../config/db";
+import db from "../config/db";
 
-const Project = sequelizeDb.define(
+const Project = db.define(
   "Project",
   {
     id: {
@@ -38,6 +38,11 @@ const Project = sequelizeDb.define(
       type: ProjectDataTypes.DATE,
       allowNull: true,
     },
+    max_students: {
+      type: ProjectDataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 4,
+    }
   },
   {
     tableName: "projects",

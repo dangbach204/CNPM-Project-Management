@@ -1,31 +1,45 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
+import { forgotPassword } from "@/service/auth-service";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("")
-  const [submitted, setSubmitted] = useState(false)
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitted(true)
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      await forgotPassword(email);
+      setSubmitted(true);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 bg-linear-to-b from-primary/10 to-primary/5">
-
-
       {/* 🔹 Logo Bách Khoa (trái trên) */}
       <div className="absolute top-4 left-4 flex items-center space-x-3">
         <Image
@@ -67,9 +81,9 @@ export default function ForgotPasswordPage() {
       {/* Nội dung chính */}
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-primary mb-2">UniProject</h1>
+          <h1 className="text-4xl font-bold text-primary mb-2">Quản lý đồ án</h1>
           <p className="text-muted-foreground">
-            Hệ thống Quản lý Đề tài Sinh viên
+            Hệ thống Quản lý Đồ án Sinh viên
           </p>
         </div>
 
@@ -96,8 +110,8 @@ export default function ForgotPasswordPage() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full">
-                  Gửi liên kết đặt lại
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Đang gửi..." : "Gửi liên kết đặt lại"}
                 </Button>
               </form>
             ) : (
@@ -121,5 +135,5 @@ export default function ForgotPasswordPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
