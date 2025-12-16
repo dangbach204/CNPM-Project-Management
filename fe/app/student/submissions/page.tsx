@@ -11,7 +11,6 @@ import { useStudentSubmission } from "@/hooks/useStudentSubmission";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StudentSubmissionsPage() {
-  const { user } = useAuthStore();
   const { submissions, isLoading } = useStudentSubmission();
 
   const getStatusIcon = (status: string) => {

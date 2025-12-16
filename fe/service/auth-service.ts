@@ -1,7 +1,6 @@
 import api from "@/config/axios";
 import { AUTH } from "@/constants/api-endpoint";
 import { AuthResponse } from "@/types/auth";
-import { isValid } from "date-fns";
 
 export const login = async (email: string, password: string) => {
   try {
@@ -40,7 +39,6 @@ export const verifyResetToken = async (email: string, token: string) => {
       isValid: true,
       message: response.data.message || "Token is valid",
     };
-    // return response;
   } catch (error) {
     throw error;
   }
@@ -63,19 +61,3 @@ export const resetPassword = async (
     throw error;
   }
 };
-
-// const register = async (name: string, email: string, password: string, phone: string) => {
-//     try {
-//         const response = await api.post(AUTH.REGISTER, {
-//             name,
-//             email,
-//             password,
-//             phone,
-//         });
-//         console.log("Register response", response);
-//         return response;
-//     } catch (error) {
-//         console.error("Register failed", error);
-//         throw error;
-//     }
-// }
