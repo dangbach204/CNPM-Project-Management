@@ -66,7 +66,14 @@ export default function MyProjectPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto relative" style={{
+            backgroundImage: 'url(/bkhoa2.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center bottom',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed',
+          }}>
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-xl -z-10"></div>
             <div className="container mx-auto p-6 space-y-6">
               {/* Header */}
               <div>
