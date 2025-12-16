@@ -270,18 +270,7 @@ export default function TeacherSubmissionsPage() {
                         <div className="space-y-2 text-sm text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
-                            <span>
-                              {new Date(submission.submittedAt).toLocaleString(
-                                "vi-VN",
-                                {
-                                  year: "numeric",
-                                  month: "2-digit",
-                                  day: "2-digit",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )}
-                            </span>
+                            <span>{submission.submittedAt}</span>
                           </div>
                           {submission.score && (
                             <div className="flex items-center gap-2 text-green-600 font-semibold">
@@ -342,19 +331,7 @@ export default function TeacherSubmissionsPage() {
                   <Calendar className="h-4 w-4" />
                   Ngày giờ nộp
                 </h3>
-                <p>
-                  {new Date(selectedSubmission.submittedAt).toLocaleString(
-                    "vi-VN",
-                    {
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                    }
-                  )}
-                </p>
+                <p>{selectedSubmission.submittedAt}</p>
               </div>
 
               {/* Grade Info */}

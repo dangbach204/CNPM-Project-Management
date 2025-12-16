@@ -1,12 +1,9 @@
 import type React from "react";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -35,3 +32,4 @@ export default function RootLayout({
     </html>
   );
 }
+
