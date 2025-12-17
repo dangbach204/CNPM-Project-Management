@@ -1,6 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Edit2, Trash2 } from "lucide-react";
 import { User } from "@/types/auth";
 
@@ -48,7 +54,7 @@ export default function UserRow({
           />
           <div>
             <p className="font-medium text-foreground">{user.fullName}</p>
-            <p className="text-xs text-muted-foreground">{user.id}</p>
+            <p className="text-xs text-muted-foreground">ID: {user.id}</p>
           </div>
         </div>
       </td>
@@ -62,25 +68,48 @@ export default function UserRow({
       </td>
       <td className="py-3 px-5">
         <div className="flex justify-center gap-2">
+          {/* Edit button */}
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 border-border/60 hover:border-primary/50 hover:bg-primary/5"
+            className="gap-2 border-blue-200 text-blue-600 hover:border-blue-300 hover:bg-blue-50"
             onClick={() => onEdit(user)}
           >
             <Edit2 className="w-4 h-4" />
             <span>Sửa</span>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
-            onClick={() => onDelete(user)}
-            disabled={deleteLoading || isCurrentUser}
-          >
-            <Trash2 className="w-4 h-4" />
-            <span>{isCurrentUser ? "Không thể xóa" : "Xóa"}</span>
-          </Button>
+
+          {/* Delete button with conditional tooltip */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-block">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`gap-2 ${
+                      isCurrentUser
+                        ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                        : "border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50"
+                    }`}
+                    onClick={() => !isCurrentUser && onDelete(user)}
+                    disabled={deleteLoading || isCurrentUser}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>{isCurrentUser ? "Không thể xóa" : "Xóa"}</span>
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {isCurrentUser && (
+                <TooltipContent side="left" className="max-w-xs">
+                  <p className="text-xs">
+                    Bạn không thể xóa tài khoản đang đăng nhập. Vui lòng sử dụng
+                    tài khoản admin khác để thực hiện thao tác này.
+                  </p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </td>
     </tr>

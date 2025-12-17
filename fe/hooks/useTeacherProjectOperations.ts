@@ -66,13 +66,20 @@ export function useTeacherProjectOperations({
     ) => {
       setEditLoading(true);
       try {
-        // Convert expiredAt to expireAt for teacher API and ensure it's a string
-        const expireAtValue =
-          typeof data.expiredAt === "string"
-            ? data.expiredAt
-            : data.expiredAt instanceof Date
-            ? data.expiredAt.toISOString()
-            : data.expiredAt;
+        let expireAtValue: string;
+
+        if (typeof data.expiredAt === "string") {
+          if (data.expiredAt.includes("T")) {
+            expireAtValue = data.expiredAt;
+          } else {
+            const date = new Date(data.expiredAt + "T23:59:59");
+            expireAtValue = date.toISOString();
+          }
+        } else if (data.expiredAt instanceof Date) {
+          expireAtValue = data.expiredAt.toISOString();
+        } else {
+          expireAtValue = String(data.expiredAt);
+        }
 
         const teacherData = {
           title: data.title,

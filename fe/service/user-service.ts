@@ -14,9 +14,13 @@ export const updateProfile = async (
 ) => {
   try {
     const isFormData = userData instanceof FormData;
-    const response = await api.patch(USER.UPDATE_PROFILE, userData, {
-      headers: isFormData ? { "Content-Type": undefined } : undefined,
-    });
+    const response = await api.patch(
+      `${USER.UPDATE_PROFILE}/${userId}`,
+      userData,
+      {
+        headers: isFormData ? { "Content-Type": undefined } : undefined,
+      }
+    );
     return response.data;
   } catch (error) {
     throw error;

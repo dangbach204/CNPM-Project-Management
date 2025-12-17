@@ -9,9 +9,9 @@ export interface StudentWithProjects {
 }
 
 export interface TeacherOverview {
-  projects: Project[];
   totalProjects: number;
-  submissions: Submission[];
-  totalSubmissions: number;
+  pendingSubmissionsCount: number;
+  pendingSubmissions: Submission[];
+  projects: Project[];
   allStudents: StudentWithProjects[];
 }

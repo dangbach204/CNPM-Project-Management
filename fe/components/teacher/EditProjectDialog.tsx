@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -97,6 +97,37 @@ const formatDateForInput = (dateString?: string) => {
   }
 };
 
+const highlightText = (text: string, search: string) => {
+  if (!search.trim()) return text;
+
+  const parts = text.split(new RegExp(`(${search})`, "gi"));
+  return parts.map((part, index) =>
+    part.toLowerCase() === search.toLowerCase() ? (
+      <mark key={index} className="bg-yellow-200 text-gray-900 font-medium">
+        {part}
+      </mark>
+    ) : (
+      part
+    )
+  );
+};
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export function EditProjectDialog({
   open,
   onClose,
@@ -123,6 +154,10 @@ export function EditProjectDialog({
 
   const [teacherOpen, setTeacherOpen] = useState(false);
   const [studentOpen, setStudentOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [displayLimit, setDisplayLimit] = useState(20);
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   useEffect(() => {
     if (!project || !open) return;
@@ -137,6 +172,8 @@ export function EditProjectDialog({
     setRemovedStudentIds([]);
     setShowStudentList(false);
     setSelectedStudentId("");
+    setSearchQuery("");
+    setDisplayLimit(20);
   }, [project, open]);
 
   const handleSave = async () => {
@@ -181,16 +218,37 @@ export function EditProjectDialog({
     );
   };
 
-  // Filter out students already in current project or in other projects
-  const availableStudents = allStudents.filter((student) => {
-    const isInCurrentProject = projectStudents.some(
-      (ps) => ps.id === student.id
-    );
-    const inOtherProject = student.joinedProjects?.some(
-      (p) => p.id !== project?.id
-    );
-    return !isInCurrentProject && !inOtherProject;
-  });
+  const studentsInProjects = useMemo(() => {
+    const studentIds = new Set<number>();
+    projectStudents.forEach((s) => studentIds.add(s.id));
+    return studentIds;
+  }, [projectStudents]);
+
+  const availableStudents = useMemo(() => {
+    const filtered = allStudents.filter((student) => {
+      const inOtherProject = student.joinedProjects?.some(
+        (p) => p.id !== project?.id
+      );
+      return !inOtherProject;
+    });
+
+    if (!debouncedSearchQuery.trim()) {
+      return filtered.slice(0, displayLimit);
+    }
+
+    const query = debouncedSearchQuery.toLowerCase();
+    const searchResults = filtered.filter((student) => {
+      const name = getFullName(student).toLowerCase();
+      const email = student.email.toLowerCase();
+      return name.includes(query) || email.includes(query);
+    });
+
+    return searchResults.slice(0, displayLimit);
+  }, [allStudents, project?.id, debouncedSearchQuery, displayLimit]);
+
+  const handleLoadMore = useCallback(() => {
+    setDisplayLimit((prev) => prev + 20);
+  }, []);
 
   const selectedTeacher = teachers.find((t) => t.id.toString() === teacherId);
   const selectedStudent = availableStudents.find(
@@ -201,98 +259,138 @@ export function EditProjectDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose} modal={true}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Chỉnh sửa đề tài</DialogTitle>
+      {/* Dialog container with comfortable max width and height */}
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0 border-gray-200">
+        {/* Header - visually lighter with medium font weight */}
+        <DialogHeader className="px-6 py-5 border-b border-gray-100">
+          <DialogTitle className="text-lg font-medium text-gray-900">
+            Chỉnh sửa đề tài
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4 overflow-y-auto px-1">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Tên đề tài</Label>
+        {/* Form content with improved spacing */}
+        <div className="space-y-5 py-5 px-6 overflow-y-auto">
+          {/* Title field */}
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="title"
+              className="text-xs font-medium text-gray-500 uppercase tracking-wide"
+            >
+              Tên đề tài
+            </Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Nhập tên đề tài"
+              className="h-10 border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Mô tả</Label>
+          {/* Description field - comfortable textarea height */}
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="description"
+              className="text-xs font-medium text-gray-500 uppercase tracking-wide"
+            >
+              Mô tả
+            </Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Nhập mô tả đề tài"
               rows={4}
+              className="border-gray-200 rounded-lg resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
-          {/* Status */}
-          <div className="space-y-2">
-            <Label htmlFor="status">Trạng thái</Label>
-            <Select
-              value={status}
-              onValueChange={(val) => setStatus(val as ProjectStatus)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                {PROJECT_STATUS_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Status & Date row - consistent alignment */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Status dropdown */}
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="status"
+                className="text-xs font-medium text-gray-500 uppercase tracking-wide"
+              >
+                Trạng thái
+              </Label>
+              <Select
+                value={status}
+                onValueChange={(val) => setStatus(val as ProjectStatus)}
+              >
+                <SelectTrigger className="h-10 border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500">
+                  <SelectValue placeholder="Chọn trạng thái" />
+                </SelectTrigger>
+                {/* Force dropdown to open downward using position="popper" */}
+                <SelectContent position="popper" sideOffset={4}>
+                  {PROJECT_STATUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Date picker - visually equal to other inputs */}
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="expiredAt"
+                className="text-xs font-medium text-gray-500 uppercase tracking-wide"
+              >
+                Ngày hết hạn
+              </Label>
+              <Input
+                id="expiredAt"
+                type="date"
+                value={expiredAt}
+                onChange={(e) => setExpiredAt(e.target.value)}
+                className="h-10 border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
           </div>
 
-          {/* Expired At */}
-          <div className="space-y-2">
-            <Label htmlFor="expiredAt">Ngày hết hạn</Label>
-            <Input
-              id="expiredAt"
-              type="date"
-              value={expiredAt}
-              onChange={(e) => setExpiredAt(e.target.value)}
-            />
-          </div>
+          <Separator className="bg-gray-100" />
 
-          <Separator />
-
-          {/* Student Management Section */}
+          {/* Student Management Section - informational feel */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                <Label className="text-base">
-                  Sinh viên ({projectStudents.length}/{MAX_STUDENTS})
-                </Label>
+                <Users className="w-4 h-4 text-gray-400" />
+                <span className="text-sm text-gray-700">
+                  Sinh viên{" "}
+                  <span className="text-gray-400">
+                    ({projectStudents.length}/{MAX_STUDENTS})
+                  </span>
+                </span>
                 {isMaxStudentsReached && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] px-1.5 py-0 bg-amber-50 text-amber-600 border-0"
+                  >
                     Đã đủ
                   </Badge>
                 )}
               </div>
+              {/* Secondary button - ghost style, smaller */}
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => setShowStudentList(!showStudentList)}
+                className="text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 h-8"
               >
                 {showStudentList ? "Ẩn danh sách" : "Xem danh sách"}
               </Button>
             </div>
 
             {showStudentList && (
-              <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+              <div className="border border-gray-100 rounded-lg p-4 space-y-3 bg-gray-50/50">
                 {/* Warning message when max students reached */}
                 {isMaxStudentsReached && (
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
+                    <p className="text-xs text-amber-700">
                       ⚠️ Đề tài đã đủ {MAX_STUDENTS} sinh viên. Vui lòng xóa bớt
                       sinh viên nếu muốn thêm người khác.
                     </p>
@@ -311,7 +409,7 @@ export function EditProjectDialog({
                         variant="outline"
                         role="combobox"
                         aria-expanded={studentOpen}
-                        className="flex-1 justify-between"
+                        className="flex-1 justify-between h-9 text-sm border-gray-200 rounded-lg font-normal"
                         disabled={isMaxStudentsReached}
                       >
                         {selectedStudent
@@ -321,46 +419,110 @@ export function EditProjectDialog({
                           : isMaxStudentsReached
                           ? "Đã đủ số lượng sinh viên"
                           : "Chọn sinh viên để thêm"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
+                    {/* Force dropdown downward, prevent auto-flip to top */}
                     <PopoverContent
                       className="w-[--radix-popover-trigger-width] p-0"
                       align="start"
                       side="bottom"
-                      sideOffset={5}
+                      sideOffset={8}
+                      avoidCollisions={false}
                     >
-                      <Command shouldFilter={true}>
-                        <CommandInput placeholder="Tìm theo tên hoặc email..." />
-                        <CommandList className="max-h-[300px] overflow-y-auto rounded-r-xl">
+                      <Command shouldFilter={false}>
+                        <CommandInput
+                          placeholder="Tìm theo tên hoặc email..."
+                          value={searchQuery}
+                          onValueChange={setSearchQuery}
+                        />
+                        <CommandList className="max-h-[300px] overflow-y-auto">
                           <CommandEmpty>
-                            {availableStudents.length === 0
-                              ? "Không có sinh viên khả dụng (tất cả đã tham gia project khác)"
-                              : "Không tìm thấy sinh viên."}
+                            {allStudents.length === 0
+                              ? "Không có sinh viên nào trong hệ thống"
+                              : availableStudents.length === 0 &&
+                                !debouncedSearchQuery
+                              ? "Tất cả sinh viên đã tham gia project khác"
+                              : "Không tìm thấy sinh viên phù hợp"}
                           </CommandEmpty>
                           <CommandGroup>
-                            {availableStudents.map((student) => (
-                              <CommandItem
-                                key={student.id}
-                                value={`${getFullName(student)} ${
-                                  student.email
-                                }`}
-                                onSelect={() => {
-                                  setSelectedStudentId(student.id.toString());
-                                  setStudentOpen(false);
-                                }}
-                              >
-                                <Check
+                            {availableStudents.map((student) => {
+                              const isAlreadyInProject = studentsInProjects.has(
+                                student.id
+                              );
+                              const fullName = getFullName(student);
+
+                              return (
+                                <CommandItem
+                                  key={student.id}
+                                  value={student.id.toString()}
+                                  onSelect={() => {
+                                    if (
+                                      !isAlreadyInProject &&
+                                      !isMaxStudentsReached
+                                    ) {
+                                      setSelectedStudentId(
+                                        student.id.toString()
+                                      );
+                                      setStudentOpen(false);
+                                      setSearchQuery("");
+                                    }
+                                  }}
+                                  disabled={isAlreadyInProject}
                                   className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedStudentId === student.id.toString()
-                                      ? "opacity-100"
-                                      : "opacity-0"
+                                    "flex items-center gap-3 py-3 cursor-pointer",
+                                    isAlreadyInProject &&
+                                      "opacity-50 cursor-not-allowed"
                                   )}
-                                />
-                                {getFullName(student)} - {student.email}
-                              </CommandItem>
-                            ))}
+                                >
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarImage src={student.avatar} />
+                                    <AvatarFallback className="text-xs bg-gray-100 text-gray-600">
+                                      {getInitials(fullName)}
+                                    </AvatarFallback>
+                                  </Avatar>
+
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-gray-900 truncate">
+                                      {highlightText(
+                                        fullName,
+                                        debouncedSearchQuery
+                                      )}
+                                    </p>
+                                    <p className="text-xs text-gray-500 truncate">
+                                      {highlightText(
+                                        student.email,
+                                        debouncedSearchQuery
+                                      )}
+                                    </p>
+                                  </div>
+
+                                  {isAlreadyInProject && (
+                                    <div className="flex items-center gap-1">
+                                      <Check className="h-4 w-4 text-green-600" />
+                                      <span className="text-xs text-green-600 font-medium">
+                                        Đã chọn
+                                      </span>
+                                    </div>
+                                  )}
+                                </CommandItem>
+                              );
+                            })}
+                            {/* Load more button */}
+                            {allStudents.length > displayLimit &&
+                              availableStudents.length === displayLimit && (
+                                <div className="p-2">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleLoadMore}
+                                    className="w-full text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  >
+                                    Tải thêm sinh viên...
+                                  </Button>
+                                </div>
+                              )}
                           </CommandGroup>
                         </CommandList>
                       </Command>
@@ -371,44 +533,48 @@ export function EditProjectDialog({
                     size="sm"
                     onClick={handleAddStudent}
                     disabled={!selectedStudentId || isMaxStudentsReached}
+                    className="h-9 px-3 bg-blue-600 hover:bg-blue-700"
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Thêm
                   </Button>
                 </div>
 
-                <Separator />
+                <Separator className="bg-gray-100" />
 
                 {/* Student List */}
-                <div className="space-y-2 max-h-64 overflow-y-auto">
+                <div className="space-y-2 max-h-52 overflow-y-auto">
                   {projectStudents.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
+                    <p className="text-xs text-gray-400 text-center py-6">
                       Chưa có sinh viên nào
                     </p>
                   ) : (
                     projectStudents.map((student) => (
                       <div
                         key={student.id}
-                        className="flex items-center gap-3 p-3 border rounded-lg bg-background"
+                        className="flex items-center gap-3 p-2.5 border border-gray-100 rounded-lg bg-white hover:border-gray-200 transition-colors"
                       >
-                        <Avatar className="h-10 w-10">
+                        <Avatar className="h-9 w-9">
                           <AvatarImage src={student.avatar} />
-                          <AvatarFallback>
+                          <AvatarFallback className="text-xs bg-gray-100 text-gray-600">
                             {getInitials(getFullName(student))}
                           </AvatarFallback>
                         </Avatar>
 
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">
+                          <p className="text-sm font-semibold text-gray-900 truncate leading-tight">
                             {getFullName(student)}
                           </p>
-                          <p className="text-sm text-muted-foreground truncate">
+                          <p className="text-xs text-gray-500 truncate mt-0.5">
                             {student.email}
                           </p>
                         </div>
 
                         {addedStudentIds.includes(student.id) && (
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] px-1.5 py-0 bg-green-50 text-green-600 border-0"
+                          >
                             Mới thêm
                           </Badge>
                         )}
@@ -418,9 +584,9 @@ export function EditProjectDialog({
                           variant="ghost"
                           size="sm"
                           onClick={() => handleRemoveStudent(student.id)}
-                          className="text-destructive hover:text-destructive"
+                          className="text-gray-400 hover:text-red-500 hover:bg-red-50 h-7 w-7 p-0"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
                     ))
@@ -431,14 +597,26 @@ export function EditProjectDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={loading}>
-            Hủy
-          </Button>
-          <Button onClick={handleSave} disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Lưu thay đổi
-          </Button>
+        {/* Footer - clear action hierarchy with spacing */}
+        <DialogFooter className="px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+          <div className="flex items-center justify-end gap-3">
+            <Button
+              variant="ghost"
+              onClick={onClose}
+              disabled={loading}
+              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            >
+              Huỷ
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-5"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Lưu thay đổi
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

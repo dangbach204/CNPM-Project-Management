@@ -10,10 +10,6 @@ interface ProtectedRouteProps {
   allowedRoles?: string[];
 }
 
-/**
- * Protected Route Component
- * Verifies authentication and optionally checks user role
- */
 export function ProtectedRoute({
   children,
   allowedRoles,
@@ -24,14 +20,12 @@ export function ProtectedRoute({
 
   useEffect(() => {
     if (!isVerifying && isAuthenticated && allowedRoles && user) {
-      // Check if user role is allowed
       if (!allowedRoles.includes(user.role || "")) {
         router.push("/dashboard");
       }
     }
   }, [isVerifying, isAuthenticated, allowedRoles, user, router]);
 
-  // Show loading while verifying
   if (isVerifying) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -43,12 +37,10 @@ export function ProtectedRoute({
     );
   }
 
-  // If not authenticated, useAuthVerify will handle redirect
   if (!isAuthenticated || !user) {
     return null;
   }
 
-  // If role check fails, wait for redirect
   if (allowedRoles && !allowedRoles.includes(user.role || "")) {
     return null;
   }

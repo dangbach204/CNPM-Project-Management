@@ -48,7 +48,7 @@ export const useStudentProjects = () => {
         title: "Thành công",
         description: "Đã tham gia đề tài",
       });
-      await fetchProjects(); // Refresh data
+      await fetchProjects();
     } catch (error: any) {
       console.error("Error joining project:", error);
       toast({
