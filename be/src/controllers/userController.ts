@@ -6,7 +6,9 @@ import LogService, { LOG_ACTIONS, ENTITY_TYPES } from "../lib/logService";
 export const updateUserProfile = async (req: Request, res: Response) => {
   try {
     const requestUser = (req as any).user;
-    const targetUserId = req.body.userId || requestUser.id;
+    const targetUserId = req.params.userId
+      ? parseInt(req.params.userId)
+      : requestUser.id;
 
     if (requestUser.role !== "admin" && requestUser.id !== targetUserId) {
       return res

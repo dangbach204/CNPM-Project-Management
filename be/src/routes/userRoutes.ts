@@ -6,7 +6,7 @@ import { upload } from "../config/cloudinary";
 const router = express.Router();
 
 router.patch(
-  "/profile",
+  "/profile/:userId",
   authMiddleware,
   upload.single("avatar"),
   updateUserProfile

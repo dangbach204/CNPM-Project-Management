@@ -6,6 +6,7 @@ import User from "../models/user";
 import LogService, { LOG_ACTIONS, ENTITY_TYPES } from "../lib/logService";
 import PasswordResetTokens from "../models/passwordResetTokens";
 import { sendEmail } from "../config/email";
+import withTimeout from "../utils/withTimeout";
 
 const generateAccessToken = (user: any) => {
   return jwt.sign(
@@ -124,7 +125,6 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     }
 
     const user = await User.findOne({ where: { email } });
-
     if (!user) {
       return res.status(200).json({
         message:
@@ -152,10 +152,11 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
 
     const resetLink = `${process.env.CLIENT_URL || "http://localhost:3000"}/reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`;
 
-    await sendEmail({
-      to: user.email,
-      subject: "Password Reset Request",
-      html: `
+    await withTimeout(
+      sendEmail({
+        to: user.email,
+        subject: "Password Reset Request",
+        html: `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #003366;">Password Reset Request</h2>
       <p>Hello,</p>
@@ -174,7 +175,10 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
       </p>
   </div>
   `,
-    });
+      }),
+      15000,
+      "Email sending timed out"
+    );
 
     return res.status(200).json({
       message:
