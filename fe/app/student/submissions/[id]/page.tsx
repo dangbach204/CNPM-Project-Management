@@ -118,135 +118,80 @@ export default function SubmissionDetailPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto">
-            <div className="p-8 space-y-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant="ghost"
-                    onClick={() => router.push("/student/submissions")}
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Quay lại
-                  </Button>
-                  <div>
-                    <h1 className="text-3xl font-bold">Chi tiết bài nộp</h1>
-                    <p className="text-muted-foreground mt-2">
-                      Xem thông tin và kết quả chấm điểm
-                    </p>
+          <main className="flex-1 overflow-y-auto bg-gray-50/50">
+            <div className="p-6 sm:p-8 space-y-6">
+              <div className="max-w-5xl mx-auto space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => router.push("/student/submissions")}
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Quay lại
+                    </Button>
+                    <div className="border-l border-gray-300 pl-3">
+                      <h1 className="text-2xl font-bold tracking-tight">
+                        Chi tiết bài nộp
+                      </h1>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(!!submission.grade)}
+                    <span
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-medium ${getStatusColor(
+                        !!submission.grade
+                      )}`}
+                    >
+                      {getStatusLabel(!!submission.grade)}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(!!submission.grade)}
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                      !!submission.grade
-                    )}`}
-                  >
-                    {getStatusLabel(!!submission.grade)}
-                  </span>
-                </div>
-              </div>
 
-              <div className="grid gap-6">
-                {/* Project Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="w-5 h-5" />
-                      Thông tin đồ án
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Tên đồ án
-                      </p>
-                      <p className="text-lg font-semibold">
-                        {submission.projectTitle || "Không có tiêu đề"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Mô tả
-                      </p>
-                      <p className="text-base">
-                        {submission.projectDescription || "Không có mô tả"}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Submission Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calendar className="w-5 h-5" />
-                      Thông tin bài nộp
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">
-                          Link báo cáo
+                <div className="grid gap-6">
+                  {/* Project & Submission Information - Combined */}
+                  <Card className="shadow-md border-gray-300/80">
+                    <CardContent className="p-6">
+                      {/* Project Title */}
+                      <div className="mb-5 pb-5 border-b border-gray-200">
+                        <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium mb-2">
+                          Tên đồ án
                         </p>
-                        <a
-                          href={submission.reportLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-medium text-primary hover:underline inline-flex items-center gap-1"
-                        >
-                          Xem báo cáo
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">
-                          Ngày nộp
-                        </p>
-                        <p className="font-medium">
-                          {new Date(submission.submittedAt).toLocaleString(
-                            "vi-VN",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Grade and Feedback */}
-                {submission.grade ? (
-                  <Card className="border-2 border-primary/20">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Star className="w-5 h-5 text-yellow-500" />
-                        Kết quả chấm điểm
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="flex items-center gap-6">
-                        <div className="bg-primary/10 rounded-lg p-6 text-center">
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Điểm số
+                        <h2 className="text-xl font-bold text-gray-900 leading-tight">
+                          {submission.projectTitle || "Không có tiêu đề"}
+                        </h2>
+                        {submission.projectDescription && (
+                          <p className="text-[14px] text-gray-600 mt-2 leading-relaxed">
+                            {submission.projectDescription}
                           </p>
-                          <p className="text-5xl font-bold text-primary">
-                            {submission.grade.score}
+                        )}
+                      </div>
+
+                      {/* Submission Details */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium">
+                            Link báo cáo
                           </p>
+                          <a
+                            href={submission.reportLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            Xem báo cáo
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
                         </div>
-                        <div className="flex-1">
-                          <p className="text-sm text-muted-foreground mb-1">
-                            Ngày chấm điểm
+                        <div className="space-y-1.5">
+                          <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                            Ngày nộp
                           </p>
-                          <p className="font-medium">
-                            {new Date(submission.grade.gradedAt).toLocaleString(
+                          <p className="text-[14px] font-semibold text-gray-900">
+                            {new Date(submission.submittedAt).toLocaleString(
                               "vi-VN",
                               {
                                 year: "numeric",
@@ -259,38 +204,92 @@ export default function SubmissionDetailPage() {
                           </p>
                         </div>
                       </div>
+                    </CardContent>
+                  </Card>
 
-                      {submission.grade.feedback && (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <MessageSquare className="w-5 h-5 text-primary" />
-                            <p className="font-semibold">
-                              Nhận xét từ giảng viên
-                            </p>
+                  {/* Grade and Feedback - Prominent */}
+                  {submission.grade ? (
+                    <Card className="shadow-lg border-2 border-green-300/60 bg-linear-to-br from-white to-green-50/30">
+                      <CardContent className="p-6 sm:p-8">
+                        {/* Score Display - Hero */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-6 pb-6 border-b border-gray-200">
+                          <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                              <Star className="w-8 h-8 text-green-600" />
+                            </div>
+                            <div>
+                              <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium mb-1">
+                                Kết quả chấm điểm
+                              </p>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-5xl font-bold text-green-600">
+                                  {submission.grade.score}
+                                </span>
+                                <span className="text-2xl text-gray-400 font-medium">
+                                  /10
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="bg-muted rounded-lg p-4">
-                            <p className="text-base whitespace-pre-wrap">
-                              {submission.grade.feedback}
-                            </p>
+
+                          <div className="flex-1 sm:border-l sm:border-gray-200 sm:pl-6">
+                            <div className="space-y-1.5">
+                              <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-gray-400" />
+                                Ngày chấm điểm
+                              </p>
+                              <p className="text-[14px] font-semibold text-gray-900">
+                                {submission.grade.gradedAt
+                                  ? new Date(
+                                      submission.grade.gradedAt
+                                    ).toLocaleString("vi-VN", {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })
+                                  : "Chưa có thông tin"}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card className="border-2 border-yellow-200">
-                    <CardContent className="pt-12 pb-12 text-center">
-                      <Clock className="w-12 h-12 mx-auto mb-4 text-yellow-600" />
-                      <p className="text-lg font-semibold mb-2">
-                        Đang chờ chấm điểm
-                      </p>
-                      <p className="text-muted-foreground">
-                        Bài nộp của bạn đang được giảng viên xem xét. Vui lòng
-                        quay lại sau.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+
+                        {/* Feedback */}
+                        {submission.grade.feedback && (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <MessageSquare className="w-4 h-4 text-gray-600" />
+                              <p className="text-[13px] font-semibold text-gray-900 uppercase tracking-wide">
+                                Nhận xét từ giảng viên
+                              </p>
+                            </div>
+                            <div className="bg-white border border-gray-200 rounded-lg p-4">
+                              <p className="text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap">
+                                {submission.grade.feedback}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card className="shadow-md border-2 border-yellow-300/60 bg-linear-to-br from-white to-yellow-50/30">
+                      <CardContent className="py-12 text-center">
+                        <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-4">
+                          <Clock className="w-8 h-8 text-yellow-600" />
+                        </div>
+                        <p className="text-lg font-semibold mb-2 text-gray-900">
+                          Đang chờ chấm điểm
+                        </p>
+                        <p className="text-[14px] text-gray-600 max-w-md mx-auto">
+                          Bài nộp của bạn đang được giảng viên xem xét. Vui lòng
+                          quây lại sau.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               </div>
             </div>
           </main>

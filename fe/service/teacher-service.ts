@@ -1,6 +1,7 @@
 import api from "@/config/axios";
 import { TEACHER } from "@/constants/api-endpoint";
 import { TeacherOverview } from "@/types/teacher";
+import { th } from "date-fns/locale";
 
 export const getTeacherOverview = async () => {
   try {
@@ -33,7 +34,7 @@ export const updateProjectInfo = async (
     title?: string;
     description?: string;
     status?: string;
-    expireAt?: string;
+    expiredAt?: string;
     addStudents?: number[];
     removeStudents?: number[];
   }
@@ -73,7 +74,7 @@ export const getSubmissions = async () => {
 export const teacherGradeSubmission = async (
   submissionId: number,
   gradeData: {
-    score: number;
+    score: number | null;
     feedback?: string;
   }
 ) => {

@@ -19,7 +19,6 @@ export default function TeacherProjectsPage() {
   const { isLoading, overview } = useTeacherOverview();
 
   const myProjects = overview?.projects || [];
-  const allStudents = overview?.allStudents || [];
 
   const projectOperations = useTeacherProjectOperations({
     onSuccess: () => {
@@ -41,27 +40,57 @@ export default function TeacherProjectsPage() {
 
   return (
     <ProtectedRoute allowedRoles={["teacher"]}>
-      <div className="flex h-screen bg-background">
+      <div className="flex h-screen">
         <Sidebar />
+
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto relative" style={{
-            backgroundImage: 'url(/bkhoa2.jpg)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center bottom',
-            backgroundRepeat: 'no-repeat',
-            backgroundAttachment: 'fixed',
-          }}>
-            <div className="absolute inset-0 bg-white/90 backdrop-blur-xl -z-10"></div>
-            <div className="p-8 space-y-8">
+
+          {/* MAIN CONTENT */}
+          <main className="flex-1 overflow-y-auto relative">
+            {/* BACKGROUND WRAPPER */}
+            <div className="absolute top-0 left-0 w-full h-full min-h-full overflow-hidden z-0 pointer-events-none">
+              {/* Blurred background image */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: "url(/bkhoa2.jpg)",
+                  backgroundSize: "cover",
+                  backgroundPosition: "top center",
+                  backgroundRepeat: "no-repeat",
+                  filter: "blur(10px)",
+                  opacity: 0.6,
+                  transform: "scale(1.1)",
+                }}
+              />
+
+              {/* Gradient overlay (fade to white) */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.95) 55%)",
+                }}
+              />
+            </div>
+
+            {/* CONTENT */}
+            <div className="relative z-10 min-h-full p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
+              {/* Page header */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold">Danh sách đề tài</h1>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    Danh sách đề tài
+                  </h1>
+                  <p className="text-[13px] text-gray-600 mt-1">
+                    Quản lý các đề tài của bạn
+                  </p>
                 </div>
+
                 <Link href="/teacher/projects/new">
-                  <Button className="gap-2">
+                  <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm h-10">
                     <Plus className="w-4 h-4" />
-                    Tạo Đề tài Mới
+                    Tạo đề tài mới
                   </Button>
                 </Link>
               </div>
@@ -82,36 +111,35 @@ export default function TeacherProjectsPage() {
                 onSave={projectOperations.handleConfirmUpdate}
                 project={projectOperations.editProject}
                 loading={projectOperations.editLoading}
-                allStudents={allStudents}
                 allProjects={myProjects}
+                allStudents={overview?.allStudents || []}
               />
 
+              {/* Project list */}
               {myProjects.length === 0 ? (
-                <Card>
-                  <CardContent className="pt-12 pb-12 text-center">
-                    <p className="text-muted-foreground mb-4">
+                <Card className="border border-gray-200 shadow-sm">
+                  <CardContent className="py-12 text-center">
+                    <p className="text-gray-600 mb-4">
                       Bạn chưa tạo đề tài nào
                     </p>
                     <Link href="/teacher/projects/new">
-                      <Button>Tạo Đề tài Đầu tiên</Button>
+                      <Button className="bg-blue-600 hover:bg-blue-700">
+                        Tạo đề tài đầu tiên
+                      </Button>
                     </Link>
                   </CardContent>
                 </Card>
               ) : (
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="space-y-4">
-                      {myProjects.map((project: any) => (
-                        <TeacherProjectCard
-                          key={project.id}
-                          project={project}
-                          onEdit={projectOperations.handleUpdateRequest}
-                          onDelete={projectOperations.handleDeleteRequest}
-                        />
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="space-y-3">
+                  {myProjects.map((project: any) => (
+                    <TeacherProjectCard
+                      key={project.id}
+                      project={project}
+                      onEdit={projectOperations.handleUpdateRequest}
+                      onDelete={projectOperations.handleDeleteRequest}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           </main>

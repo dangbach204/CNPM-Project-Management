@@ -13,7 +13,7 @@ import { useAuthStore } from "@/stores/user";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { createProject } from "@/service/teacher-service";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, FileText } from "lucide-react";
 
 export default function NewProjectPage() {
   const { user } = useAuthStore();
@@ -67,42 +67,84 @@ export default function NewProjectPage() {
 
   return (
     <ProtectedRoute allowedRoles={["teacher"]}>
-      <div className="flex h-screen bg-background">
+      <div className="flex h-screen">
+        {/* Sidebar stays unchanged */}
         <Sidebar />
+
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto flex justify-center items-start">
-            <div className="p-8 max-w-2xl w-full">
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold text-center">
+
+          {/* Main content area with subtle blurred background */}
+          <main className="flex-1 overflow-y-auto relative">
+            {/* Background wrapper - decorative only, matches Project List page */}
+            <div className="absolute top-0 left-0 w-full h-full min-h-full overflow-hidden z-0 pointer-events-none">
+              {/* Blurred background image */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: "url(/bkhoa2.jpg)",
+                  backgroundSize: "cover",
+                  backgroundPosition: "top center",
+                  backgroundRepeat: "no-repeat",
+                  filter: "blur(10px)",
+                  opacity: 0.6,
+                  transform: "scale(1.1)",
+                }}
+              />
+              {/* Gradient overlay - fades to clean white */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.95) 55%)",
+                }}
+              />
+            </div>
+
+            {/* Content layer */}
+            <div className="relative z-10 min-h-full flex flex-col items-center py-10 px-6">
+              {/* Page header - centered with clear purpose */}
+              <div className="text-center mb-8 max-w-xl">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-100 text-blue-600 mb-4">
+                  <FileText className="w-7 h-7" />
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900">
                   Tạo đề tài mới
                 </h1>
-                <p className="text-muted-foreground mt-2 text-center">
-                  Nhập thông tin chi tiết cho đề tài của bạn
+                <p className="text-[14px] text-gray-600 mt-2 leading-relaxed">
+                  Thiết lập đề tài để sinh viên có thể đăng ký và thực hiện.
+                  <br />
+                  Vui lòng điền đầy đủ thông tin bên dưới.
                 </p>
               </div>
 
-              <Card>
-                <CardContent className="pt-6">
+              {/* Form card - stronger visual presence */}
+              <Card className="w-full max-w-2xl border border-gray-200 bg-white shadow-md">
+                <CardContent className="p-8">
                   <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Title field */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Tiêu đề Đề tài
+                      <label className="text-sm font-medium text-gray-900">
+                        Tiêu đề đề tài <span className="text-red-500">*</span>
                       </label>
                       <Input
-                        placeholder="Ví dụ: Xây dựng Website E-commerce"
+                        placeholder="Ví dụ: Xây dựng Website E-commerce với React"
                         value={formData.title}
                         onChange={(e) =>
                           setFormData({ ...formData, title: e.target.value })
                         }
+                        className="h-11"
                         required
                       />
                     </div>
 
+                    {/* Description field - improved placeholder */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Mô tả</label>
+                      <label className="text-sm font-medium text-gray-900">
+                        Mô tả
+                      </label>
                       <textarea
-                        placeholder="Mô tả chi tiết về đề tài..."
+                        placeholder="Mô tả mục tiêu, yêu cầu và phạm vi của đề tài.&#10;&#10;Ví dụ: Xây dựng một hệ thống quản lý bán hàng trực tuyến bao gồm các chức năng: đăng ký, đăng nhập, quản lý sản phẩm, giỏ hàng và thanh toán..."
                         value={formData.description}
                         onChange={(e) =>
                           setFormData({
@@ -110,41 +152,57 @@ export default function NewProjectPage() {
                             description: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                        rows={5}
+                        className="w-full px-3 py-3 border border-gray-200 rounded-md bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        rows={6}
                       />
                     </div>
 
+                    {/* Deadline field with helper text */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Ngày hết hạn (không bắt buộc)
-                      </label>
-                      <Input
-                        type="date"
-                        value={formData.expireAt}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            expireAt: e.target.value,
-                          })
-                        }
-                      />
+                      <div className="flex flex-row gap-4 items-center">
+                        <label className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                          Ngày hết hạn
+                        </label>
+                        <Input
+                          type="date"
+                          value={formData.expireAt}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              expireAt: e.target.value,
+                            })
+                          }
+                          className="h-11 max-w-xs"
+                        />
+                      </div>
+
+                      {/* Helper text explaining optional nature */}
+                      <p className="text-xs text-gray-500">
+                        Không bắt buộc. Nếu không đặt hạn, sinh viên có thể đăng
+                        ký bất cứ lúc nào.
+                      </p>
                     </div>
 
-                    <div className="flex gap-3 pt-4">
-                      <Button type="submit" disabled={loading}>
+                    {/* Action buttons - clear primary/secondary distinction */}
+                    <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => router.push("/teacher/projects")}
+                        disabled={loading}
+                        className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                      >
+                        Huỷ
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={loading}
+                        className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-6 h-10"
+                      >
                         {loading && (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         )}
-                        Tạo Đề tài
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => router.push("/teacher/projects")}
-                        disabled={loading}
-                      >
-                        Hủy
+                        Tạo đề tài
                       </Button>
                     </div>
                   </form>

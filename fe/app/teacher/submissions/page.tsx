@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import {
@@ -30,7 +31,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Loader2, FileText, User, Calendar, Award } from "lucide-react";
-import Link from "next/link";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useGetSubmissions } from "@/hooks/useGetSubmissions";
 import { teacherGradeSubmission } from "@/service/teacher-service";
@@ -48,6 +48,8 @@ type Submission = {
 };
 
 export default function TeacherSubmissionsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     submissions: submissionsResponse,
     isLoading,
@@ -60,7 +62,17 @@ export default function TeacherSubmissionsPage() {
     useState<Submission | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isGrading, setIsGrading] = useState(false);
-  const [gradeData, setGradeData] = useState({
+  const [gradeData, setGradeData] = useState<{
+    score: number | null;
+    feedback: string;
+  }>({
+    score: 0,
+    feedback: "",
+  });
+  const [initialGradeData, setInitialGradeData] = useState<{
+    score: number | null;
+    feedback: string;
+  }>({
     score: 0,
     feedback: "",
   });
@@ -71,6 +83,25 @@ export default function TeacherSubmissionsPage() {
   const totalSubmissions = Array.isArray(submissionsResponse)
     ? submissionsResponse.length
     : (submissionsResponse as any)?.totalSubmissions || 0;
+
+  useEffect(() => {
+    const gradeId = searchParams.get("gradeId");
+    if (gradeId && submissions.length > 0) {
+      const targetSubmission = submissions.find(
+        (s) => s.id === parseInt(gradeId)
+      );
+      if (targetSubmission) {
+        const initialData = {
+          score: targetSubmission.score ?? 0,
+          feedback: targetSubmission.feedback || "",
+        };
+        setSelectedSubmission(targetSubmission);
+        setGradeData(initialData);
+        setInitialGradeData(initialData);
+        setIsDialogOpen(true);
+      }
+    }
+  }, [searchParams, submissions]);
 
   const filteredSubmissions = submissions.filter((submission) => {
     const matchesSearch =
@@ -94,20 +125,55 @@ export default function TeacherSubmissionsPage() {
   ).length;
   const notGradedCount = submissions.length - gradedCount;
 
+  const handleDialogClose = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      const currentParams = new URLSearchParams(searchParams.toString());
+      if (currentParams.has("gradeId")) {
+        currentParams.delete("gradeId");
+        const newPath = currentParams.toString()
+          ? `/teacher/submissions?${currentParams.toString()}`
+          : "/teacher/submissions";
+        router.replace(newPath, { scroll: false });
+      }
+    }
+  };
+
   const handleViewDetails = (submission: Submission) => {
-    setSelectedSubmission(submission);
-    setGradeData({
+    const initialData = {
       score: submission.score ?? 0,
       feedback: submission.feedback || "",
-    });
+    };
+    setSelectedSubmission(submission);
+    setGradeData(initialData);
+    setInitialGradeData(initialData);
     setIsDialogOpen(true);
+
+    router.replace(`/teacher/submissions?gradeId=${submission.id}`, {
+      scroll: false,
+    });
   };
+
+  const hasChanges =
+    gradeData.score !== initialGradeData.score ||
+    gradeData.feedback !== initialGradeData.feedback;
 
   const handleSubmitGrade = async () => {
     if (!selectedSubmission) return;
 
+    if (!hasChanges) {
+      setIsDialogOpen(false);
+      router.replace("/teacher/submissions", { scroll: false });
+      return;
+    }
+
     const scoreValue = gradeData.score;
-    if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 10) {
+    if (
+      scoreValue === null ||
+      isNaN(scoreValue) ||
+      scoreValue < 0 ||
+      scoreValue > 10
+    ) {
       toast({
         title: "Lỗi",
         description: "Điểm phải là số từ 0 đến 10",
@@ -128,9 +194,10 @@ export default function TeacherSubmissionsPage() {
         description: "Đã chấm điểm thành công",
       });
 
-      // Refresh data
       refetch();
       setIsDialogOpen(false);
+
+      router.replace("/teacher/submissions", { scroll: false });
     } catch (error) {
       toast({
         title: "Lỗi",
@@ -153,13 +220,13 @@ export default function TeacherSubmissionsPage() {
       submission.score !== null && submission.score !== undefined;
     if (isGraded) {
       return (
-        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-0">
+        <Badge className="bg-green-50 text-green-600 hover:bg-green-50 border-0 text-[11px] font-medium">
           Đã chấm
         </Badge>
       );
     }
     return (
-      <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-0">
+      <Badge className="bg-amber-50 text-amber-600 hover:bg-amber-50 border-0 text-[11px] font-medium">
         Chưa chấm
       </Badge>
     );
@@ -183,141 +250,184 @@ export default function TeacherSubmissionsPage() {
 
   return (
     <ProtectedRoute allowedRoles={["teacher"]}>
-      <div className="flex h-screen bg-background">
+      <div className="flex h-screen">
+        {/* Sidebar and Header remain unchanged */}
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto relative" style={{
-            backgroundImage: 'url(/bkhoa1.jpg)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center 30%',
-            backgroundRepeat: 'no-repeat',
-            backgroundAttachment: 'fixed',
-          }}>
-            <div className="absolute inset-0 bg-white/90 backdrop-blur-xl -z-10"></div>
-            <div className="p-8 space-y-8">
-              {/* Stats Cards */}
+
+          {/* Main content with subtle background treatment */}
+          <main className="flex-1 overflow-y-auto relative">
+            {/* BACKGROUND WRAPPER */}
+            <div className="absolute top-0 left-0 w-full h-full min-h-full overflow-hidden z-0 pointer-events-none">
+              {/* Blurred background image */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: "url(/bkhoa2.jpg)",
+                  backgroundSize: "cover",
+                  backgroundPosition: "top center",
+                  backgroundRepeat: "no-repeat",
+                  filter: "blur(10px)",
+                  opacity: 0.6,
+                  transform: "scale(1.1)",
+                }}
+              />
+
+              {/* Gradient overlay (fade to white) */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.95) 55%)",
+                }}
+              />
+            </div>
+
+            {/* Content layer */}
+            <div className="relative z-10 min-h-full p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
+              {/* Stats Cards - reduced visual weight with softer styling */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-white/90 backdrop-blur-sm border-0">
-                  <CardContent className="pt-6">
+                <Card className="bg-white border border-gray-100 shadow-sm">
+                  <CardContent className="p-5">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-xl text-black font-bold">
+                        <p className="text-sm font-medium text-gray-600">
                           Tổng bài nộp
                         </p>
-                        <p className="text-4xl font-bold mt-2">
+                        <p className="text-3xl font-bold text-gray-900 mt-1">
                           {totalSubmissions}
                         </p>
                       </div>
-                      <div className="p-3 bg-blue-50 rounded-lg">
-                        <FileText className="w-7 h-7 text-blue-600" />
+                      <div className="p-2.5 bg-blue-50 rounded-lg">
+                        <FileText className="w-5 h-5 text-blue-600" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="bg-white/90 backdrop-blur-sm border-0">
-                  <CardContent className="pt-6">
+                <Card className="bg-white border border-gray-100 shadow-sm">
+                  <CardContent className="p-5">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-xl text-black font-bold">
+                        <p className="text-sm font-medium text-gray-600">
                           Đã chấm
                         </p>
-                        <p className="text-4xl font-bold mt-2 text-green-600">
+                        <p className="text-3xl font-bold text-green-600 mt-1">
                           {gradedCount}
                         </p>
                       </div>
-                      <div className="p-3 bg-green-50 rounded-lg">
-                        <Award className="w-7 h-7 text-green-600" />
+                      <div className="p-2.5 bg-green-50 rounded-lg">
+                        <Award className="w-5 h-5 text-green-600" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="bg-white/90 backdrop-blur-sm border-0">
-                  <CardContent className="pt-6">
+                <Card className="bg-white border border-gray-100 shadow-sm">
+                  <CardContent className="p-5">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-xl text-black font-bold">
+                        <p className="text-sm font-medium text-gray-600">
                           Chưa chấm
                         </p>
-                        <p className="text-4xl font-bold mt-2 text-yellow-600">
+                        <p className="text-3xl font-bold text-amber-600 mt-1">
                           {notGradedCount}
                         </p>
                       </div>
-                      <div className="p-3 bg-yellow-50 rounded-lg">
-                        <FileText className="w-7 h-7 text-yellow-600" />
+                      <div className="p-2.5 bg-amber-50 rounded-lg">
+                        <FileText className="w-5 h-5 text-amber-600" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Filters */}
-              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div className="relative w-full md:flex-1 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-sm">
-                  <Search className="absolute left-5 top-5 h-4 w-4 text-muted-foreground" />
+              {/* Search & Filter - cohesive control bar */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Tìm kiếm theo tên dự án hoặc sinh viên..."
-                    className="pl-8 bg-transparent border-0"
+                    className="pl-9 h-10 bg-white border-gray-200 rounded-lg"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <div className="bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-sm">
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[180px] bg-transparent border-0">
-                      <SelectValue placeholder="Tất cả trạng thái" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                      <SelectItem value="graded">Đã chấm</SelectItem>
-                      <SelectItem value="not_graded">Chưa chấm</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-[200px] h-10 bg-white border-gray-200 rounded-lg">
+                    <SelectValue placeholder="Tất cả trạng thái" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" sideOffset={4}>
+                    <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                    <SelectItem value="graded">Đã chấm</SelectItem>
+                    <SelectItem value="not_graded">Chưa chấm</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Submission Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Submission Cards - more compact with clear hierarchy */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredSubmissions.length === 0 ? (
-                  <div className="col-span-full text-center py-12 text-muted-foreground">
-                    Không tìm thấy bài nộp nào
+                  <div className="col-span-full text-center py-16">
+                    <p className="text-sm text-gray-400">
+                      Không tìm thấy bài nộp nào
+                    </p>
                   </div>
                 ) : (
-                  filteredSubmissions.map((submission) => (
-                    <Card
-                      key={submission.id}
-                      className="hover:shadow-lg transition-shadow cursor-pointer"
-                      onClick={() => handleViewDetails(submission)}
-                    >
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="text-lg line-clamp-1">
-                              {submission.projectTitle}
-                            </CardTitle>
-                            <CardDescription className="mt-2">
-                              {submission.studentName}
-                            </CardDescription>
+                  filteredSubmissions.map((submission) => {
+                    const isGraded =
+                      submission.score !== null &&
+                      submission.score !== undefined;
+
+                    const getScoreColorClass = (score: number) => {
+                      if (score < 7) return "text-red-600";
+                      if (score < 8.5) return "text-yellow-600";
+                      return "text-green-600";
+                    };
+
+                    return (
+                      <Card
+                        key={submission.id}
+                        className="bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
+                        onClick={() => handleViewDetails(submission)}
+                      >
+                        {/* Card header - status first, then title */}
+                        <CardHeader className="p-4 pb-3">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            {/* Status badge emphasized */}
+                            {getStatusBadge(submission)}
                           </div>
-                          {getStatusBadge(submission)}
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
+                          <CardTitle className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug">
+                            {submission.projectTitle}
+                          </CardTitle>
+                        </CardHeader>
+
+                        {/* Card content - student and meta info */}
+                        <CardContent className="p-4 pt-0 space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <User className="h-3.5 w-3.5 shrink-0" />
+                            <span className="truncate">
+                              {submission.studentName}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <Calendar className="h-3.5 w-3.5 shrink-0" />
                             <span>{submission.submittedAt}</span>
                           </div>
-                          {submission.score !== null && submission.score !== undefined && (
-                            <div className={`flex items-center gap-2 font-semibold ${getScoreColor(submission.score)}`}>
-                              <Award className="h-4 w-4" />
+                          {/* Score with color-coded display */}
+                          {isGraded && (
+                            <div
+                              className={`flex items-center gap-2 text-sm pt-1 font-medium ${getScoreColorClass(
+                                submission.score!
+                              )}`}
+                            >
+                              <Award className="h-3.5 w-3.5 shrink-0" />
                               <span>Điểm: {submission.score}</span>
                             </div>
                           )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
+                        </CardContent>
+                      </Card>
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -325,122 +435,185 @@ export default function TeacherSubmissionsPage() {
         </div>
       </div>
 
-      {/* Detail Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Chi tiết bài nộp</DialogTitle>
-            <DialogDescription>
+      {/* Detail Dialog - URL-driven for shareability */}
+      <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+        {/* Dialog with clean layout and proper spacing */}
+        <DialogContent className="max-w-2xl p-0 gap-0 border-gray-200">
+          {/* Header - lighter title with subtle subtitle */}
+          <DialogHeader className="px-6 py-5 border-b border-gray-100">
+            <DialogTitle className="text-lg font-medium text-gray-900">
+              Chi tiết bài nộp
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 mt-1">
               Thông tin chi tiết về bài nộp của sinh viên
             </DialogDescription>
           </DialogHeader>
+
           {selectedSubmission && (
-            <div className="space-y-6">
-              {/* Project Info */}
-              <div className="space-y-2">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Dự án
-                </h3>
-                <p className="text-lg">{selectedSubmission.projectTitle}</p>
-              </div>
+            <div className="px-6 py-5 space-y-6">
+              {/* Helper function for score color feedback */}
+              {(() => {
+                const getScoreColorClass = (score: number | null) => {
+                  if (score === null || score === 0) return "text-gray-900";
+                  if (score < 7) return "text-red-600";
+                  if (score < 8.5) return "text-amber-600";
+                  return "text-green-600";
+                };
+                const scoreColorClass = getScoreColorClass(gradeData.score);
 
-              {/* Student Info */}
-              <div className="space-y-2">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Sinh viên
-                </h3>
-                <div className="space-y-1">
-                  <p className="text-lg font-medium">
-                    {selectedSubmission.studentName}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedSubmission.studentEmail}
-                  </p>
-                </div>
-              </div>
+                return (
+                  <>
+                    {/* Read-only information section - grouped with muted styling */}
+                    <div className="space-y-4 pb-5 border-b border-gray-100">
+                      {/* Project Info */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-3.5 w-3.5 text-gray-400" />
+                          <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Dự án
+                          </Label>
+                        </div>
+                        <p className="text-base text-gray-900 pl-5">
+                          {selectedSubmission.projectTitle}
+                        </p>
+                      </div>
 
-              {/* Submission Date */}
-              <div className="space-y-2">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Ngày giờ nộp
-                </h3>
-                <p>{selectedSubmission.submittedAt}</p>
-              </div>
+                      {/* Student Info */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <User className="h-3.5 w-3.5 text-gray-400" />
+                          <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Sinh viên
+                          </Label>
+                        </div>
+                        <div className="pl-5 space-y-0.5">
+                          <p className="text-base font-medium text-gray-900">
+                            {selectedSubmission.studentName}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {selectedSubmission.studentEmail}
+                          </p>
+                        </div>
+                      </div>
 
-              {/* Grade Info */}
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Award className="h-4 w-4" />
-                  Chấm điểm
-                </h3>
+                      {/* Submission Date */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                          <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Ngày giờ nộp
+                          </Label>
+                        </div>
+                        <p className="text-base text-gray-900 pl-5">
+                          {selectedSubmission.submittedAt}
+                        </p>
+                      </div>
+                    </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="grade">Điểm số (0-10)</Label>
-                    <Input
-                      id="grade"
-                      type="number"
-                      min="0"
-                      max="10"
-                      step="0.1"
-                      placeholder="Nhập điểm..."
-                      value={gradeData.score}
-                      onChange={(e) =>
-                        setGradeData({
-                          ...gradeData,
-                          score: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  </div>
+                    {/* Grading section - main focus area */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Award className="h-4 w-4 text-blue-600" />
+                        <h3 className="text-sm font-semibold text-gray-900">
+                          Chấm điểm
+                        </h3>
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="feedback">Nhận xét</Label>
-                    <Textarea
-                      id="feedback"
-                      placeholder="Nhập nhận xét về bài làm của sinh viên..."
-                      rows={4}
-                      value={gradeData.feedback}
-                      onChange={(e) =>
-                        setGradeData({ ...gradeData, feedback: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
+                      <div className="space-y-4 pl-6">
+                        {/* Score input with clear range indication and color feedback */}
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="grade"
+                            className="text-xs font-medium text-gray-500 uppercase tracking-wide"
+                          >
+                            Điểm số (0–10)
+                          </Label>
+                          <Input
+                            id="grade"
+                            type="number"
+                            min="0"
+                            max="10"
+                            step="0.1"
+                            placeholder="Nhập điểm từ 0 đến 10"
+                            value={gradeData.score ?? ""}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setGradeData({
+                                ...gradeData,
+                                score: value === "" ? null : Number(value),
+                              });
+                            }}
+                            className={`h-10 max-w-xs border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-semibold ${scoreColorClass}`}
+                          />
+                        </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-4">
-                <Button
-                  className="flex-1"
-                  onClick={handleSubmitGrade}
-                  disabled={isGrading || !gradeData.score}
-                >
-                  {isGrading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Đang lưu...
-                    </>
-                  ) : selectedSubmission?.score ? (
-                    "Cập nhật điểm"
-                  ) : (
-                    "Lưu điểm"
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    window.open(selectedSubmission?.reportLink, "_blank")
-                  }
-                >
-                  Xem báo cáo
-                </Button>
-              </div>
+                        {/* Feedback textarea - comfortable height with softer styling */}
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="feedback"
+                            className="text-xs font-medium text-gray-500 uppercase tracking-wide"
+                          >
+                            Nhận xét
+                          </Label>
+                          <Textarea
+                            id="feedback"
+                            placeholder="Nhập nhận xét về bài làm của sinh viên..."
+                            rows={5}
+                            value={gradeData.feedback}
+                            onChange={(e) =>
+                              setGradeData({
+                                ...gradeData,
+                                feedback: e.target.value,
+                              })
+                            }
+                            className="border-gray-200 rounded-lg resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
+
+          {/* Footer with clear action hierarchy */}
+          <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+            <div className="flex items-center justify-between gap-3">
+              {/* Secondary action - view report */}
+              <Button
+                variant="outline"
+                onClick={() =>
+                  window.open(selectedSubmission?.reportLink, "_blank")
+                }
+                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-gray-200"
+              >
+                Xem báo cáo
+              </Button>
+
+              {/* Primary action - save grade */}
+              <Button
+                onClick={handleSubmitGrade}
+                disabled={
+                  isGrading ||
+                  !gradeData.score ||
+                  (selectedSubmission?.score != null && !hasChanges)
+                }
+                className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-6"
+              >
+                {isGrading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Đang lưu...
+                  </>
+                ) : selectedSubmission?.score ? (
+                  "Cập nhật điểm"
+                ) : (
+                  "Lưu điểm"
+                )}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </ProtectedRoute>
