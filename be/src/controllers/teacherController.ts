@@ -340,7 +340,7 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
           projectId,
           { student_id: studentId }
         );
-        // Gửi thông báo cho sinh viên
+
         if (req.user?.id) {
           await notifyStudent(
             studentId,
@@ -582,7 +582,6 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
       await grade.save();
     }
 
-    // Gửi thông báo cho sinh viên
     console.log("📧 Attempting to send notification...");
     const submissionData = await Submission.findByPk(submissionId, {
       include: [
@@ -706,8 +705,7 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
         { updated_fields: Object.keys(updateData), ...updateData }
       );
 
-      // Gửi thông báo cho sinh viên nếu có thay đổi status hoặc expiredAt
-      console.log("🔔 Checking notification conditions:", {
+      console.log("Checking notification conditions:", {
         hasStatus: status !== undefined,
         hasExpiredAt: expiredAt !== undefined,
         hasUserId: !!req.user?.id,
@@ -818,7 +816,6 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
           { student_id: studentId }
         );
 
-        // Gửi thông báo cho sinh viên
         if (req.user?.id) {
           await notifyStudent(
             studentId,

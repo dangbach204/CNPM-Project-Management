@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { getProjects, joinProject } from "@/service/student-service";
 import { useToast } from "@/hooks/use-toast";
 import { Project } from "@/types/student";
+import { parseApiError, getUserFriendlyMessage } from "@/lib/error-utils";
 
 interface ProjectsData {
   projects: Project[];
@@ -15,6 +16,9 @@ export const useStudentProjects = () => {
     myProjectIds: [],
   });
   const [joinLoading, setJoinLoading] = useState(false);
+  const [alreadyJoinedError, setAlreadyJoinedError] = useState<{
+    projectName: string;
+  } | null>(null);
   const { toast } = useToast();
 
   const fetchProjects = async () => {
@@ -43,6 +47,7 @@ export const useStudentProjects = () => {
   const handleJoinProject = async (projectId: number) => {
     try {
       setJoinLoading(true);
+      setAlreadyJoinedError(null);
       await joinProject(projectId);
       toast({
         title: "Thành công",
@@ -50,16 +55,27 @@ export const useStudentProjects = () => {
       });
       await fetchProjects();
     } catch (error: any) {
-      console.error("Error joining project:", error);
-      toast({
-        title: "Lỗi",
-        description:
-          error?.response?.data?.message || "Không thể tham gia đề tài",
-        variant: "destructive",
-      });
+      const errorDetails = parseApiError(error);
+
+      if (errorDetails.status === 400 && errorDetails.details?.joinedProject) {
+        const joinedProject = errorDetails.details.joinedProject;
+        setAlreadyJoinedError({
+          projectName: joinedProject.title || "dự án hiện tại",
+        });
+      } else {
+        toast({
+          title: errorDetails.type === "network" ? "Lỗi kết nối" : "Lỗi",
+          description: getUserFriendlyMessage(errorDetails),
+          variant: "destructive",
+        });
+      }
     } finally {
       setJoinLoading(false);
     }
+  };
+
+  const clearAlreadyJoinedError = () => {
+    setAlreadyJoinedError(null);
   };
 
   return {
@@ -69,5 +85,7 @@ export const useStudentProjects = () => {
     joinLoading,
     handleJoinProject,
     refreshProjects: fetchProjects,
+    alreadyJoinedError,
+    clearAlreadyJoinedError,
   };
 };

@@ -1,5 +1,6 @@
 import api from "@/config/axios";
 import { STUDENT } from "@/constants/api-endpoint";
+import { logDetailedError } from "@/lib/error-utils";
 
 export const getStudentOverview = async () => {
   try {
@@ -35,8 +36,8 @@ export const joinProject = async (projectId: number) => {
   try {
     const response = await api.patch(`${STUDENT.JOIN_PROJECT}/${projectId}`);
     return response.data;
-  } catch (error) {
-    console.error("Error joining project:", error);
+  } catch (error: any) {
+    logDetailedError("joinProject", error, { projectId });
     throw error;
   }
 };
