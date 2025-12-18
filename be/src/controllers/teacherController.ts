@@ -67,7 +67,7 @@ export const getTeacherOverview = async (req: Request, res: Response) => {
         ],
       }),
       User.findAll({
-        where: { role: "student", is_active: true },
+        where: { role: "student" },
         attributes: ["id", "full_name", "email", "avatar"],
         order: [["id", "ASC"]],
         include: [

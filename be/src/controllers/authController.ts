@@ -33,7 +33,7 @@ export const loginUser = async (req: Request, res: Response) => {
 
   try {
     const user = await User.findOne({
-      where: { email, is_active: true },
+      where: { email },
     });
 
     if (!user)
@@ -83,7 +83,7 @@ export const refreshToken = async (req: Request, res: Response) => {
     ) as { id: number };
 
     const user = await User.findOne({
-      where: { id: payload.id, is_active: true },
+      where: { id: payload.id },
     });
 
     if (!user) {
