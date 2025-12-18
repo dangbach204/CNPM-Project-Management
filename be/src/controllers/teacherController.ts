@@ -8,6 +8,7 @@ import {
   parseDate,
 } from "../utils/formatDate";
 import { notifyStudent } from "./notificationController";
+
 export const getTeacherOverview = async (req: Request, res: Response) => {
   try {
     const teacherId = req.user?.id;
@@ -594,10 +595,6 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
     const submissionId = req.params.submissionId;
     const { score, feedback } = req.body;
 
-    console.log('=== GRADE REQUEST ===');
-    console.log('score:', score, 'type:', typeof score);
-    console.log('feedback:', feedback);
-
     if (score === undefined || score === null) {
       return res.status(400).json({ message: "Score is required" });
     }
@@ -631,7 +628,6 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
       await grade.save();
     }
 
-    console.log("📧 Attempting to send notification...");
     const submissionData = await Submission.findByPk(submissionId, {
       include: [
         {
@@ -647,16 +643,9 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
       attributes: ["full_name"],
     });
 
-    console.log("📧 Submission data:", {
-      studentId: submissionData?.student_id,
-      teacherId: req.user?.id,
-      teacherName: teacher?.full_name,
-      projectTitle: (submissionData as any)?.submissionProject?.title,
-    });
-
     if (submissionData && req.user?.id) {
       console.log(
-        "📧 Sending notification to student ID:",
+        "Sending notification to student ID:",
         submissionData.student_id
       );
       try {
@@ -671,12 +660,12 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
           projectTitle,
           `${teacherName} đã chấm điểm báo cáo đề tài "${projectTitle}" của bạn: ${numericScore}/10${feedback ? ` - Nhận xét: ${feedback}` : ""}`
         );
-        console.log("✅ Notification sent successfully!");
+        console.log("Notification sent successfully!");
       } catch (error) {
-        console.error("❌ Error sending notification:", error);
+        console.error("Error sending notification:", error);
       }
     } else {
-      console.log("❌ Cannot send notification - missing data");
+      console.log("Cannot send notification - missing data");
     }
 
     return res.status(200).json({
@@ -704,8 +693,6 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid projectId parameter" });
     }
 
-    console.log("🎯 teacherUpdateProjectInfo - Request body:", req.body);
-
     const {
       title,
       description,
@@ -714,15 +701,6 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
       addStudents,
       removeStudents,
     } = req.body;
-
-    console.log("📦 Extracted fields:", {
-      title,
-      description,
-      status,
-      expiredAt,
-      addStudents,
-      removeStudents,
-    });
 
     if (
       !title &&
@@ -776,11 +754,8 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
       actualChanges.expiredAt = expiredAt;
     }
 
-    console.log("💾 updateData:", updateData);
-    console.log("🔢 updateData keys count:", Object.keys(updateData).length);
-
     if (Object.keys(updateData).length > 0) {
-      console.log("✅ Updating project with data:", updateData);
+
       await project.update(updateData, { transaction });
 
       await LogService.log(
@@ -791,22 +766,10 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
         { updated_fields: Object.keys(updateData), ...updateData }
       );
 
-      // Gửi thông báo cho sinh viên - mỗi thay đổi một thông báo riêng
-      console.log("🔔 Checking notification conditions:", {
-        hasTitle: title !== undefined,
-        hasDescription: description !== undefined,
-      console.log("Checking notification conditions:", {
-        hasStatus: status !== undefined,
-        hasExpiredAt: expiredAt !== undefined,
-        hasUserId: !!req.user?.id,
-      });
-
       if ((status !== undefined || expiredAt !== undefined || title !== undefined || description !== undefined) && req.user?.id) {
         const projectStudents = await ProjectStudents.findAll({
           where: { project_id: projectId },
         });
-
-        console.log("👥 Found students in project:", projectStudents.length);
 
         const statusLabels: { [key: string]: string } = {
           open: "Trống",
@@ -858,8 +821,7 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
               `đã đổi trạng thái dự án thành "${statusLabels[actualChanges.status] || actualChanges.status}"`
             );
           }
-          
-          // Thông báo khi đổi hạn nộp (CHỈ khi thay đổi)
+
           if (actualChanges.expiredAt) {
             const date = new Date(actualChanges.expiredAt);
             await notifyStudent(
@@ -873,9 +835,8 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
           }
         }
 
-        console.log("✅ Notifications sent successfully");
       } else {
-        console.log("❌ Notification conditions not met");
+        console.log("Notification conditions not met");
       }
     }
 
