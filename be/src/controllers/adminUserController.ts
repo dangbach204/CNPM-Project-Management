@@ -40,6 +40,17 @@ export const createUser = async (req: Request, res: Response) => {
       }
     );
 
+    // Gửi thông báo cho các admin khác
+    if (req.user?.id) {
+      await notifyOtherAdmins(
+        req.user.id,
+        "user_created",
+        newUser.id,
+        newUser.full_name,
+        `đã tạo tài khoản mới "${newUser.full_name}" (${newUser.role})`
+      );
+    }
+
     return res.status(201).json({
       message: "User created successfully",
       id: newUser.id,

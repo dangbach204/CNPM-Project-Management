@@ -157,6 +157,15 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Project không tồn tại" });
     }
 
+    // Lưu giá trị cũ để so sánh
+    const oldValues = {
+      title: project.title,
+      description: project.description,
+      teacherId: project.teacher_id,
+      status: project.status,
+      expiredAt: project.expire_at,
+    };
+
     if (expiredAt && !isValidISODate(expiredAt)) {
       await transaction.rollback();
       return res.status(400).json({
@@ -179,6 +188,41 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
     if (teacherId !== undefined) updateData.teacher_id = teacherId;
     if (status !== undefined) updateData.status = status;
     if (expiredAt !== undefined) updateData.expire_at = expiredAt;
+
+    // Track actual changes để chỉ gửi thông báo cho field thực sự thay đổi
+    const actualChanges: any = {};
+    if (title !== undefined && title !== oldValues.title) actualChanges.title = title;
+    if (description !== undefined && description !== oldValues.description) actualChanges.description = description;
+    
+    // So sánh teacherId (convert về Number để đảm bảo kiểu dữ liệu giống nhau)
+    if (teacherId !== undefined && Number(teacherId) !== Number(oldValues.teacherId)) {
+      actualChanges.teacherId = teacherId;
+    }
+    
+    if (status !== undefined && status !== oldValues.status) actualChanges.status = status;
+    
+    // So sánh date chính xác (CHỈ so sánh phần NGÀY, không so sánh time)
+    if (expiredAt !== undefined && oldValues.expiredAt) {
+      // Extract chỉ phần date (YYYY-MM-DD)
+      const newDateOnly = new Date(expiredAt).toISOString().split('T')[0];
+      const oldDateOnly = new Date(oldValues.expiredAt).toISOString().split('T')[0];
+      
+      console.log('=== DEBUG DATE COMPARISON ===');
+      console.log('newDateOnly:', newDateOnly);
+      console.log('oldDateOnly:', oldDateOnly);
+      console.log('Are they equal?', newDateOnly === oldDateOnly);
+      
+      if (newDateOnly !== oldDateOnly) {
+        actualChanges.expiredAt = expiredAt;
+      }
+    } else if (expiredAt !== undefined && !oldValues.expiredAt) {
+      // Trường hợp thêm mới expiredAt
+      actualChanges.expiredAt = expiredAt;
+    }
+    
+    console.log('=== ACTUAL CHANGES ===');
+    console.log('actualChanges:', actualChanges);
+    console.log('========================');
 
     if (Object.keys(updateData).length > 0) {
       await project.update(updateData, { transaction });
@@ -277,17 +321,100 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
 
     await transaction.commit();
 
-    // Gửi thông báo cho các admin khác
+    // Gửi thông báo cho các admin khác - CHỈ khi giá trị THỰC SỰ thay đổi
     if (req.user?.id) {
       const project = await Project.findByPk(projectId);
       if (project) {
-        await notifyOtherAdmins(
-          req.user.id,
-          "project_updated",
-          projectId,
-          project.title,
-          `đã cập nhật thông tin đề tài "${project.title}"`
-        );
+        // Thông báo khi đổi tên (CHỈ khi thay đổi)
+        if (actualChanges.title) {
+          await notifyOtherAdmins(
+            req.user.id,
+            "project_updated",
+            projectId,
+            project.title,
+            `đã đổi tên đề tài thành "${actualChanges.title}"`
+          );
+        }
+        
+        // Thông báo khi đổi mô tả (CHỈ khi thay đổi)
+        if (actualChanges.description) {
+          const shortDesc = actualChanges.description.length > 100 
+            ? actualChanges.description.substring(0, 100) + '...' 
+            : actualChanges.description;
+          await notifyOtherAdmins(
+            req.user.id,
+            "project_updated",
+            projectId,
+            project.title,
+            `đã đổi mô tả đề tài thành "${shortDesc}"`
+          );
+        }
+        
+        // Thông báo khi đổi trạng thái (CHỈ khi thay đổi)
+        if (actualChanges.status) {
+          const statusLabels: { [key: string]: string } = {
+            open: "Trống",
+            available: "Mở",
+            pending: "Đang thực hiện",
+            completed: "Hoàn thành",
+            approved: "Đã phê duyệt",
+            rejected: "Đã từ chối",
+            expired: "Hết hạn",
+          };
+          await notifyOtherAdmins(
+            req.user.id,
+            "project_updated",
+            projectId,
+            project.title,
+            `đã đổi trạng thái đề tài thành "${statusLabels[actualChanges.status] || actualChanges.status}"`
+          );
+        }
+        
+        // Thông báo khi đổi hạn nộp (CHỈ khi thay đổi)
+        if (actualChanges.expiredAt) {
+          const date = new Date(actualChanges.expiredAt);
+          await notifyOtherAdmins(
+            req.user.id,
+            "project_updated",
+            projectId,
+            project.title,
+            `đã đổi hạn nộp đề tài thành ${date.toLocaleDateString('vi-VN')}`
+          );
+        }
+        
+        // Thông báo khi đổi giáo viên (CHỈ khi thay đổi)
+        if (actualChanges.teacherId) {
+          const teacher = await User.findByPk(actualChanges.teacherId);
+          await notifyOtherAdmins(
+            req.user.id,
+            "project_updated",
+            projectId,
+            project.title,
+            `đã đổi giáo viên hướng dẫn đề tài thành "${teacher?.full_name}"`
+          );
+        }
+        
+        // Thông báo khi thêm sinh viên
+        if (addStudents && addStudents.length > 0) {
+          await notifyOtherAdmins(
+            req.user.id,
+            "project_updated",
+            projectId,
+            project.title,
+            `đã thêm ${addStudents.length} sinh viên vào đề tài`
+          );
+        }
+        
+        // Thông báo khi xóa sinh viên
+        if (removeStudents && removeStudents.length > 0) {
+          await notifyOtherAdmins(
+            req.user.id,
+            "project_updated",
+            projectId,
+            project.title,
+            `đã xóa ${removeStudents.length} sinh viên khỏi đề tài`
+          );
+        }
       }
     }
 

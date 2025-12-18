@@ -123,6 +123,7 @@ export const createNotification = async (data: {
   recipientId: number;
   actorId: number;
   type:
+    | "user_created"
     | "user_updated"
     | "project_updated"
     | "grade_submitted"
@@ -203,7 +204,7 @@ export const notifyStudent = async (
 
 export const notifyOtherAdmins = async (
   actorId: number,
-  type: "user_updated" | "project_updated",
+  type: "user_created" | "user_updated" | "project_updated",
   entityId: number,
   entityName: string,
   message: string
