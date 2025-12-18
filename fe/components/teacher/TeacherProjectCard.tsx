@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit2, Trash2, Users, Calendar, Clock } from "lucide-react";
 import {
-  getProjectStatusColor,
   getProjectStatusLabel,
 } from "@/lib/project-utils";
 import { formatDate, getFieldValue } from "@/lib/project-helpers";
@@ -27,13 +26,29 @@ export function TeacherProjectCard({
   const getStatusBadge = () => {
     const status = project.status;
     if (status === "open" || status === "Mở") {
-      return "bg-blue-100 text-blue-700 hover:bg-blue-100";
-    } else if (status === "approved" || status === "Đã phê duyệt") {
-      return "bg-green-100 text-green-700 hover:bg-green-100";
+      return "bg-green-600 text-white";
+    } else if (status === "pending" || status === "Đang thực hiện") {
+      return "bg-yellow-600 text-white";
+    } else if (status === "completed" || status === "Hoàn thành") {
+      return "bg-blue-600 text-white";
     } else if (status === "expired" || status === "Hết hạn") {
-      return "bg-gray-100 text-gray-600 hover:bg-gray-100";
+      return "bg-red-600 text-white";
     }
-    return "bg-gray-100 text-gray-600 hover:bg-gray-100";
+    return "bg-gray-600 text-white";
+  };
+
+  const getCardBackground = () => {
+    const status = project.status;
+    if (status === "open" || status === "Mở") {
+      return "bg-green-50/50";
+    } else if (status === "pending" || status === "Đang thực hiện") {
+      return "bg-yellow-50/50";
+    } else if (status === "completed" || status === "Hoàn thành") {
+      return "bg-blue-50/50";
+    } else if (status === "expired" || status === "Hết hạn") {
+      return "bg-red-50/50";
+    }
+    return "bg-white";
   };
 
   return (
@@ -46,7 +61,7 @@ export function TeacherProjectCard({
       />
 
       {/* Compact card with single-row layout */}
-      <div className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
+      <div className={`border border-gray-200 rounded-lg p-4 ${getCardBackground()} hover:shadow-md transition-shadow`}>
         {/* Top row: Title + Badge + Actions */}
         <div className="flex items-start justify-between gap-4 mb-2">
           <div className="flex-1 min-w-0">
@@ -54,7 +69,7 @@ export function TeacherProjectCard({
               <h3 className="text-[15px] font-semibold text-gray-900 truncate">
                 {project.title}
               </h3>
-              <Badge className={`text-[10px] px-2 py-0.5 ${getStatusBadge()}`}>
+              <Badge className={`text-[11px] px-3 py-1 font-semibold ${getStatusBadge()}`}>
                 {getProjectStatusLabel(project.status)}
               </Badge>
             </div>

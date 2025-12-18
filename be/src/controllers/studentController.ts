@@ -312,6 +312,18 @@ export const studentGetProjects = async (req: Request, res: Response) => {
       ],
     });
 
+    const now = new Date();
+    for (const project of projects) {
+      const projectData = project.toJSON() as any;
+      if (
+        projectData.expire_at &&
+        new Date(projectData.expire_at) < now &&
+        projectData.status !== "expired"
+      ) {
+        await project.update({ status: "expired" });
+      }
+    }
+
     const formattedProjects = projects.map((project: any) => {
       const currentStudentCount = project.projectStudents?.length || 0;
       const maxStudents = project.max_students || 4;

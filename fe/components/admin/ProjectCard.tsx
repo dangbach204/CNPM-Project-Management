@@ -35,7 +35,7 @@ export function ProjectCard({
   const studentCount =
     getFieldValue(project, "studentCount", "student_count") || 0;
 
-  const canDelete = !["completed", "approved"].includes(project.status);
+  const canDelete = !["completed"].includes(project.status);
 
   return (
     <>

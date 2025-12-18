@@ -81,6 +81,18 @@ export const getTeacherOverview = async (req: Request, res: Response) => {
       }),
     ]);
 
+    const now = new Date();
+    for (const project of projects) {
+      const projectData = project.toJSON() as any;
+      if (
+        projectData.expire_at &&
+        new Date(projectData.expire_at) < now &&
+        projectData.status !== "expired"
+      ) {
+        await project.update({ status: "expired" });
+      }
+    }
+
     const formattedProjects = projects.map((project: any) => {
       const projectData = project.toJSON();
       const students =
@@ -719,9 +731,6 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
     if (description !== undefined) updateData.description = description;
     if (status !== undefined) updateData.status = status;
     if (expiredAt !== undefined) updateData.expire_at = expiredAt;
-
-    console.log("💾 updateData:", updateData);
-    console.log("🔢 updateData keys count:", Object.keys(updateData).length);
 
     if (Object.keys(updateData).length > 0) {
       console.log("✅ Updating project with data:", updateData);

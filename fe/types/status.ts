@@ -1,10 +1,7 @@
 export type ProjectStatus =
   | "open"
-  | "available"
   | "pending"
   | "completed"
-  | "approved"
-  | "rejected"
   | "expired";
 
 export type SubmissionStatus =
@@ -14,23 +11,17 @@ export type SubmissionStatus =
   | "rejected";
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
-  open: "Trống",
-  available: "Mở",
+  open: "Mở",
   pending: "Đang thực hiện",
   completed: "Hoàn thành",
-  approved: "Đã phê duyệt",
-  rejected: "Đã từ chối",
   expired: "Hết hạn",
 };
 
 export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
-  open: "bg-gray-100 text-gray-700",
-  available: "bg-cyan-100 text-cyan-700",
+  open: "bg-green-100 text-green-700",
   pending: "bg-yellow-100 text-yellow-700",
-  completed: "bg-green-100 text-green-700",
-  approved: "bg-purple-100 text-purple-700",
-  rejected: "bg-red-100 text-red-700",
-  expired: "bg-gray-800 text-white",
+  completed: "bg-blue-100 text-blue-700",
+  expired: "bg-red-100 text-red-700",
 };
 
 export const SUBMISSION_STATUS_LABELS: Record<SubmissionStatus, string> = {
@@ -48,11 +39,8 @@ export const SUBMISSION_STATUS_COLORS: Record<SubmissionStatus, string> = {
 };
 
 export const PROJECT_STATUS_OPTIONS = [
-  { value: "open", label: "Trống" },
-  { value: "available", label: "Mở" },
+  { value: "open", label: "Mở" },
   { value: "pending", label: "Đang thực hiện" },
   { value: "completed", label: "Hoàn thành" },
-  { value: "approved", label: "Đã phê duyệt" },
-  { value: "rejected", label: "Đã từ chối" },
   { value: "expired", label: "Hết hạn" },
 ] as const;

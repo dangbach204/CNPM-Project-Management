@@ -360,25 +360,23 @@ export default function AdminDashboard() {
                     </div>
                     <span
                       className={`text-xs px-3 py-1 rounded-full font-medium whitespace-nowrap ${
-                        project.status === "approved"
+                        project.status === "open"
                           ? "bg-green-100 text-green-700"
                           : project.status === "pending"
                           ? "bg-yellow-100 text-yellow-700"
                           : project.status === "completed"
                           ? "bg-blue-100 text-blue-700"
-                          : project.status === "rejected"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-gray-100 text-gray-700"
+                          : "bg-gray-100 text-red-700"
                       }`}
                     >
-                      {project.status === "approved"
-                        ? "Đã duyệt"
+                      {project.status === "open"
+                        ? "Mở"
                         : project.status === "pending"
-                        ? "Chờ duyệt"
+                        ? "Đang thực hiện"
                         : project.status === "completed"
                         ? "Hoàn thành"
-                        : project.status === "rejected"
-                        ? "Từ chối"
+                        : project.status === "expired"
+                        ? "Hết hạn"
                         : "Khác"}
                     </span>
                   </div>

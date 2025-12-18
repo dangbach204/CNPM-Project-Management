@@ -9,9 +9,9 @@ export const PROJECT_STATS_CONFIG = [
   },
   {
     label: "Mở",
-    statusKey: "available",
+    statusKey: "open",
     icon: BookOpen,
-    color: "bg-cyan-100 text-cyan-600",
+    color: "bg-green-100 text-green-600",
   },
   {
     label: "Đang thực hiện",
@@ -23,12 +23,12 @@ export const PROJECT_STATS_CONFIG = [
     label: "Hoàn thành",
     statusKey: "completed",
     icon: CheckCircle,
-    color: "bg-green-100 text-green-600",
+    color: "bg-blue-100 text-blue-600",
   },
   {
-    label: "Đã phê duyệt",
-    statusKey: "approved",
+    label: "Hết hạn",
+    statusKey: "expired",
     icon: CheckCircle,
-    color: "bg-purple-100 text-purple-600",
+    color: "bg-red-100 text-red-600",
   },
 ] as const;

@@ -3,7 +3,7 @@ export interface StudentOverview {
     projectId: number;
     title: string;
     description: string;
-    status: "open" | "available" | "pending" | "completed" | "approved" | "rejected" | "expired";
+    status: "open" | "pending" | "completed" | "expired";
     joinedAt: string;
   }[];
   mySubmissions: {
@@ -40,7 +40,7 @@ export interface MyProject {
   projectId: number;
   title: string;
   description: string;
-  status: "open" | "available" | "pending" | "completed" | "approved" | "rejected" | "expired";
+  status: "open" | "pending" | "completed" | "expired";
   teacher: {
     id: number;
     name: string;
