@@ -201,20 +201,44 @@ export default function SubmissionDetailPage() {
 
                   {/* Grade and Feedback - Prominent */}
                   {submission.grade ? (
-                    <Card className="shadow-lg border-2 border-green-300/60 bg-linear-to-br from-white to-green-50/30">
+                    <Card className={`shadow-lg border-2 ${
+                      submission.grade.score >= 8.5 
+                        ? 'border-green-300/60 bg-gradient-to-br from-white to-green-50/30' 
+                        : submission.grade.score >= 7 
+                        ? 'border-yellow-300/60 bg-gradient-to-br from-white to-yellow-50/30'
+                        : 'border-red-300/60 bg-gradient-to-br from-white to-red-50/30'
+                    }`}>
                       <CardContent className="p-6 sm:p-8">
                         {/* Score Display - Hero */}
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-6 pb-6 border-b border-gray-200">
                           <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                              <Star className="w-8 h-8 text-green-600" />
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                              submission.grade.score >= 8.5
+                                ? 'bg-green-100'
+                                : submission.grade.score >= 7
+                                ? 'bg-yellow-100'
+                                : 'bg-red-100'
+                            }`}>
+                              <Star className={`w-8 h-8 ${
+                                submission.grade.score >= 8.5
+                                  ? 'text-green-600'
+                                  : submission.grade.score >= 7
+                                  ? 'text-yellow-600'
+                                  : 'text-red-600'
+                              }`} />
                             </div>
                             <div>
                               <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium mb-1">
                                 Kết quả chấm điểm
                               </p>
                               <div className="flex items-baseline gap-2">
-                                <span className="text-5xl font-bold text-green-600">
+                                <span className={`text-5xl font-bold ${
+                                  submission.grade.score >= 8.5
+                                    ? 'text-green-600'
+                                    : submission.grade.score >= 7
+                                    ? 'text-yellow-600'
+                                    : 'text-red-600'
+                                }`}>
                                   {submission.grade.score}
                                 </span>
                                 <span className="text-2xl text-gray-400 font-medium">
