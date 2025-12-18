@@ -21,7 +21,6 @@ const ProjectStudents = db.define(
     student_id: {
       type: ProjectStudentsDataTypes.INTEGER,
       allowNull: false,
-      unique: true,
       references: {
         model: "users",
         key: "id",

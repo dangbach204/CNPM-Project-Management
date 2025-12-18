@@ -109,64 +109,6 @@ export default function MyProjectPage() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-6">
-                  {/* Main Project Card */}
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-2 flex-1">
-                          <CardTitle className="text-2xl">
-                            {myProject.title}
-                          </CardTitle>
-                          <div className="flex items-center gap-2">
-                            {myProject.status === "expired" || isExpired(myProject.expireAt) ? (
-                              <Badge variant="destructive">Hết hạn</Badge>
-                            ) : myProject.status === "completed" ? (
-                              <Badge className="bg-green-600 hover:bg-green-700">Hoàn thành</Badge>
-                            ) : myProject.status === "approved" ? (
-                              <Badge className="bg-blue-600 hover:bg-blue-700">Đã phê duyệt</Badge>
-                            ) : myProject.status === "rejected" ? (
-                              <Badge variant="destructive">Đã từ chối</Badge>
-                            ) : myProject.status === "pending" ? (
-                              <Badge className="bg-yellow-600 hover:bg-yellow-700">Đang thực hiện</Badge>
-                            ) : myProject.status === "available" ? (
-                              <Badge className="bg-emerald-600 hover:bg-emerald-700">Mở</Badge>
-                            ) : (
-                              <Badge variant="secondary">Trống</Badge>
-                            )}
-                          </div>
-                        </div>
-                        <Button
-                          onClick={() => setSubmitDialogOpen(true)}
-                          disabled={isExpired(myProject.expireAt)}
-                        >
-                          <Send className="w-4 h-4 mr-2" />
-                          Nộp báo cáo hoặc báo cáo tiến độ
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      {/* Description */}
-                      <div>
-                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                          <FileText className="w-5 h-5" />
-                          Mô tả
-                        </h3>
-                        <p className="text-muted-foreground leading-relaxed">
-                          {myProject.description}
-                        </p>
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2 text-gray-900">
-                        Chưa có đề tài
-                      </h3>
-                      <p className="text-gray-600 text-center max-w-md text-[14px] leading-relaxed">
-                        Bạn chưa được phân công đề tài nào. Vui lòng liên hệ
-                        giảng viên hướng dẫn hoặc quản trị viên để được phân
-                        công.
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
                   <div className="space-y-6">
                     {/* Main Project Overview Card */}
                     <Card className="shadow-lg border-gray-300/80">
@@ -293,7 +235,6 @@ export default function MyProjectPage() {
                     </Card>
                   </div>
                 )}
-              </div>
 
               {/* Submit Report Dialog */}
               <Dialog
@@ -349,7 +290,6 @@ export default function MyProjectPage() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-            </div>
           </main>
         </div>
       </div>

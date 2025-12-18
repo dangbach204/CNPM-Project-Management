@@ -7,17 +7,23 @@ export const getStundentOverview = async (req: Request, res: Response) => {
   try {
     const studentId = req.user?.id;
 
+    if (!studentId) {
+      return res.status(401).json({
+        message: "Không tìm thấy thông tin sinh viên",
+      });
+    }
+
     const [myProject, mySubmissions] = await Promise.all([
       ProjectStudents.findAll({
         where: {
           student_id: studentId,
         },
-
         include: [
           {
             model: Project,
             as: "joinedProject",
             attributes: ["id", "title", "description", "status"],
+            required: false,
           },
         ],
       }),
@@ -31,10 +37,14 @@ export const getStundentOverview = async (req: Request, res: Response) => {
             model: Grade,
             as: "grades",
             attributes: ["score", "feedback"],
+            required: false,
           },
         ],
       }),
     ]);
+
+    console.log("myProject:", myProject);
+    console.log("mySubmissions:", mySubmissions);
 
     const formatDate = (date: Date | string | null) => {
       if (!date) return null;
@@ -52,15 +62,17 @@ export const getStundentOverview = async (req: Request, res: Response) => {
         .replace(",", "");
     };
 
-    const formattedMyProject = myProject.map((myProject: any) => {
-      return {
-        projectId: myProject.joinedProject.id,
-        title: myProject.joinedProject.title,
-        description: myProject.joinedProject.description,
-        status: myProject.joinedProject.status,
-        joinedAt: formatDate(myProject.joined_at),
-      };
-    });
+    const formattedMyProject = myProject
+      .filter((myProject: any) => myProject.joinedProject)
+      .map((myProject: any) => {
+        return {
+          projectId: myProject.joinedProject.id,
+          title: myProject.joinedProject.title,
+          description: myProject.joinedProject.description,
+          status: myProject.joinedProject.status,
+          joinedAt: formatDate(myProject.joined_at),
+        };
+      });
 
     const formattedMySubmissions = mySubmissions.map((submission: any) => {
       const projectInfo = myProject.find(
@@ -75,7 +87,7 @@ export const getStundentOverview = async (req: Request, res: Response) => {
         submittedAt: formatDate(submission.submitted_at),
         reportLink: submission.report_link,
         grade:
-          submission.grades.length > 0
+          submission.grades && submission.grades.length > 0
             ? {
                 score: submission.grades[0].score,
                 feedback: submission.grades[0].feedback,
@@ -90,9 +102,12 @@ export const getStundentOverview = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("Error fetching student overview:", error);
+    console.error("Error stack:", error.stack);
+    console.error("Error name:", error.name);
     return res.status(500).json({
       message: "Lỗi máy chủ khi lấy tổng quan sinh viên",
       error: error.message,
+      details: error.stack,
     });
   }
 };
