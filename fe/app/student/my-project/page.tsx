@@ -94,26 +94,21 @@ export default function MyProjectPage() {
               </div>
             </div>
 
-            <div className="px-6 sm:px-8 lg:px-12 py-8">
-              <div className="max-w-5xl mx-auto">
-                {/* Project Overview or Empty State */}
-                {!myProject ? (
-                  <Card className="shadow-md border-gray-300/80">
-                    <CardContent className="flex flex-col items-center justify-center py-16">
-                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                        <FileText className="w-8 h-8 text-gray-400" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2 text-gray-900">
-                        Chưa có đề tài
-                      </h3>
-                      <p className="text-gray-600 text-center max-w-md text-[14px] leading-relaxed">
-                        Bạn chưa được phân công đề tài nào. Vui lòng liên hệ
-                        giảng viên hướng dẫn hoặc quản trị viên để được phân
-                        công.
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
+              {/* Project Details */}
+              {!myProject ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <FileText className="w-16 h-16 text-muted-foreground mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">
+                      Chưa có đề tài
+                    </h3>
+                    <p className="text-muted-foreground text-center">
+                      Bạn chưa tham gia đề tài nào. Hãy vào trang Đề tài để chọn
+                      và tham gia một đề tài phù hợp.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
                   <div className="space-y-6">
                     {/* Main Project Overview Card */}
                     <Card className="shadow-lg border-gray-300/80">
@@ -240,7 +235,6 @@ export default function MyProjectPage() {
                     </Card>
                   </div>
                 )}
-              </div>
 
               {/* Submit Report Dialog */}
               <Dialog
@@ -296,7 +290,6 @@ export default function MyProjectPage() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-            </div>
           </main>
         </div>
       </div>

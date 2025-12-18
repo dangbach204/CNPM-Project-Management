@@ -1,6 +1,7 @@
 import Comments from "./feedback";
 import Grade from "./grade";
 import Log from "./log";
+import Notification from "./notification";
 import PasswordRestTokens from "./passwordResetTokens";
 import Project from "./project";
 import ProjectStudents from "./projectStudents";
@@ -74,4 +75,7 @@ ProjectStudents.belongsTo(User, { foreignKey: "student_id", as: "student" });
 
 PasswordRestTokens.belongsTo(User, {foreignKey: "user_id"});
 
-export { User, Project, Submission, Grade, Comments, Log, ProjectStudents, PasswordRestTokens };
+Notification.belongsTo(User, { foreignKey: "recipient_id", as: "recipient" });
+Notification.belongsTo(User, { foreignKey: "actor_id", as: "actor" });
+
+export { User, Project, Submission, Grade, Comments, Log, ProjectStudents, PasswordRestTokens, Notification };

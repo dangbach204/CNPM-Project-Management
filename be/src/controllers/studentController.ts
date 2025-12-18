@@ -2,22 +2,29 @@ import { Request, Response } from "express";
 import { Grade, Project, ProjectStudents, Submission, User } from "../models";
 import user from "../models/user";
 import { toISOStringOrNull } from "../utils/formatDate";
+import { notifyTeacher } from "./notificationController";
 
 export const getStundentOverview = async (req: Request, res: Response) => {
   try {
     const studentId = req.user?.id;
+
+    if (!studentId) {
+      return res.status(401).json({
+        message: "Không tìm thấy thông tin sinh viên",
+      });
+    }
 
     const [myProject, mySubmissions] = await Promise.all([
       ProjectStudents.findAll({
         where: {
           student_id: studentId,
         },
-
         include: [
           {
             model: Project,
             as: "joinedProject",
-            attributes: ["id", "title", "description"],
+            attributes: ["id", "title", "description", "status"],
+            required: false,
           },
         ],
       }),
@@ -31,6 +38,7 @@ export const getStundentOverview = async (req: Request, res: Response) => {
             model: Grade,
             as: "grades",
             attributes: ["score", "feedback"],
+            required: false,
           },
         ],
       }),
@@ -58,7 +66,7 @@ export const getStundentOverview = async (req: Request, res: Response) => {
         submittedAt: toISOStringOrNull(submission.submitted_at),
         reportLink: submission.report_link,
         grade:
-          submission.grades.length > 0
+          submission.grades && submission.grades.length > 0
             ? {
                 score: submission.grades[0].score,
                 feedback: submission.grades[0].feedback,
@@ -73,9 +81,12 @@ export const getStundentOverview = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("Error fetching student overview:", error);
+    console.error("Error stack:", error.stack);
+    console.error("Error name:", error.name);
     return res.status(500).json({
       message: "Lỗi máy chủ khi lấy tổng quan sinh viên",
       error: error.message,
+      details: error.stack,
     });
   }
 };
@@ -96,7 +107,7 @@ export const getMyProject = async (req: Request, res: Response) => {
         {
           model: Project,
           as: "joinedProject",
-          attributes: ["id", "title", "description", "expire_at"],
+          attributes: ["id", "title", "description", "status", "expire_at"],
           include: [
             {
               model: User,
@@ -123,6 +134,7 @@ export const getMyProject = async (req: Request, res: Response) => {
         projectId: joinedProject.id,
         title: joinedProject.title,
         description: joinedProject.description,
+        status: joinedProject.status,
         teacher: joinedProject.teacher
           ? {
               id: joinedProject.teacher.id,
@@ -189,13 +201,66 @@ export const submitProject = async (req: Request, res: Response) => {
   const { projectId } = req.params;
   const { reportLink } = req.body;
 
+  console.log("📝 submitProject called - studentId:", studentId, "projectId:", projectId);
+
   try {
+    // Lấy thông tin project và teacher
+    const project = await Project.findByPk(projectId, {
+      include: [
+        {
+          model: User,
+          as: "teacher",
+          attributes: ["id", "full_name"],
+        },
+      ],
+    });
+
+    console.log("🔍 Project found:", project ? project.title : "null");
+    console.log("👨‍🏫 Teacher ID:", project?.teacher_id);
+
+    if (!project) {
+      return res.status(404).json({
+        message: "Project không tồn tại",
+      });
+    }
+
     const submission = await Submission.create({
       project_id: projectId,
       student_id: studentId,
       report_link: reportLink,
       submitted_at: new Date(),
     });
+
+    console.log("✅ Submission created:", submission.id);
+
+    // Gửi thông báo cho giáo viên
+    console.log("🔔 Checking notification conditions:", {
+      hasTeacherId: !!project.teacher_id,
+      hasStudentId: !!studentId,
+    });
+
+    if (project.teacher_id && studentId) {
+      const student = await User.findByPk(studentId, {
+        attributes: ["full_name"],
+      });
+
+      console.log("👨‍🎓 Student name:", student?.full_name);
+
+      const studentName = student?.full_name || "Sinh viên";
+
+      await notifyTeacher(
+        project.teacher_id,
+        studentId,
+        "submission_received",
+        Number(projectId),
+        project.title,
+        `Sinh viên ${studentName} đã nộp báo cáo cho dự án "${project.title}"`
+      );
+
+      console.log("📧 Notification sent to teacher:", project.teacher_id);
+    } else {
+      console.log("❌ Notification NOT sent - missing teacherId or studentId");
+    }
 
     return res.status(201).json({
       message: "Nộp báo cáo thành công",

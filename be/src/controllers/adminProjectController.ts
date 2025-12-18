@@ -3,6 +3,7 @@ import Project from "../models/project";
 import User from "../models/user";
 import { ProjectStudents } from "../models";
 import sequelize from "../config/db";
+import { notifyOtherAdmins } from "./notificationController";
 import LogService, { LOG_ACTIONS, ENTITY_TYPES } from "../lib/logService";
 import { isValidISODate } from "../utils/formatDate";
 
@@ -275,6 +276,20 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
     }
 
     await transaction.commit();
+
+    // Gửi thông báo cho các admin khác
+    if (req.user?.id) {
+      const project = await Project.findByPk(projectId);
+      if (project) {
+        await notifyOtherAdmins(
+          req.user.id,
+          "project_updated",
+          projectId,
+          project.title,
+          `đã cập nhật thông tin đề tài "${project.title}"`
+        );
+      }
+    }
 
     const updatedProject = await Project.findByPk(projectId, {
       include: [

@@ -17,7 +17,7 @@ router.use(authorize("teacher"));
 
 router.get("/overview", getTeacherOverview);
 router.post("/create-project", createProject);
-router.patch("/update-project/:projectId", updateProjectInfo);
+router.patch("/update-project/:projectId", teacherUpdateProjectInfo);
 router.delete("/delete-project/:projectId", deleteProject);
 router.get("/submissions", getSubmissions);
 router.patch("/grade-submission/:submissionId", teacherGradeSubmission);

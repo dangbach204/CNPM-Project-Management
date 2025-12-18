@@ -74,10 +74,20 @@ export default function StudentDashboard() {
   };
 
   const getProjectStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
+      expired: { bg: "bg-red-100", text: "text-red-700", label: "Hết hạn" },
+      completed: { bg: "bg-green-100", text: "text-green-700", label: "Hoàn thành" },
+      approved: { bg: "bg-blue-100", text: "text-blue-700", label: "Đã phê duyệt" },
+      rejected: { bg: "bg-red-100", text: "text-red-700", label: "Đã từ chối" },
+      pending: { bg: "bg-yellow-100", text: "text-yellow-700", label: "Đang thực hiện" },
+      available: { bg: "bg-emerald-100", text: "text-emerald-700", label: "Mở" },
+      open: { bg: "bg-gray-100", text: "text-gray-700", label: "Trống" },
+    };
+    const config = statusConfig[status] || statusConfig.pending;
     return (
-      <Badge className="bg-blue-600 text-white hover:bg-blue-700 px-3 py-1 text-xs font-medium">
-        Đang thực hiện
-      </Badge>
+      <span className={`text-xs px-2 py-1 rounded-full ${config.bg} ${config.text}`}>
+        {config.label}
+      </span>
     );
   };
 
@@ -305,7 +315,7 @@ export default function StudentDashboard() {
                               {project.title}
                             </h3>
                           </Link>
-                          <div>{getProjectStatusBadge("")}</div>
+                          <div>{getProjectStatusBadge(project.status)}</div>
                           <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
                             {project.description}
                           </p>
@@ -420,14 +430,13 @@ export default function StudentDashboard() {
                     className="block"
                   >
                     <div className="p-5 border rounded-xl hover:bg-green-50/50 hover:border-green-300 hover:shadow-md transition-all cursor-pointer group">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3 flex-1">
-                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-600 transition-colors">
-                              {submission.title}
-                            </h3>
-                            {getSubmissionStatusBadge(submission.grade)}
-                          </div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3 flex-1">
+                          <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-600 transition-colors">
+                            {submission.title}
+                          </h3>
+                          {getSubmissionStatusBadge(submission.grade)}
+                        </div>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -498,6 +507,28 @@ export default function StudentDashboard() {
                           </div>
                         )}
                       </div>
+                      {submission.reportLink && (
+                        <div className="mt-2" onClick={(e) => e.preventDefault()}>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              window.open(submission.reportLink, '_blank');
+                            }}
+                            className="text-xs text-blue-600 hover:underline"
+                          >
+                            📎 Xem báo cáo
+                          </button>
+                        </div>
+                      )}
+                      {submission.grade && submission.grade.feedback && (
+                        <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
+                          <p className="font-medium text-gray-700">Nhận xét:</p>
+                          <p className="text-gray-600 mt-1">
+                            {submission.grade.feedback}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </Link>
                 ))
