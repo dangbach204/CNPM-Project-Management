@@ -179,6 +179,18 @@ export function EditProjectDialog({
   const handleSave = async () => {
     if (!project) return;
 
+    if (expiredAt) {
+      const expireDate = new Date(expiredAt);
+      const createdDate = new Date(project.createdAt || (project as any).created_at);
+      createdDate.setHours(0, 0, 0, 0);
+      expireDate.setHours(0, 0, 0, 0);
+      
+      if (expireDate < createdDate) {
+        alert("Ngày hết hạn phải sau ngày tạo đề tài");
+        return;
+      }
+    }
+
     await onSave(project.id, {
       title,
       description,
@@ -346,6 +358,7 @@ export function EditProjectDialog({
                 type="date"
                 value={expiredAt}
                 onChange={(e) => setExpiredAt(e.target.value)}
+                min={project?.createdAt ? formatDateForInput(project.createdAt) : formatDateForInput((project as any)?.created_at)}
                 className="h-10 border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
