@@ -7,8 +7,7 @@ import {
   isValidISODate,
   parseDate,
 } from "../utils/formatDate";
-
-import sequelize from "../config/db";import { notifyStudent } from "./notificationController";
+import { notifyStudent } from "./notificationController";
 export const getTeacherOverview = async (req: Request, res: Response) => {
   try {
     const teacherId = req.user?.id;
@@ -602,7 +601,10 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
     });
 
     if (submissionData && req.user?.id) {
-      console.log("📧 Sending notification to student ID:", submissionData.student_id);
+      console.log(
+        "📧 Sending notification to student ID:",
+        submissionData.student_id
+      );
       try {
         await notifyStudent(
           submissionData.student_id,
@@ -656,7 +658,14 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
       removeStudents,
     } = req.body;
 
-    console.log("📦 Extracted fields:", { title, description, status, expiredAt, addStudents, removeStudents });
+    console.log("📦 Extracted fields:", {
+      title,
+      description,
+      status,
+      expiredAt,
+      addStudents,
+      removeStudents,
+    });
 
     if (
       !title &&
@@ -703,7 +712,7 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
         hasExpiredAt: expiredAt !== undefined,
         hasUserId: !!req.user?.id,
         status,
-        expiredAt
+        expiredAt,
       });
 
       if ((status !== undefined || expiredAt !== undefined) && req.user?.id) {
