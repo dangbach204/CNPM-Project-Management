@@ -203,10 +203,10 @@ export default function SubmissionDetailPage() {
                   {submission.grade ? (
                     <Card className={`shadow-lg border-2 ${
                       submission.grade.score >= 8.5 
-                        ? 'border-green-300/60 bg-gradient-to-br from-white to-green-50/30' 
+                        ? 'border-green-300/60 bg-linear-to-br from-white to-green-50/30' 
                         : submission.grade.score >= 7 
-                        ? 'border-yellow-300/60 bg-gradient-to-br from-white to-yellow-50/30'
-                        : 'border-red-300/60 bg-gradient-to-br from-white to-red-50/30'
+                        ? 'border-yellow-300/60 bg-linear-to-br from-white to-yellow-50/30'
+                        : 'border-red-300/60 bg-linear-to-br from-white to-red-50/30'
                     }`}>
                       <CardContent className="p-6 sm:p-8">
                         {/* Score Display - Hero */}

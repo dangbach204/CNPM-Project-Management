@@ -1,5 +1,9 @@
 # Error Handling Improvements - Join Project Feature
 
+> 📚 **Related Documentation:** [README](README.md) | [BÁO CÁO DỰ ÁN (Vietnamese)](BÁO%20CÁO%20DỰ%20ÁN.md)
+
+---
+
 ## Problem
 
 The application was showing `Error response: {}` when trying to join a project, making it difficult to diagnose the root cause.
