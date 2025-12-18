@@ -74,18 +74,39 @@ export default function StudentDashboard() {
   };
 
   const getProjectStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
+    const statusConfig: Record<
+      string,
+      { bg: string; text: string; label: string }
+    > = {
       expired: { bg: "bg-red-100", text: "text-red-700", label: "Hết hạn" },
-      completed: { bg: "bg-green-100", text: "text-green-700", label: "Hoàn thành" },
-      approved: { bg: "bg-blue-100", text: "text-blue-700", label: "Đã phê duyệt" },
+      completed: {
+        bg: "bg-green-100",
+        text: "text-green-700",
+        label: "Hoàn thành",
+      },
+      approved: {
+        bg: "bg-blue-100",
+        text: "text-blue-700",
+        label: "Đã phê duyệt",
+      },
       rejected: { bg: "bg-red-100", text: "text-red-700", label: "Đã từ chối" },
-      pending: { bg: "bg-yellow-100", text: "text-yellow-700", label: "Đang thực hiện" },
-      available: { bg: "bg-emerald-100", text: "text-emerald-700", label: "Mở" },
+      pending: {
+        bg: "bg-yellow-100",
+        text: "text-yellow-700",
+        label: "Đang thực hiện",
+      },
+      available: {
+        bg: "bg-emerald-100",
+        text: "text-emerald-700",
+        label: "Mở",
+      },
       open: { bg: "bg-gray-100", text: "text-gray-700", label: "Trống" },
     };
     const config = statusConfig[status] || statusConfig.pending;
     return (
-      <span className={`text-xs px-2 py-1 rounded-full ${config.bg} ${config.text}`}>
+      <span
+        className={`text-xs px-2 py-1 rounded-full ${config.bg} ${config.text}`}
+      >
         {config.label}
       </span>
     );
@@ -437,41 +458,52 @@ export default function StudentDashboard() {
                           </h3>
                           {getSubmissionStatusBadge(submission.grade)}
                         </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-green-600 hover:text-green-700 hover:bg-green-100"
-                          >
-                            Chi tiết →
-                          </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-green-600 hover:text-green-700 hover:bg-green-100"
+                        >
+                          Chi tiết →
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
+                        {submission.description}
+                      </p>
+                      <div className="flex items-center gap-3 mt-4 text-sm text-muted-foreground">
+                        <div className="p-1.5 bg-gray-100 rounded">
+                          <Clock className="w-3.5 h-3.5" />
                         </div>
-                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
-                          {submission.description}
-                        </p>
-                        <div className="flex items-center gap-3 mt-4 text-sm text-muted-foreground">
-                          <div className="p-1.5 bg-gray-100 rounded">
-                            <Clock className="w-3.5 h-3.5" />
-                          </div>
-                          <span>
-                            Nộp lúc:{" "}
-                            {new Date(
-                              submission.submittedAt
-                            ).toLocaleDateString("vi-VN", {
+                        <span>
+                          Nộp lúc:{" "}
+                          {new Date(submission.submittedAt).toLocaleDateString(
+                            "vi-VN",
+                            {
                               year: "numeric",
                               month: "2-digit",
                               day: "2-digit",
                               hour: "2-digit",
                               minute: "2-digit",
-                            })}
-                          </span>
-                        </div>
-                        {submission.reportLink && (
-                          <div className="mt-3">
-                            <span
-                              role="button"
-                              tabIndex={0}
-                              className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:underline bg-blue-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                              onClick={(e) => {
+                            }
+                          )}
+                        </span>
+                      </div>
+                      {submission.reportLink && (
+                        <div className="mt-3">
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:underline bg-blue-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              window.open(
+                                submission.reportLink,
+                                "_blank",
+                                "noopener,noreferrer"
+                              );
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 window.open(
@@ -479,52 +511,19 @@ export default function StudentDashboard() {
                                   "_blank",
                                   "noopener,noreferrer"
                                 );
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  window.open(
-                                    submission.reportLink,
-                                    "_blank",
-                                    "noopener,noreferrer"
-                                  );
-                                }
-                              }}
-                            >
-                              📎 Xem báo cáo
-                            </span>
-                          </div>
-                        )}
-                        {submission.grade && submission.grade.feedback && (
-                          <div className="mt-3 p-3 bg-linear-to-r from-gray-50 to-gray-100 rounded-lg text-sm border">
-                            <p className="font-semibold text-gray-700">
-                              Nhận xét:
-                            </p>
-                            <p className="text-gray-600 mt-1 leading-relaxed">
-                              {submission.grade.feedback}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                      {submission.reportLink && (
-                        <div className="mt-2" onClick={(e) => e.preventDefault()}>
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              window.open(submission.reportLink, '_blank');
+                              }
                             }}
-                            className="text-xs text-blue-600 hover:underline"
                           >
                             📎 Xem báo cáo
-                          </button>
+                          </span>
                         </div>
                       )}
                       {submission.grade && submission.grade.feedback && (
-                        <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
-                          <p className="font-medium text-gray-700">Nhận xét:</p>
-                          <p className="text-gray-600 mt-1">
+                        <div className="mt-3 p-3 bg-linear-to-r from-gray-50 to-gray-100 rounded-lg text-sm border">
+                          <p className="font-semibold text-gray-700">
+                            Nhận xét:
+                          </p>
+                          <p className="text-gray-600 mt-1 leading-relaxed">
                             {submission.grade.feedback}
                           </p>
                         </div>

@@ -38,6 +38,22 @@ export default function NewProjectPage() {
       return;
     }
 
+   
+    if (formData.expireAt) {
+      const expireDate = new Date(formData.expireAt);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (expireDate < today) {
+        toast({
+          title: "Lỗi",
+          description: "Ngày hết hạn phải sau ngày hiện tại",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       await createProject({
@@ -172,6 +188,7 @@ export default function NewProjectPage() {
                               expireAt: e.target.value,
                             })
                           }
+                          min={new Date().toISOString().split('T')[0]}
                           className="h-11 max-w-xs"
                         />
                       </div>

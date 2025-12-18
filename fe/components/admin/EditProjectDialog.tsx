@@ -141,6 +141,19 @@ export function EditProjectDialog({
   const handleSave = async () => {
     if (!project) return;
 
+   
+    if (expiredAt) {
+      const expireDate = new Date(expiredAt);
+      const createdDate = new Date(project.createdAt || (project as any).created_at);
+      createdDate.setHours(0, 0, 0, 0);
+      expireDate.setHours(0, 0, 0, 0);
+      
+      if (expireDate < createdDate) {
+        alert("Ngày hết hạn phải sau ngày tạo đề tài");
+        return;
+      }
+    }
+
     await onSave(project.id, {
       title,
       description,
@@ -180,7 +193,6 @@ export function EditProjectDialog({
     );
   };
 
-  // Get all student IDs that are in other projects (not current project)
   const studentsInOtherProjects = new Set<number>();
   allProjects.forEach((proj) => {
     if (proj.id !== project?.id && (proj as any).students) {
@@ -190,7 +202,6 @@ export function EditProjectDialog({
     }
   });
 
-  // Filter out students already in current project or in other projects
   const availableStudents = allStudents.filter(
     (student) =>
       !projectStudents.some((ps) => ps.id === student.id) &&
@@ -323,6 +334,7 @@ export function EditProjectDialog({
               type="date"
               value={expiredAt}
               onChange={(e) => setExpiredAt(e.target.value)}
+              min={project?.createdAt ? formatDateForInput(project.createdAt) : formatDateForInput((project as any)?.created_at)}
             />
           </div>
 

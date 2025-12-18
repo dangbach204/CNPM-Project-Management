@@ -165,6 +165,22 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
       });
     }
 
+
+    if (expiredAt) {
+      const projectData = project.toJSON() as any;
+      const createdAt = new Date(projectData.created_at);
+      createdAt.setHours(0, 0, 0, 0);
+      const expireDate = new Date(expiredAt);
+      expireDate.setHours(0, 0, 0, 0);
+      
+      if (expireDate < createdAt) {
+        await transaction.rollback();
+        return res.status(400).json({
+          message: "Ngày hết hạn phải sau ngày tạo đề tài",
+        });
+      }
+    }
+
     if (teacherId) {
       const teacher = await User.findByPk(teacherId);
       if (!teacher || teacher.role !== "teacher") {
@@ -276,8 +292,7 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
     }
 
     await transaction.commit();
-
-    // Gửi thông báo cho các admin khác
+    
     if (req.user?.id) {
       const project = await Project.findByPk(projectId);
       if (project) {

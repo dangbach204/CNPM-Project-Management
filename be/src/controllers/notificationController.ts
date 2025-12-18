@@ -4,9 +4,7 @@ import { Op } from "sequelize";
 
 export const getNotifications = async (req: Request, res: Response) => {
   try {
-    console.log("getNotifications called");
     const userId = req.user?.id;
-    console.log("User ID:", userId);
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -25,9 +23,6 @@ export const getNotifications = async (req: Request, res: Response) => {
       limit: 5,
     });
 
-    console.log("Found notifications:", notifications.length);
-
-    // Đếm số thông báo chưa đọc
     const unreadCount = await Notification.count({
       where: {
         recipientId: userId,
@@ -35,7 +30,7 @@ export const getNotifications = async (req: Request, res: Response) => {
       },
     });
 
-    res.json({
+    res.status(200).json({
       notifications,
       unreadCount,
     });
@@ -64,7 +59,7 @@ export const markAsRead = async (req: Request, res: Response) => {
 
     await notification.update({ isRead: true });
 
-    res.json({ message: "Notification marked as read" });
+    res.status(200).json({ message: "Notification marked as read" });
   } catch (error) {
     console.error("Error marking notification as read:", error);
     res.status(500).json({ message: "Error marking notification as read" });
@@ -89,7 +84,7 @@ export const markAllAsRead = async (req: Request, res: Response) => {
       }
     );
 
-    res.json({ message: "All notifications marked as read" });
+    res.status(200).json({ message: "All notifications marked as read" });
   } catch (error) {
     console.error("Error marking all notifications as read:", error);
     res
@@ -117,33 +112,34 @@ export const deleteNotification = async (req: Request, res: Response) => {
 
     await notification.destroy();
 
-    res.json({ message: "Notification deleted" });
+    res.status(200).json({ message: "Notification deleted" });
   } catch (error) {
     console.error("Error deleting notification:", error);
     res.status(500).json({ message: "Error deleting notification" });
   }
 };
 
-// Helper function để tạo thông báo và giới hạn 5 thông báo
 export const createNotification = async (data: {
   recipientId: number;
   actorId: number;
-  type: "user_updated" | "project_updated" | "grade_submitted" | "added_to_project" | "submission_received";
+  type:
+    | "user_updated"
+    | "project_updated"
+    | "grade_submitted"
+    | "added_to_project"
+    | "submission_received";
   entityId: number;
   entityName: string;
   message: string;
 }) => {
   try {
-    // Tạo thông báo mới
     await Notification.create(data);
 
-    // Lấy tất cả thông báo của recipient, sắp xếp theo thời gian
     const allNotifications = await Notification.findAll({
       where: { recipientId: data.recipientId },
       order: [["createdAt", "DESC"]],
     });
 
-    // Nếu có hơn 5 thông báo, xóa những thông báo cũ nhất
     if (allNotifications.length > 5) {
       const notificationsToDelete = allNotifications.slice(5);
       const idsToDelete = notificationsToDelete.map((n) => n.id);
@@ -161,7 +157,6 @@ export const createNotification = async (data: {
   }
 };
 
-// Helper function để tạo thông báo cho giáo viên
 export const notifyTeacher = async (
   teacherId: number,
   actorId: number,
@@ -184,7 +179,6 @@ export const notifyTeacher = async (
   }
 };
 
-// Helper function để tạo thông báo cho sinh viên
 export const notifyStudent = async (
   studentId: number,
   actorId: number,
@@ -207,7 +201,6 @@ export const notifyStudent = async (
   }
 };
 
-// Helper function để tạo thông báo cho tất cả admin khác
 export const notifyOtherAdmins = async (
   actorId: number,
   type: "user_updated" | "project_updated",
@@ -216,7 +209,6 @@ export const notifyOtherAdmins = async (
   message: string
 ) => {
   try {
-    // Tìm tất cả admin khác (không bao gồm actor)
     const otherAdmins = await User.findAll({
       where: {
         role: "admin",
@@ -226,7 +218,6 @@ export const notifyOtherAdmins = async (
       },
     });
 
-    // Tạo thông báo cho mỗi admin
     for (const admin of otherAdmins) {
       await createNotification({
         recipientId: admin.id,

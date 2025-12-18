@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Search,
   Users,
   Calendar,
@@ -16,6 +24,8 @@ import {
   CheckCircle2,
   XCircle,
   Sparkles,
+  AlertCircle,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useMemo } from "react";
@@ -38,12 +48,16 @@ interface StudentProjectCardProps {
   project: Project;
   isEnrolled: boolean;
   expired: boolean;
+  onJoin?: (projectId: number) => void;
+  joinLoading?: boolean;
 }
 
 function StudentProjectCard({
   project,
   isEnrolled,
   expired,
+  onJoin,
+  joinLoading,
 }: StudentProjectCardProps) {
   const parseStudentCount = (countStr: string) => {
     const match = countStr.match(/(\d+)\/(\d+)/);
@@ -203,6 +217,37 @@ function StudentProjectCard({
               </span>
             </div>
           </div>
+
+          {/* Join Project Button */}
+          {!isEnrolled && (
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <Button
+                onClick={() => onJoin?.(project.id)}
+                disabled={expired || isFull || joinLoading}
+                className={`w-full h-10 text-sm font-semibold transition-all ${
+                  expired || isFull
+                    ? "bg-gray-300 hover:bg-gray-300 cursor-not-allowed text-gray-500"
+                    : "bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg"
+                }`}
+              >
+                {joinLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin">⏳</span>
+                    Đang tham gia...
+                  </span>
+                ) : expired ? (
+                  "Đã hết hạn"
+                ) : isFull ? (
+                  "Đã đủ thành viên"
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4" />
+                    Tham gia đề tài
+                  </span>
+                )}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </div>
     </Card>
@@ -213,8 +258,15 @@ export default function StudentProjectsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  const { isLoading, projects, myProjectIds, joinLoading, handleJoinProject } =
-    useStudentProjects();
+  const {
+    isLoading,
+    projects,
+    myProjectIds,
+    joinLoading,
+    handleJoinProject,
+    alreadyJoinedError,
+    clearAlreadyJoinedError,
+  } = useStudentProjects();
 
   const filteredProjects = useMemo(() => {
     if (!projects || !Array.isArray(projects)) {
@@ -232,6 +284,9 @@ export default function StudentProjectsPage() {
         return matchesSearch && myProjectIds.includes(p.id);
       } else if (filterStatus === "available") {
         return matchesSearch && !myProjectIds.includes(p.id);
+      } else if (filterStatus === "notExpired") {
+        const notExpired = new Date(p.expiredAt) >= new Date();
+        return matchesSearch && notExpired;
       }
 
       return matchesSearch;
@@ -338,6 +393,16 @@ export default function StudentProjectsPage() {
                     >
                       Có sẵn
                     </button>
+                    <button
+                      onClick={() => setFilterStatus("notExpired")}
+                      className={`px-4 py-2 rounded-[6px] text-[13px] font-medium transition-all ${
+                        filterStatus === "notExpired"
+                          ? "bg-white text-gray-900 shadow-sm"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50/50"
+                      }`}
+                    >
+                      Còn hạn
+                    </button>
                   </div>
                 </CardContent>
               </Card>
@@ -365,6 +430,8 @@ export default function StudentProjectsPage() {
                           project={project}
                           isEnrolled={isEnrolled}
                           expired={expired}
+                          onJoin={handleJoinProject}
+                          joinLoading={joinLoading}
                         />
                       );
                     })}
@@ -374,6 +441,51 @@ export default function StudentProjectsPage() {
             </div>
           </main>
         </div>
+
+        {/* Dialog thông báo nổi giữa màn hình */}
+        <Dialog
+          open={!!alreadyJoinedError}
+          onOpenChange={(open) => {
+            if (!open) clearAlreadyJoinedError();
+          }}
+        >
+          <DialogContent className="sm:max-w-[500px] bg-white">
+            <DialogHeader>
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-amber-100">
+                <AlertCircle className="w-6 h-6 text-amber-600" />
+              </div>
+              <DialogTitle className="text-center text-xl font-bold text-gray-900">
+                Không thể tham gia đề tài mới
+              </DialogTitle>
+              <DialogDescription className="text-center text-gray-600 pt-2">
+                Bạn đã tham gia dự án{" "}
+                <span className="font-semibold text-gray-900">
+                  "{alreadyJoinedError?.projectName}"
+                </span>
+                .<br />
+                Vui lòng rời khỏi dự án hiện tại trước khi tham gia dự án mới.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="sm:justify-center gap-2 mt-2">
+              <Button
+                variant="outline"
+                onClick={clearAlreadyJoinedError}
+                className="px-6"
+              >
+                Đóng
+              </Button>
+              <Button
+                onClick={() => {
+                  clearAlreadyJoinedError();
+                  window.location.href = "/student/my-project";
+                }}
+                className="px-6 bg-blue-600 hover:bg-blue-700"
+              >
+                Xem dự án của tôi
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </ProtectedRoute>
   );

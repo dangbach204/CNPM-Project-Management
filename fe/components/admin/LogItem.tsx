@@ -10,7 +10,6 @@ import {
 import { Log } from "@/types/admin";
 import { LogActionBadge } from "./LogActionBadge";
 import { cn } from "@/lib/utils";
-// Use shared date formatting utility - formatting happens at render time only
 import { formatDateTime } from "@/lib/project-helpers";
 
 interface LogItemProps {
