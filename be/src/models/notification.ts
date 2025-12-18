@@ -5,7 +5,13 @@ interface NotificationAttributes {
   id: number;
   recipientId: number;
   actorId: number;
-  type: "user_created" | "user_updated" | "project_updated" | "grade_submitted" | "added_to_project" | "submission_received";
+  type:
+    | "user_created"
+    | "user_updated"
+    | "project_updated"
+    | "grade_submitted"
+    | "added_to_project"
+    | "submission_received";
   entityId: number;
   entityName: string;
   message: string;
@@ -24,7 +30,13 @@ class Notification
   public id!: number;
   public recipientId!: number;
   public actorId!: number;
-  public type!: "user_created" | "user_updated" | "project_updated" | "grade_submitted" | "added_to_project" | "submission_received";
+  public type!:
+    | "user_created"
+    | "user_updated"
+    | "project_updated"
+    | "grade_submitted"
+    | "added_to_project"
+    | "submission_received";
   public entityId!: number;
   public entityName!: string;
   public message!: string;
@@ -51,7 +63,14 @@ Notification.init(
       field: "actor_id",
     },
     type: {
-      type: DataTypes.ENUM("user_created", "user_updated", "project_updated", "grade_submitted", "added_to_project", "submission_received"),
+      type: DataTypes.ENUM(
+        "user_created",
+        "user_updated",
+        "project_updated",
+        "grade_submitted",
+        "added_to_project",
+        "submission_received"
+      ),
       allowNull: false,
     },
     entityId: {

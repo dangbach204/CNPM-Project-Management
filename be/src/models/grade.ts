@@ -1,47 +1,47 @@
-import { DataTypes as GradeDataTypes } from 'sequelize';
-import db from '../config/db';
+import { DataTypes as GradeDataTypes } from "sequelize";
+import db from "../config/db";
 
 const Grade = db.define(
-  'Grade',
+  "Grade",
   {
-    id: { 
-      type: GradeDataTypes.INTEGER, 
-      primaryKey: true, 
-      autoIncrement: true 
+    id: {
+      type: GradeDataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
     },
-    submission_id: { 
+    submission_id: {
       type: GradeDataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'submissions',
-        key: 'id'
+        model: "submissions",
+        key: "id",
       },
-      onDelete: 'CASCADE'
+      onDelete: "CASCADE",
     },
-    teacher_id: { 
+    teacher_id: {
       type: GradeDataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'users',
-        key: 'id'
+        model: "users",
+        key: "id",
       },
-      onDelete: 'SET NULL'
+      onDelete: "SET NULL",
     },
-    score: { 
-      type: GradeDataTypes.DECIMAL(5, 2), 
-      allowNull: true 
+    score: {
+      type: GradeDataTypes.DECIMAL(5, 2),
+      allowNull: true,
     },
-    feedback: { 
-      type: GradeDataTypes.TEXT, 
-      allowNull: true 
+    feedback: {
+      type: GradeDataTypes.TEXT,
+      allowNull: true,
     },
     created_at: {
       type: GradeDataTypes.DATE,
-      defaultValue: GradeDataTypes.NOW
-    }
+      defaultValue: GradeDataTypes.NOW,
+    },
   },
   {
-    tableName: 'grades',
+    tableName: "grades",
     timestamps: false,
   }
 );

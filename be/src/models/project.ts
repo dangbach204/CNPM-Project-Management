@@ -42,7 +42,7 @@ const Project = db.define(
       type: ProjectDataTypes.INTEGER,
       allowNull: false,
       defaultValue: 4,
-    }
+    },
   },
   {
     tableName: "projects",

@@ -65,7 +65,14 @@ export const getAdminOverview = async (req: Request, res: Response) => {
       Project.findAll({
         order: [["created_at", "DESC"]],
         limit: 3,
-        attributes: ["id", "title", "description", "created_at", "status", "expire_at"],
+        attributes: [
+          "id",
+          "title",
+          "description",
+          "created_at",
+          "status",
+          "expire_at",
+        ],
       }),
       Submission.findAll({
         order: [["submitted_at", "DESC"]],
@@ -89,9 +96,10 @@ export const getAdminOverview = async (req: Request, res: Response) => {
 
     const now = new Date();
     const allProjectsToCheck = [...projects, ...latestProjects];
-    const uniqueProjects = Array.from(new Set(allProjectsToCheck.map((p: any) => p.id)))
-      .map(id => allProjectsToCheck.find((p: any) => p.id === id));
-    
+    const uniqueProjects = Array.from(
+      new Set(allProjectsToCheck.map((p: any) => p.id))
+    ).map((id) => allProjectsToCheck.find((p: any) => p.id === id));
+
     for (const project of uniqueProjects) {
       if (project) {
         const projectData = project.toJSON() as any;

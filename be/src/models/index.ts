@@ -27,7 +27,7 @@ User.hasMany(ProjectStudents, {
   as: "projectMemberships",
 });
 
-User.hasMany(PasswordRestTokens, {foreignKey: "user_id"});
+User.hasMany(PasswordRestTokens, { foreignKey: "user_id" });
 
 Project.belongsTo(User, { foreignKey: "teacher_id", as: "teacher" });
 Project.belongsToMany(User, {
@@ -73,9 +73,19 @@ ProjectStudents.belongsTo(Project, {
 });
 ProjectStudents.belongsTo(User, { foreignKey: "student_id", as: "student" });
 
-PasswordRestTokens.belongsTo(User, {foreignKey: "user_id"});
+PasswordRestTokens.belongsTo(User, { foreignKey: "user_id" });
 
 Notification.belongsTo(User, { foreignKey: "recipient_id", as: "recipient" });
 Notification.belongsTo(User, { foreignKey: "actor_id", as: "actor" });
 
-export { User, Project, Submission, Grade, Comments, Log, ProjectStudents, PasswordRestTokens, Notification };
+export {
+  User,
+  Project,
+  Submission,
+  Grade,
+  Comments,
+  Log,
+  ProjectStudents,
+  PasswordRestTokens,
+  Notification,
+};

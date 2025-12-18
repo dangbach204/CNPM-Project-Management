@@ -24,10 +24,7 @@ app.use(
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
 
-      if (
-        origin.includes("localhost") ||
-        origin.endsWith(".vercel.app")
-      ) {
+      if (origin.includes("localhost") || origin.endsWith(".vercel.app")) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS: " + origin));
@@ -36,7 +33,6 @@ app.use(
     credentials: true,
   })
 );
-
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -55,6 +51,8 @@ app.use("/api/user", userRoutes);
 app.use("/api/teacher", teacherRoutes);
 app.use("/api/student", studentRoutes);
 
-console.log("✅ Routes loaded: /api/notifications, /api/auth, /api/admin, /api/user, /api/teacher, /api/student");
+console.log(
+  "✅ Routes loaded: /api/notifications, /api/auth, /api/admin, /api/user, /api/teacher, /api/student"
+);
 
 export default app;

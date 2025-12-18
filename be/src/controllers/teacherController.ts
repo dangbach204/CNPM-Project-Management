@@ -188,13 +188,12 @@ export const createProject = async (req: Request, res: Response) => {
 
     const parsedExpireAt = parseDate(expireAt);
 
-    
     if (parsedExpireAt) {
       const now = new Date();
       now.setHours(0, 0, 0, 0);
       const expireDate = new Date(parsedExpireAt);
       expireDate.setHours(0, 0, 0, 0);
-      
+
       if (expireDate < now) {
         return res.status(400).json({
           message: "Ngày hết hạn phải sau ngày hiện tại",
@@ -293,14 +292,13 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
       });
     }
 
-    
     if (expiredAt) {
       const projectData = project.toJSON() as any;
       const createdAt = new Date(projectData.created_at);
       createdAt.setHours(0, 0, 0, 0);
       const expireDate = new Date(expiredAt);
       expireDate.setHours(0, 0, 0, 0);
-      
+
       if (expireDate < createdAt) {
         await transaction.rollback();
         return res.status(400).json({
@@ -600,9 +598,14 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
     }
 
     // Convert score to number if it's a string
-    const numericScore = typeof score === 'string' ? parseFloat(score) : score;
+    const numericScore = typeof score === "string" ? parseFloat(score) : score;
 
-    if (typeof numericScore !== "number" || isNaN(numericScore) || numericScore < 0 || numericScore > 10) {
+    if (
+      typeof numericScore !== "number" ||
+      isNaN(numericScore) ||
+      numericScore < 0 ||
+      numericScore > 10
+    ) {
       return res.status(400).json({ message: "Invalid score" });
     }
 
@@ -649,9 +652,10 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
         submissionData.student_id
       );
       try {
-        const projectTitle = (submissionData as any).submissionProject?.title || "Bài nộp";
+        const projectTitle =
+          (submissionData as any).submissionProject?.title || "Bài nộp";
         const teacherName = teacher?.full_name || "Giáo viên";
-        
+
         await notifyStudent(
           submissionData.student_id,
           req.user.id,
@@ -736,16 +740,21 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
 
     // Track actual changes để chỉ gửi thông báo cho field thực sự thay đổi
     const actualChanges: any = {};
-    if (title !== undefined && title !== oldValues.title) actualChanges.title = title;
-    if (description !== undefined && description !== oldValues.description) actualChanges.description = description;
-    if (status !== undefined && status !== oldValues.status) actualChanges.status = status;
-    
+    if (title !== undefined && title !== oldValues.title)
+      actualChanges.title = title;
+    if (description !== undefined && description !== oldValues.description)
+      actualChanges.description = description;
+    if (status !== undefined && status !== oldValues.status)
+      actualChanges.status = status;
+
     // So sánh date chính xác (CHỈ so sánh phần NGÀY, không so sánh time)
     if (expiredAt !== undefined && oldValues.expiredAt) {
       // Extract chỉ phần date (YYYY-MM-DD)
-      const newDateOnly = new Date(expiredAt).toISOString().split('T')[0];
-      const oldDateOnly = new Date(oldValues.expiredAt).toISOString().split('T')[0];
-      
+      const newDateOnly = new Date(expiredAt).toISOString().split("T")[0];
+      const oldDateOnly = new Date(oldValues.expiredAt)
+        .toISOString()
+        .split("T")[0];
+
       if (newDateOnly !== oldDateOnly) {
         actualChanges.expiredAt = expiredAt;
       }
@@ -755,7 +764,6 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
     }
 
     if (Object.keys(updateData).length > 0) {
-
       await project.update(updateData, { transaction });
 
       await LogService.log(
@@ -766,7 +774,13 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
         { updated_fields: Object.keys(updateData), ...updateData }
       );
 
-      if ((status !== undefined || expiredAt !== undefined || title !== undefined || description !== undefined) && req.user?.id) {
+      if (
+        (status !== undefined ||
+          expiredAt !== undefined ||
+          title !== undefined ||
+          description !== undefined) &&
+        req.user?.id
+      ) {
         const projectStudents = await ProjectStudents.findAll({
           where: { project_id: projectId },
         });
@@ -794,12 +808,13 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
               `đã đổi tên dự án thành "${actualChanges.title}"`
             );
           }
-          
+
           // Thông báo khi đổi mô tả (CHỈ khi thay đổi)
           if (actualChanges.description) {
-            const shortDesc = actualChanges.description.length > 100 
-              ? actualChanges.description.substring(0, 100) + '...' 
-              : actualChanges.description;
+            const shortDesc =
+              actualChanges.description.length > 100
+                ? actualChanges.description.substring(0, 100) + "..."
+                : actualChanges.description;
             await notifyStudent(
               ps.student_id,
               req.user.id,
@@ -809,7 +824,7 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
               `đã đổi mô tả dự án thành "${shortDesc}"`
             );
           }
-          
+
           // Thông báo khi đổi trạng thái (CHỈ khi thay đổi)
           if (actualChanges.status) {
             await notifyStudent(
@@ -834,7 +849,6 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
             );
           }
         }
-
       } else {
         console.log("Notification conditions not met");
       }
