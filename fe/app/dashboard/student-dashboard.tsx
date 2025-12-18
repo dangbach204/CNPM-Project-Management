@@ -322,7 +322,7 @@ export default function StudentDashboard() {
                               {project.title}
                             </h3>
                           </Link>
-                          <div>{getProjectStatusBadge("")}</div>
+                          <div>{getProjectStatusBadge(project.status)}</div>
                           <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
                             {project.description}
                           </p>
@@ -352,9 +352,9 @@ export default function StudentDashboard() {
                                 Ngày tham gia
                               </p>
                               <p className="font-medium text-gray-700">
-                                {new Date(project.joinedAt).toLocaleDateString(
-                                  "vi-VN"
-                                )}
+                                {project.joinedAt 
+                                  ? new Date(project.joinedAt).toLocaleDateString("vi-VN")
+                                  : "Đang cập nhật"}
                               </p>
                             </div>
                           </div>
@@ -449,20 +449,13 @@ export default function StudentDashboard() {
                     className="block"
                   >
                     <div className="p-5 border rounded-xl hover:bg-green-50/50 hover:border-green-300 hover:shadow-md transition-all cursor-pointer group">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2 flex-1">
-                            <p className="font-medium group-hover:text-blue-600 transition-colors">
-                              {project.title}
-                            </p>
-                            {getProjectStatusBadge(project.status)}
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3 flex-1">
-                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-600 transition-colors">
-                              {submission.title}
-                            </h3>
-                            {getSubmissionStatusBadge(submission.grade)}
-                          </div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3 flex-1">
+                          <h3 className="text-lg font-bold text-gray-900 group-hover:text-green-600 transition-colors">
+                            {submission.title}
+                          </h3>
+                          {getSubmissionStatusBadge(submission.grade)}
+                        </div>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -513,30 +506,7 @@ export default function StudentDashboard() {
                             {submission.grade.feedback}
                           </p>
                         </div>
-                        {submission.reportLink && (
-                          <div className="mt-3">
-                            <a
-                              href={submission.reportLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:underline bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              📎 Xem báo cáo
-                            </a>
-                          </div>
-                        )}
-                        {submission.grade && submission.grade.feedback && (
-                          <div className="mt-3 p-3 bg-linear-to-r from-gray-50 to-gray-100 rounded-lg text-sm border">
-                            <p className="font-semibold text-gray-700">
-                              Nhận xét:
-                            </p>
-                            <p className="text-gray-600 mt-1 leading-relaxed">
-                              {submission.grade.feedback}
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </Link>
                 ))
