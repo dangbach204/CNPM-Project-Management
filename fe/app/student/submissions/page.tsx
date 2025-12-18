@@ -3,77 +3,78 @@
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Calendar, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  FileText,
+  Calendar,
+  CheckCircle,
+  Clock,
+  XCircle,
+  ExternalLink,
+  Eye,
+  FileIcon,
+  AlertCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/user";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useStudentSubmission } from "@/hooks/useStudentSubmission";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDateTime } from "@/lib/project-helpers";
 
 export default function StudentSubmissionsPage() {
   const { submissions, isLoading } = useStudentSubmission();
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "submitted":
-        return <Clock className="w-5 h-5 text-yellow-600" />;
-      case "reviewed":
-        return <FileText className="w-5 h-5 text-blue-600" />;
-      case "approved":
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case "rejected":
-        return <XCircle className="w-5 h-5 text-red-600" />;
-      default:
-        return <FileText className="w-5 h-5" />;
+  const getStatusBadge = (submission: any) => {
+    if (submission.grade) {
+      return (
+        <Badge className="bg-green-100 text-green-700 border border-green-200 hover:bg-green-100 font-medium gap-1.5">
+          <CheckCircle className="w-3.5 h-3.5" />
+          Đã chấm điểm
+        </Badge>
+      );
     }
+    return (
+      <Badge className="bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-100 font-medium gap-1.5">
+        <Clock className="w-3.5 h-3.5" />
+        Đang chờ chấm
+      </Badge>
+    );
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "Đang chờ";
-      case "submitted":
-        return "Đã nộp";
-      case "reviewed":
-        return "Đã xem";
-      case "graded":
-        return "Đã chấm điểm";
-      case "approved":
-        return "Chấp nhận";
-      case "rejected":
-        return "Từ chối";
-      default:
-        return status;
-    }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score > 8.5) {
-      return "text-green-600";
+  const getScoreBadge = (score: number) => {
+    if (score >= 8.5) {
+      return "bg-green-500 text-white border-green-600";
     } else if (score >= 7) {
-      return "text-yellow-600";
-    } else {
-      return "text-red-600";
+      return "bg-yellow-500 text-white border-yellow-600";
+    } else if (score >= 5) {
+      return "bg-orange-500 text-white border-orange-600";
     }
+    return "bg-red-500 text-white border-red-600";
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-gray-100 text-gray-700";
-      case "submitted":
-        return "bg-yellow-100 text-yellow-700";
-      case "reviewed":
-        return "bg-blue-100 text-blue-700";
-      case "graded":
-        return "bg-green-100 text-green-700";
-      case "approved":
-        return "bg-green-100 text-green-700";
-      case "rejected":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
+  const getFileExtension = (url: string) => {
+    const ext = url.split(".").pop()?.toLowerCase();
+    if (ext === "pdf")
+      return { label: "PDF", color: "bg-red-100 text-red-700 border-red-200" };
+    if (ext === "doc" || ext === "docx")
+      return {
+        label: "DOCX",
+        color: "bg-blue-100 text-blue-700 border-blue-200",
+      };
+    return {
+      label: "FILE",
+      color: "bg-gray-100 text-gray-700 border-gray-200",
+    };
   };
 
   return (
@@ -104,22 +105,21 @@ export default function StudentSubmissionsPage() {
             </div>
 
             <div className="px-6 sm:px-8 lg:px-12 py-8">
-              <div className="max-w-5xl mx-auto">
+              <div className="max-w-6xl mx-auto">
                 {isLoading ? (
-                  <div className="grid gap-5">
-                    {[1, 2, 3].map((i) => (
-                      <Card key={i} className="shadow-sm border-gray-300/80">
-                        <CardContent className="p-5">
-                          <Skeleton className="h-20 w-full" />
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                  <Card className="shadow-sm border-gray-200">
+                    <CardContent className="p-6">
+                      <Skeleton className="h-12 w-full mb-4" />
+                      <Skeleton className="h-16 w-full mb-2" />
+                      <Skeleton className="h-16 w-full mb-2" />
+                      <Skeleton className="h-16 w-full" />
+                    </CardContent>
+                  </Card>
                 ) : submissions.length === 0 ? (
-                  <Card className="shadow-md border-gray-300/80">
-                    <CardContent className="flex flex-col items-center justify-center py-16">
-                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                        <FileText className="w-8 h-8 text-gray-400" />
+                  <Card className="shadow-md border-gray-200 bg-white">
+                    <CardContent className="flex flex-col items-center justify-center py-20">
+                      <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-5">
+                        <FileText className="w-10 h-10 text-gray-400" />
                       </div>
                       <h3 className="text-xl font-semibold mb-2 text-gray-900">
                         Chưa có bài nộp
@@ -131,96 +131,147 @@ export default function StudentSubmissionsPage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid gap-5">
-                    {submissions.map((submission) => {
-                      return (
-                        <Card
-                          key={submission.id}
-                          className="group shadow-md shadow-gray-200/80 hover:shadow-xl hover:shadow-gray-300/50 hover:-translate-y-1 transition-all duration-300 border border-gray-300/80 bg-white"
-                        >
-                          <CardContent className="p-5">
-                            <div className="flex items-start gap-6">
-                              {/* Left: Main Info */}
-                              <div className="flex-1 min-w-0">
-                                {/* Title */}
-                                <h3 className="text-[17px] font-semibold text-gray-900 mb-2 leading-tight tracking-[-0.01em] truncate">
-                                  {submission.projectTitle ||
-                                    "Không có tiêu đề"}
-                                </h3>
+                  <Card className="shadow-lg border-gray-200 bg-white overflow-hidden">
+                    {/* Table Header */}
+                    <div className="px-6 py-4 bg-linear-to-r from-slate-50 to-gray-50 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h2 className="text-lg font-semibold text-gray-900">
+                            Lịch sử nộp bài
+                          </h2>
+                          <p className="text-sm text-gray-500 mt-0.5">
+                            Tổng cộng {submissions.length} bài nộp
+                          </p>
+                        </div>
+                      </div>
+                    </div>
 
-                                {/* Metadata Grid */}
-                                <div className="flex items-center gap-6 text-[13px]">
-                                  {/* Submission Date */}
-                                  <div className="flex items-center gap-1.5 text-gray-600">
-                                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                                    <span>
-                                      {new Date(
-                                        submission.submittedAt
-                                      ).toLocaleDateString("vi-VN")}
-                                    </span>
+                    {/* Table */}
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gray-50/80 hover:bg-gray-50/80">
+                          <TableHead className="font-semibold text-gray-700 pl-6">
+                            Tên đề tài
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700 w-[140px]">
+                            Ngày nộp
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700 w-[120px]">
+                            File đính kèm
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700 w-40 text-center">
+                            Trạng thái / Điểm
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700 w-[120px] text-right pr-6">
+                            Hành động
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {submissions.map((submission) => {
+                          const fileInfo = getFileExtension(
+                            submission.reportLink || ""
+                          );
+
+                          return (
+                            <TableRow
+                              key={submission.id}
+                              className="group hover:bg-blue-50/50 transition-colors border-b border-gray-100 last:border-0"
+                            >
+                              {/* Tên đề tài */}
+                              <TableCell className="pl-6 py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-100 to-indigo-100 flex items-center justify-center shrink-0">
+                                    <FileText className="w-5 h-5 text-blue-600" />
                                   </div>
-
-                                  {/* Report Link */}
-                                  <a
-                                    href={submission.reportLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 hover:underline font-medium"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <FileText className="w-3.5 h-3.5" />
-                                    <span>Xem báo cáo</span>
-                                  </a>
+                                  <div className="min-w-0">
+                                    <p className="font-semibold text-gray-900 truncate max-w-[280px]">
+                                      {submission.projectTitle ||
+                                        "Không có tiêu đề"}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
+                              </TableCell>
 
-                              {/* Right: Score + CTA */}
-                              <div className="flex items-center gap-4 shrink-0">
-                                {/* Score Badge */}
+                              {/* Ngày nộp */}
+                              <TableCell className="py-4">
+                                <div className="flex items-center gap-1.5 text-gray-600 text-sm">
+                                  <Calendar className="w-4 h-4 text-gray-400" />
+                                  <span>
+                                    {formatDateTime(submission.submittedAt)}
+                                  </span>
+                                </div>
+                              </TableCell>
+
+                              {/* File đính kèm */}
+                              <TableCell className="py-4">
+                                <a
+                                  href={submission.reportLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium hover:opacity-80 transition-opacity"
+                                  style={{ backgroundColor: "transparent" }}
+                                >
+                                  <span
+                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded ${fileInfo.color} border`}
+                                  >
+                                    <FileIcon className="w-3 h-3" />
+                                    {fileInfo.label}
+                                  </span>
+                                  <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
+                                </a>
+                              </TableCell>
+
+                              {/* Trạng thái / Điểm */}
+                              <TableCell className="py-4 text-center">
                                 {submission.grade ? (
-                                  <div className="text-center">
+                                  <div className="flex items-center justify-center gap-3">
                                     <div
-                                      className={`text-3xl font-bold leading-none mb-1 ${
-                                        submission.grade.score >= 8.5
-                                          ? "text-green-600"
-                                          : submission.grade.score >= 7
-                                          ? "text-yellow-600"
-                                          : submission.grade.score >= 5
-                                          ? "text-orange-600"
-                                          : "text-red-600"
-                                      }`}
+                                      className={`inline-flex items-center justify-center w-12 h-12 rounded-xl font-bold text-lg ${getScoreBadge(
+                                        submission.grade.score
+                                      )} border shadow-sm`}
                                     >
                                       {submission.grade.score}
                                     </div>
-                                    <div className="text-[10px] uppercase tracking-wide text-gray-500 font-medium">
-                                      Điểm
+                                    <div className="text-left">
+                                      <Badge className="bg-green-100 text-green-700 border border-green-200 hover:bg-green-100 text-[10px] px-2 py-0.5">
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        Đã chấm
+                                      </Badge>
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="text-center px-3">
-                                    <div className="text-sm font-medium text-gray-400">
-                                      Chưa chấm
-                                    </div>
-                                  </div>
+                                  <Badge className="bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-100 font-medium gap-1">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    Đang chờ chấm
+                                  </Badge>
                                 )}
+                              </TableCell>
 
-                                {/* CTA */}
+                              {/* Hành động */}
+                              <TableCell className="py-4 text-right pr-6">
                                 <Link
                                   href={`/student/submissions/${submission.id}`}
                                 >
-                                  <button className="px-4 py-2 text-[13px] font-medium text-gray-700 hover:text-gray-900 border border-gray-300 hover:border-gray-400 rounded-md hover:bg-gray-50 transition-all">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-1.5 text-gray-700 hover:text-blue-700 hover:border-blue-300 hover:bg-blue-50 transition-all"
+                                  >
+                                    <Eye className="w-4 h-4" />
                                     {submission.grade
                                       ? "Xem đánh giá"
-                                      : "Xem chi tiết"}
-                                  </button>
+                                      : "Chi tiết"}
+                                  </Button>
                                 </Link>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </Card>
                 )}
               </div>
             </div>

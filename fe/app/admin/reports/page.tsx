@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { LogItem } from "@/components/admin/LogItem";
 import { LogActionBadge } from "@/components/admin/LogActionBadge";
+import { formatDateTime } from "@/lib/project-helpers";
 
 export default function AdminReportsPage() {
   const { user } = useAuthStore();
@@ -62,17 +63,6 @@ export default function AdminReportsPage() {
       default:
         return <Activity className="h-4 w-4" />;
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("vi-VN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
   };
 
   return (
@@ -391,7 +381,7 @@ export default function AdminReportsPage() {
                 <div className="flex items-center gap-2 bg-muted/50 px-3 py-2 rounded">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <p className="text-sm font-medium">
-                    {formatDate(selectedLog.createdAt)}
+                    {formatDateTime(selectedLog.createdAt)}
                   </p>
                 </div>
               </div>

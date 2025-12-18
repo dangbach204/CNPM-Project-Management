@@ -64,7 +64,34 @@ export function useProjectOperations({ onSuccess }: UseProjectOperationProps) {
     ) => {
       setEditLoading(true);
       try {
-        await updateProjectInfo(projectId, data);
+        // Convert expiredAt to ISO-8601 string format for backend
+        let expiredAtValue: string | undefined;
+        if (data.expiredAt) {
+          if (typeof data.expiredAt === "string") {
+            if (data.expiredAt.includes("T")) {
+              // Already ISO format
+              expiredAtValue = data.expiredAt;
+            } else {
+              // Date input format (YYYY-MM-DD) - add time and convert to ISO
+              const date = new Date(data.expiredAt + "T23:59:59");
+              expiredAtValue = date.toISOString();
+            }
+          } else if (data.expiredAt instanceof Date) {
+            expiredAtValue = data.expiredAt.toISOString();
+          }
+        }
+
+        const updateData = {
+          title: data.title,
+          description: data.description,
+          teacherId: data.teacherId,
+          status: data.status,
+          expiredAt: expiredAtValue, // ISO-8601 string for backend
+          addStudents: data.addStudents,
+          removeStudents: data.removeStudents,
+        };
+
+        await updateProjectInfo(projectId, updateData);
         toast({ title: "Cập nhật thành công" });
         setEditDialogOpen(false);
         setEditProject(null);

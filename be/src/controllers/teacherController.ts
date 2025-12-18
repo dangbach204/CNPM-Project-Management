@@ -1,6 +1,13 @@
 import { Request, Response } from "express";
 import { Grade, Project, ProjectStudents, Submission, User } from "../models";
 import LogService, { ENTITY_TYPES, LOG_ACTIONS } from "../lib/logService";
+import sequelize from "../config/db";
+import {
+  toISOStringOrNull,
+  isValidISODate,
+  parseDate,
+} from "../utils/formatDate";
+
 import sequelize from "../config/db";import { notifyStudent } from "./notificationController";
 export const getTeacherOverview = async (req: Request, res: Response) => {
   try {
@@ -113,7 +120,6 @@ export const getTeacherOverview = async (req: Request, res: Response) => {
       };
     });
 
-    // Filter pending submissions (submissions without grades)
     const grades = await Grade.findAll({
       where: {
         submission_id: submissions.map((sub: any) => sub.id),
@@ -148,25 +154,33 @@ export const getTeacherOverview = async (req: Request, res: Response) => {
 
 export const createProject = async (req: Request, res: Response) => {
   try {
-    const { title, description, createAt, expireAt } = req.body;
+    const { title, description, expireAt } = req.body;
     const teacherId = req.user?.id;
 
     if (!title) {
       return res.status(400).json({ message: "Tiêu đề đề tài là bắt buộc" });
     }
 
-    if (!title && !description && !createAt && !expireAt) {
+    if (!title && !description && !expireAt) {
       return res.status(400).json({
         message: "Vui lòng cung cấp ít nhất một trường để tạo đề tài",
       });
     }
 
+    if (expireAt && !isValidISODate(expireAt)) {
+      return res.status(400).json({
+        message:
+          "expireAt phải là chuỗi ISO-8601 hợp lệ (VD: 2024-01-15T10:30:00Z)",
+      });
+    }
+
+    const parsedExpireAt = parseDate(expireAt);
+
     const newProject = await Project.create({
       title,
       description,
       teacher_id: teacherId,
-      created_at: createAt || new Date(),
-      expire_at: expireAt,
+      ...(parsedExpireAt && { expire_at: parsedExpireAt }),
       status: "open",
     });
 
@@ -189,7 +203,7 @@ export const createProject = async (req: Request, res: Response) => {
         id: newProject.id,
         title: newProject.title,
         description: newProject.description,
-        expire_at: newProject.expire_at,
+        expireAt: newProject.expire_at,
       },
     });
   } catch (error) {
@@ -242,6 +256,14 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
       await transaction.rollback();
       return res.status(403).json({
         message: "Bạn không có quyền sửa project này",
+      });
+    }
+
+    if (expiredAt && !isValidISODate(expiredAt)) {
+      await transaction.rollback();
+      return res.status(400).json({
+        message:
+          "expiredAt phải là chuỗi ISO-8601 hợp lệ (VD: 2024-01-15T10:30:00Z)",
       });
     }
 
@@ -503,29 +525,13 @@ export const getSubmissions = async (req: Request, res: Response) => {
       }),
     ]);
 
-    const formatDate = (date: Date | string | null) => {
-      if (!date) return null;
-      return new Date(date)
-        .toLocaleString("vi-VN", {
-          timeZone: "Asia/Ho_Chi_Minh",
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        })
-        .replace(",", "");
-    };
-
     const formattedSubmissions = submissions.map((submission: any) => {
       return {
         id: submission.id,
         projectTitle: submission.submissionProject?.title,
         studentName: submission.student?.full_name,
         studentEmail: submission.student?.email,
-        submittedAt: formatDate(submission.submitted_at),
+        submittedAt: toISOStringOrNull(submission.submitted_at),
         reportLink: submission.report_link,
         score: submission.grades?.[0]?.score ?? null,
         feedback: submission.grades?.[0]?.feedback ?? "",

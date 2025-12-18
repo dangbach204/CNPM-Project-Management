@@ -79,7 +79,7 @@ export function Sidebar() {
     if (user.role === "student") {
       return [
         ...baseItems,
-        { href: "/student/projects", label: "Đề tài", icon: BookOpen },
+        { href: "/student/projects", label: "Đề tài hiện có", icon: BookOpen },
         {
           href: "/student/my-project",
           label: "Đề tài của tôi",

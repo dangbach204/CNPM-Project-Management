@@ -85,7 +85,7 @@ export function useTeacherProjectOperations({
           title: data.title,
           description: data.description,
           status: data.status,
-          expireAt: expireAtValue,
+          expiredAt: expireAtValue, // Must match backend field name 'expiredAt'
           addStudents: data.addStudents,
           removeStudents: data.removeStudents,
         };

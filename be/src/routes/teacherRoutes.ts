@@ -1,6 +1,14 @@
 import express from "express";
 import { authMiddleware, authorize } from "../middlewares/authMiddleware";
-import { createProject, deleteProject, getSubmissions, getTeacherOverview, teacherGradeSubmission, teacherUpdateProjectInfo } from "../controllers/teacherController";
+import {
+  createProject,
+  deleteProject,
+  getSubmissions,
+  getTeacherOverview,
+  teacherGradeSubmission,
+  teacherUpdateProjectInfo,
+  updateProjectInfo,
+} from "../controllers/teacherController";
 
 const router = express.Router();
 

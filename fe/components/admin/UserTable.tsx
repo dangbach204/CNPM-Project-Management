@@ -2,7 +2,6 @@
 
 import UserRow from "./UserRow";
 import { User } from "@/types/auth";
-import { Card, CardContent } from "@/components/ui/card";
 
 interface UserTableProps {
   users: User[];
@@ -21,50 +20,61 @@ export default function UserTable({
 }: UserTableProps) {
   if (!users || users.length === 0) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">
-              Không tìm thấy người dùng nào
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-16">
+        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+          <svg
+            className="w-8 h-8 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+            />
+          </svg>
+        </div>
+        <p className="text-gray-500 font-medium">
+          Không tìm thấy người dùng nào
+        </p>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="overflow-x-auto">
-          <table className="w-full border-separate border-spacing-0">
-            <thead>
-              <tr className="bg-muted/50 text-sm text-muted-foreground">
-                <th className="text-left py-3 px-5 font-semibold rounded-tl-lg">
-                  Tên
-                </th>
-                <th className="text-left py-3 px-5 font-semibold">Email</th>
-                <th className="text-center py-3 px-5 font-semibold">Vai trò</th>
-                <th className="text-center py-3 px-5 font-semibold rounded-tr-lg">
-                  Hành động
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <UserRow
-                  key={user.id}
-                  user={user}
-                  currentUserId={currentUserId}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  deleteLoading={deleteLoading}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="bg-linear-to-r from-gray-50 to-slate-50 border-b border-gray-200">
+            <th className="text-left py-4 px-6 font-semibold text-gray-700 text-sm">
+              Người dùng
+            </th>
+            <th className="text-left py-4 px-6 font-semibold text-gray-700 text-sm">
+              Email
+            </th>
+            <th className="text-center py-4 px-6 font-semibold text-gray-700 text-sm">
+              Vai trò
+            </th>
+            <th className="text-center py-4 px-6 font-semibold text-gray-700 text-sm">
+              Hành động
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {users.map((user) => (
+            <UserRow
+              key={user.id}
+              user={user}
+              currentUserId={currentUserId}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              deleteLoading={deleteLoading}
+            />
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

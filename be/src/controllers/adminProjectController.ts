@@ -5,6 +5,7 @@ import { ProjectStudents } from "../models";
 import sequelize from "../config/db";
 import { notifyOtherAdmins } from "./notificationController";
 import LogService, { LOG_ACTIONS, ENTITY_TYPES } from "../lib/logService";
+import { isValidISODate } from "../utils/formatDate";
 
 export const getProjectsManagement = async (req: Request, res: Response) => {
   try {
@@ -154,6 +155,14 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
     if (!project) {
       await transaction.rollback();
       return res.status(404).json({ message: "Project không tồn tại" });
+    }
+
+    if (expiredAt && !isValidISODate(expiredAt)) {
+      await transaction.rollback();
+      return res.status(400).json({
+        message:
+          "expiredAt phải là chuỗi ISO-8601 hợp lệ (VD: 2024-01-15T10:30:00Z)",
+      });
     }
 
     if (teacherId) {

@@ -10,19 +10,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  BookOpen,
-  FileText,
-  Clock,
-  Inbox,
-  User,
-  Calendar,
-  AlertTriangle,
-} from "lucide-react";
+import { BookOpen, FileText, Clock, Inbox, User, Calendar } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/user";
 import useStudentOverview from "@/hooks/useStudentOverview";
 import { StudentOverview } from "@/types/student";
+import { formatDate } from "@/lib/project-helpers";
 
 export default function StudentDashboard() {
   const { user } = useAuthStore();
@@ -352,9 +345,7 @@ export default function StudentDashboard() {
                                 Ngày tham gia
                               </p>
                               <p className="font-medium text-gray-700">
-                                {project.joinedAt 
-                                  ? new Date(project.joinedAt).toLocaleDateString("vi-VN")
-                                  : "Đang cập nhật"}
+                                {formatDate(project.joinedAt)}
                               </p>
                             </div>
                           </div>
@@ -373,16 +364,6 @@ export default function StudentDashboard() {
                           </div>
                         </div>
                       </div>
-
-                      {/* Submit Button - Sticky at bottom right */}
-                      <div className="flex justify-end mt-4 pt-4 border-t">
-                        <Link href={`/student/projects/${project.projectId}`}>
-                          <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all">
-                            <FileText className="w-4 h-4 mr-2" />
-                            Nộp báo cáo
-                          </Button>
-                        </Link>
-                      </div>
                     </div>
                   ))
               )}
@@ -391,8 +372,8 @@ export default function StudentDashboard() {
         </Card>
 
         {/* My Submissions */}
-        <Card className="overflow-hidden bg-white shadow-md hover:shadow-lg transition-shadow border-0">
-          <CardHeader className="bg-linear-to-r from-green-50 to-emerald-50 border-b">
+        <Card className="overflow-hidden shadow-md hover:shadow-lg transition-shadow border-0 rounded-xl">
+          <CardHeader className="bg-linear-to-r from-green-50 to-emerald-50 border-b border-green-100">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-3 text-xl">
@@ -481,9 +462,50 @@ export default function StudentDashboard() {
                               day: "2-digit",
                               hour: "2-digit",
                               minute: "2-digit",
-                            }
-                          )}
-                        </span>
+                            })}
+                          </span>
+                        </div>
+                        {submission.reportLink && (
+                          <div className="mt-3">
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:underline bg-blue-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                window.open(
+                                  submission.reportLink,
+                                  "_blank",
+                                  "noopener,noreferrer"
+                                );
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  window.open(
+                                    submission.reportLink,
+                                    "_blank",
+                                    "noopener,noreferrer"
+                                  );
+                                }
+                              }}
+                            >
+                              📎 Xem báo cáo
+                            </span>
+                          </div>
+                        )}
+                        {submission.grade && submission.grade.feedback && (
+                          <div className="mt-3 p-3 bg-linear-to-r from-gray-50 to-gray-100 rounded-lg text-sm border">
+                            <p className="font-semibold text-gray-700">
+                              Nhận xét:
+                            </p>
+                            <p className="text-gray-600 mt-1 leading-relaxed">
+                              {submission.grade.feedback}
+                            </p>
+                          </div>
+                        )}
                       </div>
                       {submission.reportLink && (
                         <div className="mt-2" onClick={(e) => e.preventDefault()}>

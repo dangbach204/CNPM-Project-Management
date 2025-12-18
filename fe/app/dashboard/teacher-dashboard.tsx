@@ -26,6 +26,7 @@ import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuthStore } from "@/stores/user";
 import { useTeacherOverview } from "@/hooks/useTeacherOverview";
+import { formatDate } from "@/lib/project-helpers";
 
 function formatRelativeTime(dateString: string): string {
   const date = new Date(dateString);
@@ -301,22 +302,10 @@ export default function TeacherDashboard() {
                           ) : (
                             <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              Hạn:{" "}
-                              {new Date(project.expiredAt).toLocaleDateString(
-                                "vi-VN"
-                              )}
+                              Hạn: {formatDate(project.expiredAt)}
                             </p>
                           )}
                         </div>
-                        <Link href={`/teacher/projects/${project.id}`}>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-200"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </Link>
                       </div>
                     );
                   })}
@@ -435,14 +424,10 @@ export default function TeacherDashboard() {
                               {project.description}
                             </td>
                             <td className="px-4 py-3 text-gray-600">
-                              {new Date(project.createdAt).toLocaleDateString(
-                                "vi-VN"
-                              )}
+                              {formatDate(project.createdAt)}
                             </td>
                             <td className="px-4 py-3 text-gray-600">
-                              {new Date(project.expiredAt).toLocaleDateString(
-                                "vi-VN"
-                              )}
+                              {formatDate(project.expiredAt)}
                             </td>
                           </tr>
                         ))}
@@ -464,11 +449,7 @@ export default function TeacherDashboard() {
                                 "N/A"}
                             </td>
                             <td className="px-4 py-3 text-gray-600">
-                              {submission.submittedAt
-                                ? new Date(
-                                    submission.submittedAt
-                                  ).toLocaleDateString("vi-VN")
-                                : "N/A"}
+                              {formatDate(submission.submittedAt, "N/A")}
                             </td>
                             <td className="px-4 py-3">
                               {submission.reportLink ? (

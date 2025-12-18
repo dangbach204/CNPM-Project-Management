@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Grade, Project, ProjectStudents, Submission, User } from "../models";
 import user from "../models/user";
+import { toISOStringOrNull } from "../utils/formatDate";
 import { notifyTeacher } from "./notificationController";
 
 export const getStundentOverview = async (req: Request, res: Response) => {
@@ -43,36 +44,14 @@ export const getStundentOverview = async (req: Request, res: Response) => {
       }),
     ]);
 
-    console.log("myProject:", myProject);
-    console.log("mySubmissions:", mySubmissions);
-
-    const formatDate = (date: Date | string | null) => {
-      if (!date) return null;
-      return new Date(date)
-        .toLocaleString("vi-VN", {
-          timeZone: "Asia/Ho_Chi_Minh",
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        })
-        .replace(",", "");
-    };
-
-    const formattedMyProject = myProject
-      .filter((myProject: any) => myProject.joinedProject)
-      .map((myProject: any) => {
-        return {
-          projectId: myProject.joinedProject.id,
-          title: myProject.joinedProject.title,
-          description: myProject.joinedProject.description,
-          status: myProject.joinedProject.status,
-          joinedAt: formatDate(myProject.joined_at),
-        };
-      });
+    const formattedMyProject = myProject.map((myProject: any) => {
+      return {
+        projectId: myProject.joinedProject.id,
+        title: myProject.joinedProject.title,
+        description: myProject.joinedProject.description,
+        joinedAt: toISOStringOrNull(myProject.joined_at),
+      };
+    });
 
     const formattedMySubmissions = mySubmissions.map((submission: any) => {
       const projectInfo = myProject.find(
@@ -84,7 +63,7 @@ export const getStundentOverview = async (req: Request, res: Response) => {
         projectId: submission.project_id,
         title: projectInfo?.joinedProject?.title || "N/A",
         description: projectInfo?.joinedProject?.description || "N/A",
-        submittedAt: formatDate(submission.submitted_at),
+        submittedAt: toISOStringOrNull(submission.submitted_at),
         reportLink: submission.report_link,
         grade:
           submission.grades && submission.grades.length > 0

@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import {
   Search,
   Users,
@@ -12,11 +13,15 @@ import {
   Clock,
   UserCircle,
   ArrowRight,
+  CheckCircle2,
+  XCircle,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useMemo } from "react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useStudentProjects } from "@/hooks/useStudentProjects";
+import { formatDate } from "@/lib/project-helpers";
 
 interface Project {
   id: number;
@@ -40,102 +45,166 @@ function StudentProjectCard({
   isEnrolled,
   expired,
 }: StudentProjectCardProps) {
+  const parseStudentCount = (countStr: string) => {
+    const match = countStr.match(/(\d+)\/(\d+)/);
+    if (match) {
+      return { current: parseInt(match[1]), max: parseInt(match[2]) };
+    }
+    return { current: 0, max: 1 };
+  };
+
+  const studentSlots = parseStudentCount(project.studentCount);
+  const slotPercentage = (studentSlots.current / studentSlots.max) * 100;
+  const isFull = studentSlots.current >= studentSlots.max;
+
+  const getAccentColor = () => {
+    if (isEnrolled) return "from-blue-500 to-blue-600";
+    if (expired) return "from-gray-400 to-gray-500";
+    return "from-emerald-500 to-teal-500";
+  };
+
   return (
-    <Card className="group shadow-md shadow-gray-200/80 hover:shadow-xl hover:shadow-gray-300/50 hover:-translate-y-1 transition-all duration-300 border border-gray-300/80 bg-white">
-      <CardContent className="p-5">
-        {/* Header: Title + Status Badge */}
-        <div className="flex items-start justify-between gap-4 mb-3">
-          <h3 className="text-[17px] sm:text-lg font-semibold text-gray-900 leading-[1.4] flex-1 tracking-[-0.01em]">
-            {project.title}
-          </h3>
-          <div className="shrink-0">
-            {isEnrolled && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-blue-50/80 text-blue-600 border border-blue-200/50 tracking-wide">
-                Đã tham gia
-              </span>
-            )}
-            {expired && !isEnrolled && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-gray-50 text-gray-500 border border-gray-200/50 tracking-wide">
-                Đã hết hạn
-              </span>
-            )}
-            {!expired && !isEnrolled && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50/80 text-emerald-600 border border-emerald-200/50 tracking-wide">
-                Đang mở
-              </span>
-            )}
+    <Card className="group relative shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-gray-300 bg-white overflow-hidden">
+      {/* Left accent border */}
+      <div
+        className={`absolute left-0 top-0 bottom-0 w-1.5 bg-linear-to-b ${getAccentColor()}`}
+      />
+
+      <div className="pl-5">
+        {/* Card Header */}
+        <div className="px-5 pt-5 pb-4 bg-linear-to-br from-slate-50/90 via-white to-white border-b border-gray-100">
+          {/* Header: Title + Status Badge */}
+          <div className="flex items-start justify-between gap-4">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 leading-[1.35] flex-1 tracking-[-0.02em] group-hover:text-gray-800">
+              {project.title}
+            </h3>
+            <div className="shrink-0">
+              {isEnrolled && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700 border border-blue-200 shadow-sm">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Đã tham gia
+                </span>
+              )}
+              {expired && !isEnrolled && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-red-50 text-red-600 border border-red-200 shadow-sm">
+                  <XCircle className="w-3.5 h-3.5" />
+                  Đã hết hạn
+                </span>
+              )}
+              {!expired && !isEnrolled && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Đang mở
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Description - 2 lines max */}
-        <p className="text-[13px] sm:text-sm text-gray-600 leading-relaxed mb-4 line-clamp-2">
-          {project.description}
-        </p>
+        <CardContent className="p-5 pt-4">
+          {/* Description - 2 lines max */}
+          <p className="text-[13px] sm:text-sm text-gray-600 leading-relaxed mb-5 line-clamp-2 min-h-10">
+            {project.description}
+          </p>
 
-        {/* Key Info Grid - Prioritized order */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5 mb-4 pb-4 border-b border-gray-100">
-          {/* 1. Expired Date - High Priority */}
-          <div className="col-span-2 sm:col-span-1 space-y-1.5">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-gray-400" />
-              Hết hạn
-            </p>
-            <p
-              className={`text-[13px] sm:text-sm font-semibold leading-tight ${
-                expired ? "text-gray-500" : "text-amber-600"
+          {/* Key Info Grid */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            {/* Expired Date */}
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50/80 border border-slate-100">
+              <div
+                className={`p-2 rounded-lg ${
+                  expired ? "bg-gray-200" : "bg-amber-100"
+                }`}
+              >
+                <Clock
+                  className={`w-4 h-4 ${
+                    expired ? "text-gray-500" : "text-amber-600"
+                  }`}
+                />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-gray-500 font-medium">
+                  Hết hạn
+                </p>
+                <p
+                  className={`text-sm font-semibold ${
+                    expired ? "text-gray-500" : "text-amber-600"
+                  }`}
+                >
+                  {project.expiredAt
+                    ? formatDate(project.expiredAt)
+                    : "Không giới hạn"}
+                </p>
+              </div>
+            </div>
+
+            {/* Supervisor */}
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50/80 border border-slate-100">
+              <div className="p-2 rounded-lg bg-indigo-100">
+                <UserCircle className="w-4 h-4 text-indigo-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-wider text-gray-500 font-medium">
+                  Giảng viên
+                </p>
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {project.teacherName || "Chưa có"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Student Slots with Progress Bar */}
+          <div className="p-3 rounded-lg bg-slate-50/80 border border-slate-100">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div
+                  className={`p-1.5 rounded-md ${
+                    isFull ? "bg-orange-100" : "bg-emerald-100"
+                  }`}
+                >
+                  <Users
+                    className={`w-3.5 h-3.5 ${
+                      isFull ? "text-orange-600" : "text-emerald-600"
+                    }`}
+                  />
+                </div>
+                <span className="text-[11px] uppercase tracking-wider text-gray-500 font-medium">
+                  Số sinh viên
+                </span>
+              </div>
+              <span
+                className={`text-sm font-bold ${
+                  isFull ? "text-orange-600" : "text-gray-900"
+                }`}
+              >
+                {project.studentCount}
+              </span>
+            </div>
+            <Progress
+              value={slotPercentage}
+              className={`h-2 ${
+                isFull ? "[&>div]:bg-orange-500" : "[&>div]:bg-emerald-500"
               }`}
-            >
-              {project.expiredAt
-                ? new Date(project.expiredAt).toLocaleDateString("vi-VN")
-                : "Không giới hạn"}
-            </p>
+            />
+            {isFull && (
+              <p className="text-[10px] text-orange-600 mt-1.5 font-medium">
+                Đã đủ thành viên
+              </p>
+            )}
           </div>
 
-          {/* 2. Supervisor */}
-          <div className="col-span-2 sm:col-span-1 space-y-1.5">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium flex items-center gap-1.5">
-              <UserCircle className="w-3.5 h-3.5 text-gray-400" />
-              Giáo viên
-            </p>
-            <p className="text-[13px] sm:text-sm font-medium text-gray-900 truncate leading-tight">
-              {project.teacherName || "Chưa có"}
-            </p>
+          {/* Created Date - Footer */}
+          <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-gray-400">
+              <Calendar className="w-3.5 h-3.5" />
+              <span className="text-[11px]">
+                Tạo lúc: {formatDate(project.createdAt)}
+              </span>
+            </div>
           </div>
-
-          {/* 3. Student Slots */}
-          <div className="space-y-1.5">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-gray-400" />
-              Số SV
-            </p>
-            <p className="text-[13px] sm:text-sm font-semibold text-gray-900 leading-tight">
-              {project.studentCount}
-            </p>
-          </div>
-
-          {/* 4. Created Date - Secondary */}
-          <div className="space-y-1.5">
-            <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-gray-400" />
-              Tạo lúc
-            </p>
-            <p className="text-[13px] sm:text-sm text-gray-600 leading-tight">
-              {new Date(project.createdAt).toLocaleDateString("vi-VN")}
-            </p>
-          </div>
-        </div>
-
-        {/* CTA Button - View Details Only */}
-        <Link href={`/student/projects/${project.id}`} className="block">
-          <Button
-            variant="outline"
-            className="w-full h-10 border-gray-300 bg-white text-gray-900 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all text-[13px] font-medium"
-          >
-            Xem chi tiết
-            <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-0.5" />
-          </Button>
-        </Link>
-      </CardContent>
+        </CardContent>
+      </div>
     </Card>
   );
 }
@@ -199,7 +268,7 @@ export default function StudentProjectsPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto bg-gray-50/50">
+          <main className="flex-1 overflow-y-auto bg-slate-100/80">
             {/* Hero Banner - Reduced height with dark overlay */}
             <div className="relative h-48 sm:h-52 overflow-hidden">
               <div
@@ -224,7 +293,7 @@ export default function StudentProjectsPage() {
 
             {/* Floating Search & Filter Card */}
             <div className="px-6 sm:px-8 lg:px-12 -mt-8 relative z-10">
-              <Card className="shadow-xl shadow-gray-200/40 border-0 mb-8 bg-white">
+              <Card className="shadow-lg shadow-gray-300/30 border border-gray-200/60 mb-8 bg-white/95 backdrop-blur-sm">
                 <CardContent className="p-5 sm:p-6 space-y-5">
                   {/* Search Bar */}
                   <div className="relative">
@@ -276,7 +345,7 @@ export default function StudentProjectsPage() {
               {/* Projects Grid */}
               <div className="pb-10">
                 {filteredProjects.length === 0 ? (
-                  <Card className="border-gray-200/60">
+                  <Card className="border-gray-200 bg-white/80 backdrop-blur-sm">
                     <CardContent className="py-20 text-center">
                       <p className="text-gray-500 text-[15px] font-medium">
                         Không tìm thấy đề tài nào
@@ -284,7 +353,7 @@ export default function StudentProjectsPage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid gap-5">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     {filteredProjects.map((project) => {
                       const isEnrolled =
                         myProjectIds?.includes(project.id) || false;
