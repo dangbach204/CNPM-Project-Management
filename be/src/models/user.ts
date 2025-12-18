@@ -38,7 +38,7 @@ const User = db.define(
   {
     tableName: "users",
     timestamps: false,
-    paranoid: true,
+    paranoid: false,
     deletedAt: "deleted_at",
   }
 );
