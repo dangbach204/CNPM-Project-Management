@@ -64,15 +64,12 @@ export function useProjectOperations({ onSuccess }: UseProjectOperationProps) {
     ) => {
       setEditLoading(true);
       try {
-        // Convert expiredAt to ISO-8601 string format for backend
         let expiredAtValue: string | undefined;
         if (data.expiredAt) {
           if (typeof data.expiredAt === "string") {
             if (data.expiredAt.includes("T")) {
-              // Already ISO format
               expiredAtValue = data.expiredAt;
             } else {
-              // Date input format (YYYY-MM-DD) - add time and convert to ISO
               const date = new Date(data.expiredAt + "T23:59:59");
               expiredAtValue = date.toISOString();
             }
@@ -86,7 +83,7 @@ export function useProjectOperations({ onSuccess }: UseProjectOperationProps) {
           description: data.description,
           teacherId: data.teacherId,
           status: data.status,
-          expiredAt: expiredAtValue, // ISO-8601 string for backend
+          expiredAt: expiredAtValue,
           addStudents: data.addStudents,
           removeStudents: data.removeStudents,
         };

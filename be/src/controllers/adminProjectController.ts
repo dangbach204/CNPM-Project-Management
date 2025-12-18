@@ -292,8 +292,7 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
     }
 
     await transaction.commit();
-
-    // Gửi thông báo cho các admin khác
+    
     if (req.user?.id) {
       const project = await Project.findByPk(projectId);
       if (project) {
