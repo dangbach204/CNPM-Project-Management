@@ -7,6 +7,7 @@ import TeacherDashboard from "./teacher-dashboard";
 import StudentDashboard from "./student-dashboard";
 import { useAuthStore } from "@/stores/user";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -24,6 +25,7 @@ export default function DashboardPage() {
           </main>
         </div>
       </div>
+      <Toaster />
     </ProtectedRoute>
   );
 }

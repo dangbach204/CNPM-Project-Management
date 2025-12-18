@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   getNotifications,
   markAsRead,
@@ -6,16 +6,80 @@ import {
   deleteNotification,
   Notification,
 } from "@/service/notification-service";
+import { useToast } from "@/hooks/use-toast";
+import { User, Folder, Star, UserPlus, FileText, Bell } from "lucide-react";
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  const previousNotificationIdsRef = useRef<Set<number>>(new Set());
+
+  const getNotificationConfig = (type: string) => {
+    switch (type) {
+      case "user_created":
+        return {
+          title: "👤 Tạo người dùng mới",
+          icon: "👤"
+        };
+      case "user_updated":
+        return {
+          title: "✏️ Cập nhật người dùng",
+          icon: "✏️"
+        };
+      case "project_updated":
+        return {
+          title: "📁 Cập nhật đề tài",
+          icon: "📁"
+        };
+      case "grade_submitted":
+        return {
+          title: "⭐ Điểm số mới",
+          icon: "⭐"
+        };
+      case "added_to_project":
+        return {
+          title: "➕ Thêm vào dự án",
+          icon: "➕"
+        };
+      case "submission_received":
+        return {
+          title: "📄 Bài nộp mới",
+          icon: "📄"
+        };
+      default:
+        return {
+          title: "🔔 Thông báo",
+          icon: "🔔"
+        };
+    }
+  };
 
   const fetchNotifications = async () => {
     setIsLoading(true);
     const data = await getNotifications();
     if (data) {
+      // Kiểm tra thông báo mới dựa trên ID
+      const currentIds = new Set(data.notifications.map((n: Notification) => n.id));
+      const newNotifications = data.notifications.filter(
+        (n: Notification) => !previousNotificationIdsRef.current.has(n.id) && !n.isRead
+      );
+
+      // Hiển thị toast cho thông báo mới (chỉ khi không phải lần đầu load)
+      if (previousNotificationIdsRef.current.size > 0 && newNotifications.length > 0) {
+        // Hiển thị thông báo mới nhất
+        const latestNotification = newNotifications[0];
+        const config = getNotificationConfig(latestNotification.type);
+        toast({
+          title: config.title,
+          description: `${latestNotification.actor?.name || "Hệ thống"} ${latestNotification.message}`,
+          duration: 5000,
+        });
+      }
+
+      // Cập nhật danh sách ID đã biết
+      previousNotificationIdsRef.current = currentIds;
       setNotifications(data.notifications);
       setUnreadCount(data.unreadCount);
     }

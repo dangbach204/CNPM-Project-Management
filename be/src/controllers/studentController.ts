@@ -395,7 +395,7 @@ export const getMySubmissions = async (req: Request, res: Response) => {
               id: submission.grades[0].id,
               score: submission.grades[0].score,
               feedback: submission.grades[0].feedback,
-              gradedAt: submission.grades[0].graded_at,
+              gradedAt: submission.grades[0].created_at,
             }
           : null,
     }));
