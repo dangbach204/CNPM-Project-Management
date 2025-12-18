@@ -89,7 +89,6 @@ export const useNotifications = () => {
   useEffect(() => {
     fetchNotifications();
 
-    // Polling mỗi 30 giây để cập nhật thông báo
     const interval = setInterval(fetchNotifications, 30000);
 
     return () => clearInterval(interval);

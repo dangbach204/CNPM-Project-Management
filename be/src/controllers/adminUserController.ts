@@ -168,7 +168,6 @@ export const updateUserInfo = async (req: Request, res: Response) => {
       { updated_fields: Object.keys(updatedFields), ...updatedFields }
     );
 
-    // Gửi thông báo cho các admin khác
     if (req.user?.id) {
       await notifyOtherAdmins(
         req.user.id,

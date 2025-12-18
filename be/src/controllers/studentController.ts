@@ -159,23 +159,45 @@ export const studentJoinProject = async (req: Request, res: Response) => {
     const studentId = req.user?.id;
     const { projectId } = req.params;
 
-    const existingEntry = await ProjectStudents.findOne({
-      where: {
-        student_id: studentId,
-      },
-    });
+    if (!studentId || !projectId) {
+      return res.status(400).json({ message: "Thiếu thông tin bắt buộc" });
+    }
 
-    const joinedProject = await Project.findOne({
-      where: {
-        id: existingEntry?.project_id || null,
-      },
-      attributes: ["title", "description"],
+    const existingEntry = await ProjectStudents.findOne({
+      where: { student_id: studentId },
+      include: [
+        {
+          model: Project,
+          as: "joinedProject",
+          attributes: ["id", "title", "description"],
+        },
+      ],
     });
 
     if (existingEntry) {
       return res.status(400).json({
-        message: "Student already joined another project",
-        joinedProject,
+        message: "Sinh viên đã tham gia một đề tài khác",
+        joinedProject: existingEntry.joinedProject,
+      });
+    }
+
+    const project = await Project.findByPk(projectId, {
+      attributes: ["id", "max_students"],
+    });
+
+    if (!project) {
+      return res.status(404).json({
+        message: "Đề tài không tồn tại",
+      });
+    }
+
+    const currentCount = await ProjectStudents.count({
+      where: { project_id: projectId },
+    });
+
+    if (currentCount >= project.max_students) {
+      return res.status(400).json({
+        message: "Đề tài đã đủ số lượng sinh viên",
       });
     }
 
@@ -184,14 +206,14 @@ export const studentJoinProject = async (req: Request, res: Response) => {
       project_id: projectId,
       joined_at: new Date(),
     });
+
     return res.status(200).json({
-      message: "Successfully joined the project",
+      message: "Tham gia đề tài thành công",
     });
   } catch (error: any) {
     console.error("Error joining project:", error);
     return res.status(500).json({
       message: "Lỗi máy chủ khi tham gia đề tài",
-      error: error.message,
     });
   }
 };
@@ -201,10 +223,7 @@ export const submitProject = async (req: Request, res: Response) => {
   const { projectId } = req.params;
   const { reportLink } = req.body;
 
-  console.log("📝 submitProject called - studentId:", studentId, "projectId:", projectId);
-
   try {
-    // Lấy thông tin project và teacher
     const project = await Project.findByPk(projectId, {
       include: [
         {
@@ -214,9 +233,6 @@ export const submitProject = async (req: Request, res: Response) => {
         },
       ],
     });
-
-    console.log("🔍 Project found:", project ? project.title : "null");
-    console.log("👨‍🏫 Teacher ID:", project?.teacher_id);
 
     if (!project) {
       return res.status(404).json({
@@ -231,20 +247,10 @@ export const submitProject = async (req: Request, res: Response) => {
       submitted_at: new Date(),
     });
 
-    console.log("✅ Submission created:", submission.id);
-
-    // Gửi thông báo cho giáo viên
-    console.log("🔔 Checking notification conditions:", {
-      hasTeacherId: !!project.teacher_id,
-      hasStudentId: !!studentId,
-    });
-
     if (project.teacher_id && studentId) {
       const student = await User.findByPk(studentId, {
         attributes: ["full_name"],
       });
-
-      console.log("👨‍🎓 Student name:", student?.full_name);
 
       const studentName = student?.full_name || "Sinh viên";
 
@@ -256,10 +262,8 @@ export const submitProject = async (req: Request, res: Response) => {
         project.title,
         `Sinh viên ${studentName} đã nộp báo cáo cho dự án "${project.title}"`
       );
-
-      console.log("📧 Notification sent to teacher:", project.teacher_id);
     } else {
-      console.log("❌ Notification NOT sent - missing teacherId or studentId");
+      console.log("Teacher or student ID is missing, skipping notification.");
     }
 
     return res.status(201).json({
