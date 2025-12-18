@@ -113,11 +113,29 @@ export const getTeacherOverview = async (req: Request, res: Response) => {
       };
     });
 
+    // Filter pending submissions (submissions without grades)
+    const grades = await Grade.findAll({
+      where: {
+        submission_id: submissions.map((sub: any) => sub.id),
+      },
+      attributes: ["submission_id"],
+    });
+
+    const gradedSubmissionIds = new Set(
+      grades.map((grade: any) => grade.submission_id)
+    );
+
+    const pendingSubmissions = formattedSubmissions.filter(
+      (sub: any) => !gradedSubmissionIds.has(sub.id)
+    );
+
     return res.status(200).json({
       totalProjects,
       projects: formattedProjects,
       submissions: formattedSubmissions,
       totalSubmissions,
+      pendingSubmissionsCount: pendingSubmissions.length,
+      pendingSubmissions,
       allStudents,
     });
   } catch (error) {

@@ -1,9 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Search, Plus, BookOpen, UsersIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  Plus,
+  BookOpen,
+  UsersIcon,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
-// Components
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
@@ -21,14 +27,11 @@ import EditUserDialog from "@/components/admin/EditUserDialog";
 import UserTable from "@/components/admin/UserTable";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
-// Hooks
 import { useAuthStore } from "@/stores/user";
 import { useAdminUserManagement } from "@/hooks/useAdminUserManagement";
 import { useUserOperations } from "@/hooks/useUserOperations";
 import { useUserFilters } from "@/hooks/useUserFilters";
 
-// Utils
-import { getRoleLabel, UserRole } from "@/lib/user-utils";
 import { useMemo, useState } from "react";
 
 export default function AdminUsersPage() {
@@ -42,7 +45,6 @@ export default function AdminUsersPage() {
     onSuccess: refetch,
   });
 
-  // Filtering
   const {
     searchTerm,
     setSearchTerm,
@@ -51,7 +53,6 @@ export default function AdminUsersPage() {
     filteredUsers,
   } = useUserFilters(users);
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
@@ -59,7 +60,6 @@ export default function AdminUsersPage() {
   const endIndex = startIndex + itemsPerPage;
   const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
-  // Stats
   const stats = useMemo(
     () => [
       {
@@ -84,7 +84,6 @@ export default function AdminUsersPage() {
     [users]
   );
 
-  // Loading State
   if (isLoading) {
     return (
       <ProtectedRoute allowedRoles={["admin"]}>
@@ -103,13 +102,13 @@ export default function AdminUsersPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main 
+          <main
             className="flex-1 overflow-y-auto"
             style={{
-              backgroundImage: 'url(/bkhoa1.jpg)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
+              backgroundImage: "url(/bkhoa1.jpg)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
             }}
           >
             <div className="p-8 space-y-6">
@@ -119,6 +118,7 @@ export default function AdminUsersPage() {
                 onClose={() => userOperations.setDeleteDialogOpen(false)}
                 onConfirm={userOperations.handleConfirmDelete}
                 userName={userOperations.selectedUser?.fullName}
+                userEmail={userOperations.selectedUser?.email}
                 loading={userOperations.deleteLoading}
               />
               <EditUserDialog
@@ -126,6 +126,7 @@ export default function AdminUsersPage() {
                 onClose={() => userOperations.setEditDialogOpen(false)}
                 onSave={userOperations.handleConfirmUpdate}
                 user={userOperations.editUser}
+                currentUserId={user?.id}
                 loading={userOperations.editLoading}
               />
 
@@ -150,7 +151,9 @@ export default function AdminUsersPage() {
 
                   {/* Role Filter */}
                   <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium whitespace-nowrap">Vai trò:</label>
+                    <label className="text-sm font-medium whitespace-nowrap">
+                      Vai trò:
+                    </label>
                     <Select value={filterRole} onValueChange={setFilterRole}>
                       <SelectTrigger className="h-10 w-40">
                         <SelectValue placeholder="Vai trò" />
@@ -188,43 +191,52 @@ export default function AdminUsersPage() {
                 {filteredUsers.length > 0 && (
                   <div className="border-t border-gray-200 px-4 py-3 flex items-center justify-between">
                     <div className="text-sm text-muted-foreground">
-                      Hiển thị {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} trong số {filteredUsers.length} người dùng
+                      Hiển thị {startIndex + 1}-
+                      {Math.min(endIndex, filteredUsers.length)} trong số{" "}
+                      {filteredUsers.length} người dùng
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        onClick={() =>
+                          setCurrentPage((p) => Math.max(1, p - 1))
+                        }
                         disabled={currentPage === 1}
                       >
                         <ChevronLeft className="w-4 h-4" />
                       </Button>
-                      
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum;
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = currentPage - 2 + i;
+
+                      {Array.from(
+                        { length: Math.min(5, totalPages) },
+                        (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={
+                                currentPage === pageNum ? "default" : "outline"
+                              }
+                              size="sm"
+                              onClick={() => setCurrentPage(pageNum)}
+                              className="w-8 h-8 p-0"
+                            >
+                              {pageNum}
+                            </Button>
+                          );
                         }
-                        
-                        return (
-                          <Button
-                            key={pageNum}
-                            variant={currentPage === pageNum ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(pageNum)}
-                            className="w-8 h-8 p-0"
-                          >
-                            {pageNum}
-                          </Button>
-                        );
-                      })}
-                      
+                      )}
+
                       {totalPages > 5 && currentPage < totalPages - 2 && (
                         <>
                           <span className="text-muted-foreground">...</span>
@@ -242,7 +254,9 @@ export default function AdminUsersPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        onClick={() =>
+                          setCurrentPage((p) => Math.min(totalPages, p + 1))
+                        }
                         disabled={currentPage === totalPages}
                       >
                         <ChevronRight className="w-4 h-4" />

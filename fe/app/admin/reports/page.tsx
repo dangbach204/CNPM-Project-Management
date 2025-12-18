@@ -12,15 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useAuthStore } from "@/stores/user";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAdminLogs } from "@/hooks/useAdminLogs";
@@ -34,94 +26,24 @@ import {
   Globe,
   ChevronLeft,
   ChevronRight,
+  BookOpen,
+  FileCheck,
 } from "lucide-react";
-
-const LOGS_PER_PAGE = 15;
+import { LogItem } from "@/components/admin/LogItem";
+import { LogActionBadge } from "@/components/admin/LogActionBadge";
 
 export default function AdminReportsPage() {
   const { user } = useAuthStore();
-  const { logs, isLoading } = useAdminLogs();
+  const { logs, isLoading, currentPage, totalPages, totalLogs, goToPage } =
+    useAdminLogs();
   const [selectedLog, setSelectedLog] = useState<Log | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [actionFilter, setActionFilter] = useState<string>("all");
-  const [timeFilter, setTimeFilter] = useState<string>("all");
-  const [idFilter, setIdFilter] = useState<string>("");
 
-  // Ensure logs is always an array
   const logsArray = Array.isArray(logs) ? logs : [];
 
-  // Get unique actions from logs
-  const uniqueActions = useMemo(() => {
-    const actions = new Set(logsArray.map(log => log.action));
-    return Array.from(actions).sort();
-  }, [logsArray]);
-
-  // Filter logs by action, time, and ID
-  const filteredLogs = useMemo(() => {
-    let filtered = logsArray;
-
-    // Filter by action
-    if (actionFilter !== "all") {
-      filtered = filtered.filter(log => log.action === actionFilter);
-    }
-
-    // Filter by time
-    if (timeFilter !== "all") {
-      const now = new Date();
-      const filterDate = new Date();
-      
-      if (timeFilter === "today") {
-        filterDate.setHours(0, 0, 0, 0);
-      } else if (timeFilter === "week") {
-        filterDate.setDate(now.getDate() - 7);
-      } else if (timeFilter === "month") {
-        filterDate.setMonth(now.getMonth() - 1);
-      }
-      
-      filtered = filtered.filter(log => {
-        const logDate = new Date(log.createdAt);
-        return logDate >= filterDate;
-      });
-    }
-
-    // Filter by ID (search in entity ID only)
-    if (idFilter.trim() !== "") {
-      const searchId = idFilter.trim();
-      filtered = filtered.filter(log => 
-        log.entityId?.toString() === searchId
-      );
-    }
-
-    return filtered;
-  }, [logsArray, actionFilter, timeFilter, idFilter]);
-
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredLogs.length / LOGS_PER_PAGE);
-  const paginatedLogs = useMemo(() => {
-    const startIndex = (currentPage - 1) * LOGS_PER_PAGE;
-    const endIndex = startIndex + LOGS_PER_PAGE;
-    return filteredLogs.slice(startIndex, endIndex);
-  }, [filteredLogs, currentPage]);
-
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleActionFilterChange = (action: string) => {
-    setActionFilter(action);
-    setCurrentPage(1);
-  };
-
-  const handleTimeFilterChange = (time: string) => {
-    setTimeFilter(time);
-    setCurrentPage(1);
-  };
-
-  const handleIdFilterChange = (id: string) => {
-    setIdFilter(id);
-    setCurrentPage(1);
+    goToPage(page, 10);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleLogClick = (log: Log) => {
@@ -142,26 +64,6 @@ export default function AdminReportsPage() {
     }
   };
 
-  const getActionColor = (action: string) => {
-    const lowerAction = action.toLowerCase();
-    if (lowerAction.includes("create") || lowerAction.includes("add")) {
-      return "bg-green-100 text-green-700 border-green-200";
-    } else if (lowerAction.includes("update") || lowerAction.includes("edit")) {
-      return "bg-blue-100 text-blue-700 border-blue-200";
-    } else if (
-      lowerAction.includes("delete") ||
-      lowerAction.includes("remove")
-    ) {
-      return "bg-red-100 text-red-700 border-red-200";
-    } else if (
-      lowerAction.includes("login") ||
-      lowerAction.includes("logout")
-    ) {
-      return "bg-purple-100 text-purple-700 border-purple-200";
-    }
-    return "bg-gray-100 text-gray-700 border-gray-200";
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString("vi-VN", {
       year: "numeric",
@@ -179,18 +81,42 @@ export default function AdminReportsPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main 
-            className="flex-1 overflow-y-auto"
-            style={{
-              backgroundImage: 'url(/bkhoa1.jpg)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-            }}
-          >
-            <div className="p-8 space-y-8">
+          <main className="flex-1 overflow-y-auto relative">
+            {/* BACKGROUND WRAPPER */}
+            <div className="absolute top-0 left-0 w-full h-full min-h-full overflow-hidden z-0 pointer-events-none">
+              {/* Blurred background image */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: "url(/bkhoa2.jpg)",
+                  backgroundSize: "cover",
+                  backgroundPosition: "top center",
+                  backgroundRepeat: "no-repeat",
+                  filter: "blur(10px)",
+                  opacity: 0.6,
+                  transform: "scale(1.1)",
+                }}
+              />
+
+              {/* Gradient overlay */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.7) 35%, rgba(255,255,255,0.95) 55%)",
+                }}
+              />
+            </div>
+
+            <div className="relative z-10 min-h-full p-6 space-y-6 max-w-[1600px] mx-auto">
+              {/* Page Header */}
               <div>
-                <h1 className="text-3xl font-bold">Nhật ký Hệ thống</h1>
+                <h1 className="text-3xl font-bold tracking-tight">
+                  Nhật ký Hệ thống
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Theo dõi và kiểm tra tất cả hoạt động trong hệ thống
+                </p>
               </div>
 
               {/* Loading State */}
@@ -208,248 +134,187 @@ export default function AdminReportsPage() {
               {/* Logs Summary */}
               {!isLoading && (
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <Card>
+                  <Card className="border-0 shadow-sm">
                     <CardContent className="pt-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-muted-foreground font-medium">
                             Tổng số Log
                           </p>
-                          <p className="text-2xl font-bold mt-1">
+                          <p className="text-3xl font-bold mt-2">{totalLogs}</p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
+                          <Activity className="h-6 w-6" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-0 shadow-sm">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground font-medium">
+                            Trang hiện tại
+                          </p>
+                          <p className="text-3xl font-bold mt-2">
+                            {currentPage} / {totalPages}
+                          </p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-purple-100 text-purple-600">
+                          <BookOpen className="h-6 w-6" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-0 shadow-sm">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground font-medium">
+                            Logs trên trang
+                          </p>
+                          <p className="text-3xl font-bold mt-2">
                             {logsArray.length}
                           </p>
                         </div>
-                        <Activity className="h-8 w-8 text-muted-foreground" />
+                        <div className="p-3 rounded-lg bg-green-100 text-green-600">
+                          <FileCheck className="h-6 w-6" />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="border-0 shadow-sm">
                     <CardContent className="pt-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-muted-foreground">
-                            Người dùng
+                          <p className="text-sm text-muted-foreground font-medium">
+                            Tổng trang
                           </p>
-                          <p className="text-2xl font-bold mt-1">
-                            {
-                              logsArray.filter(
-                                (l) => l.entityType?.toLowerCase() === "user"
-                              ).length
-                            }
+                          <p className="text-3xl font-bold mt-2">
+                            {totalPages}
                           </p>
                         </div>
-                        <User className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-muted-foreground">
-                            Bài nộp
-                          </p>
-                          <p className="text-2xl font-bold mt-1">
-                            {
-                              logsArray.filter(
-                                (l) =>
-                                  l.entityType?.toLowerCase() === "submission"
-                              ).length
-                            }
-                          </p>
+                        <div className="p-3 rounded-lg bg-amber-100 text-amber-600">
+                          <FileText className="h-6 w-6" />
                         </div>
-                        <FolderOpen className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-muted-foreground">
-                            Bài nộp
-                          </p>
-                          <p className="text-2xl font-bold mt-1">
-                            {
-                              logsArray.filter(
-                                (l) =>
-                                  l.entityType?.toLowerCase() === "submission"
-                              ).length
-                            }
-                          </p>
-                        </div>
-                        <FileText className="h-8 w-8 text-muted-foreground" />
                       </div>
                     </CardContent>
                   </Card>
                 </div>
               )}
 
-              {/* Filter Bar */}
-              {!isLoading && logsArray.length > 0 && (
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Action Filter */}
-                      <div className="flex items-center gap-3">
-                        <label className="text-sm font-medium whitespace-nowrap">Hành động:</label>
-                        <Select value={actionFilter} onValueChange={handleActionFilterChange}>
-                          <SelectTrigger className="flex-1">
-                            <SelectValue placeholder="Chọn hành động" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">
-                              Tất cả ({logsArray.length})
-                            </SelectItem>
-                            {uniqueActions.map((action) => {
-                              const count = logsArray.filter(log => log.action === action).length;
-                              return (
-                                <SelectItem key={action} value={action}>
-                                  {action} ({count})
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Time Filter */}
-                      <div className="flex items-center gap-3">
-                        <label className="text-sm font-medium whitespace-nowrap">Thời gian:</label>
-                        <Select value={timeFilter} onValueChange={handleTimeFilterChange}>
-                          <SelectTrigger className="flex-1">
-                            <SelectValue placeholder="Chọn thời gian" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Tất cả</SelectItem>
-                            <SelectItem value="today">Hôm nay</SelectItem>
-                            <SelectItem value="week">7 ngày qua</SelectItem>
-                            <SelectItem value="month">30 ngày qua</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* ID Filter */}
-                      <div className="flex items-center gap-3">
-                        <label className="text-sm font-medium whitespace-nowrap">ID:</label>
-                        <Input
-                          type="text"
-                          placeholder="Tìm theo ID..."
-                          value={idFilter}
-                          onChange={(e) => handleIdFilterChange(e.target.value)}
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
               {/* Logs Table */}
               {!isLoading && logsArray.length > 0 && (
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Danh sách Nhật ký</CardTitle>
-                    <div className="text-sm text-muted-foreground">
-                      Hiển thị {((currentPage - 1) * LOGS_PER_PAGE) + 1} - {Math.min(currentPage * LOGS_PER_PAGE, filteredLogs.length)} trong tổng số {filteredLogs.length} nhật ký
-                      {actionFilter !== "all" && ` (lọc: ${actionFilter})`}
+                <Card className="border-0 shadow-sm">
+                  <CardHeader className="border-b">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl">
+                        Danh sách Nhật ký
+                      </CardTitle>
+                      <div className="text-sm text-muted-foreground">
+                        Hiển thị{" "}
+                        <span className="font-semibold text-foreground">
+                          {(currentPage - 1) * 10 + 1}
+                        </span>{" "}
+                        -{" "}
+                        <span className="font-semibold text-foreground">
+                          {Math.min(currentPage * 10, totalLogs)}
+                        </span>{" "}
+                        trong tổng số{" "}
+                        <span className="font-semibold text-foreground">
+                          {totalLogs}
+                        </span>{" "}
+                        nhật ký
+                      </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {paginatedLogs.map((log) => (
-                        <div
+                  <CardContent className="pt-6">
+                    <div className="space-y-3">
+                      {logsArray.map((log) => (
+                        <LogItem
                           key={log.id}
-                          onClick={() => handleLogClick(log)}
-                          className="p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-all hover:shadow-md"
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex items-start gap-3 flex-1">
-                              <div className="mt-1">
-                                {getEntityIcon(log.entityType)}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap mb-2">
-                                  <Badge className={getActionColor(log.action)}>
-                                    {log.action}
-                                  </Badge>
-                                  <Badge variant="outline">
-                                    {log.entityType}
-                                  </Badge>
-                                  <span className="text-xs text-muted-foreground">
-                                    ID: {log.entityId}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    <span>{formatDate(log.createdAt)}</span>
-                                  </div>
-                                  {log.ipAddress && (
-                                    <div className="flex items-center gap-1">
-                                      <Globe className="h-3 w-3" />
-                                      <span>{log.ipAddress}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                          log={log}
+                          onClick={handleLogClick}
+                        />
                       ))}
                     </div>
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                      <div className="flex items-center justify-center gap-2 mt-6 pt-6 border-t">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={currentPage === 1}
-                        >
-                          <ChevronLeft className="h-4 w-4 mr-1" />
-                          Trước
-                        </Button>
-                        
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                            // Show first page, last page, current page, and pages around current
-                            if (
-                              page === 1 ||
-                              page === totalPages ||
-                              (page >= currentPage - 1 && page <= currentPage + 1)
-                            ) {
-                              return (
-                                <Button
-                                  key={page}
-                                  variant={currentPage === page ? "default" : "outline"}
-                                  size="sm"
-                                  onClick={() => handlePageChange(page)}
-                                  className="w-10"
-                                >
-                                  {page}
-                                </Button>
-                              );
-                            } else if (page === currentPage - 2 || page === currentPage + 2) {
-                              return <span key={page} className="px-2">...</span>;
-                            }
-                            return null;
-                          })}
+                      <div className="flex items-center justify-between mt-6 pt-6 border-t">
+                        <div className="text-sm text-muted-foreground">
+                          Trang {currentPage} / {totalPages}
                         </div>
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={currentPage === totalPages}
-                        >
-                          Sau
-                          <ChevronRight className="h-4 w-4 ml-1" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="gap-1"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                            Trước
+                          </Button>
+
+                          <div className="flex items-center gap-1">
+                            {Array.from(
+                              { length: totalPages },
+                              (_, i) => i + 1
+                            ).map((page) => {
+                              if (
+                                page === 1 ||
+                                page === totalPages ||
+                                (page >= currentPage - 1 &&
+                                  page <= currentPage + 1)
+                              ) {
+                                return (
+                                  <Button
+                                    key={page}
+                                    variant={
+                                      currentPage === page
+                                        ? "default"
+                                        : "outline"
+                                    }
+                                    size="sm"
+                                    onClick={() => handlePageChange(page)}
+                                    className="w-10"
+                                  >
+                                    {page}
+                                  </Button>
+                                );
+                              } else if (
+                                page === currentPage - 2 ||
+                                page === currentPage + 2
+                              ) {
+                                return (
+                                  <span
+                                    key={page}
+                                    className="px-2 text-muted-foreground"
+                                  >
+                                    ...
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })}
+                          </div>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="gap-1"
+                          >
+                            Sau
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </CardContent>
@@ -458,14 +323,16 @@ export default function AdminReportsPage() {
 
               {/* Empty State */}
               {!isLoading && logsArray.length === 0 && (
-                <Card>
-                  <CardContent className="py-12">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="py-16">
                     <div className="text-center">
-                      <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <div className="mx-auto w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
+                        <Activity className="h-8 w-8 text-muted-foreground" />
+                      </div>
                       <h3 className="text-lg font-semibold mb-2">
                         Chưa có nhật ký
                       </h3>
-                      <p className="text-muted-foreground">
+                      <p className="text-muted-foreground text-sm max-w-sm mx-auto">
                         Các hoạt động trong hệ thống sẽ được ghi lại tại đây
                       </p>
                     </div>
@@ -490,20 +357,18 @@ export default function AdminReportsPage() {
             <div className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
                     Hành động
                   </p>
-                  <Badge className={getActionColor(selectedLog.action)}>
-                    {selectedLog.action}
-                  </Badge>
+                  <LogActionBadge action={selectedLog.action} />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
                     Loại đối tượng
                   </p>
                   <div className="flex items-center gap-2">
                     {getEntityIcon(selectedLog.entityType)}
-                    <span className="font-medium">
+                    <span className="font-semibold">
                       {selectedLog.entityType}
                     </span>
                   </div>
@@ -511,28 +376,32 @@ export default function AdminReportsPage() {
               </div>
 
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
                   ID đối tượng
                 </p>
-                <p className="font-mono text-sm">{selectedLog.entityId}</p>
+                <p className="font-mono text-sm bg-muted/50 px-3 py-2 rounded">
+                  {selectedLog.entityId}
+                </p>
               </div>
 
               <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
                   Thời gian
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-muted/50 px-3 py-2 rounded">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <p className="text-sm">{formatDate(selectedLog.createdAt)}</p>
+                  <p className="text-sm font-medium">
+                    {formatDate(selectedLog.createdAt)}
+                  </p>
                 </div>
               </div>
 
               {selectedLog.ipAddress && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
                     Địa chỉ IP
                   </p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 bg-muted/50 px-3 py-2 rounded">
                     <Globe className="h-4 w-4 text-muted-foreground" />
                     <p className="font-mono text-sm">{selectedLog.ipAddress}</p>
                   </div>

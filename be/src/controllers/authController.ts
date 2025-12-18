@@ -5,7 +5,7 @@ import crypto from "crypto";
 import User from "../models/user";
 import LogService, { LOG_ACTIONS, ENTITY_TYPES } from "../lib/logService";
 import PasswordResetTokens from "../models/passwordResetTokens";
-import { sendEmail } from "../config/email";
+import { sendEmail } from "../utils/sendEmail";
 
 const generateAccessToken = (user: any) => {
   return jwt.sign(
@@ -124,7 +124,6 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     }
 
     const user = await User.findOne({ where: { email } });
-
     if (!user) {
       return res.status(200).json({
         message:
@@ -152,7 +151,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
 
     const resetLink = `${process.env.CLIENT_URL || "http://localhost:3000"}/reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`;
 
-    await sendEmail({
+    sendEmail({
       to: user.email,
       subject: "Password Reset Request",
       html: `
@@ -174,6 +173,11 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
       </p>
   </div>
   `,
+    }).catch((err) => {
+      console.error(
+        "Send reset email failed:",
+        err?.response?.data || err.message
+      );
     });
 
     return res.status(200).json({

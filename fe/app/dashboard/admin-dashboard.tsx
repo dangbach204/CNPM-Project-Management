@@ -115,7 +115,7 @@ export default function AdminDashboard() {
       {/* Data Table */}
       {selectedRole && (
         <Card className="overflow-hidden border-0 shadow-xl bg-white/90 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
+          <CardHeader className="bg-linear-to-r from-gray-50 to-gray-100 border-b">
             <CardTitle className="text-lg font-bold">
               {selectedRole === "teacher"
                 ? "Danh sách Giáo viên"

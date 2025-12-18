@@ -219,7 +219,15 @@ export const getUsersManagement = async (req: Request, res: Response) => {
 
 export const getLogsOverview = async (req: Request, res: Response) => {
   try {
-    const logs = await Log.findAll({
+    const page = Math.max(parseInt(req.query.page as string) || 1, 1);
+    const limit = Math.min(
+      Math.max(parseInt(req.query.limit as string) || 10, 1),
+      50
+    );
+    const offset = (page - 1) * limit;
+
+    const { count, rows: logs } = await Log.findAndCountAll({
+      distinct: true,
       order: [["created_at", "DESC"]],
       include: [
         {
@@ -228,10 +236,18 @@ export const getLogsOverview = async (req: Request, res: Response) => {
           attributes: ["id", "full_name", "email"],
         },
       ],
+      limit,
+      offset,
     });
 
     return res.status(200).json({
       logs,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalLogs: count,
+        logsPerPage: limit,
+      },
     });
   } catch (error) {
     console.error("Lỗi lấy logs:", error);

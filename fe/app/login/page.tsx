@@ -52,8 +52,8 @@ export default function LoginPage() {
           className="object-cover"
           priority
         />
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-blue-900/40 backdrop-blur-[2px]"></div>
+        {/* Stronger Overlay */}
+        <div className="absolute inset-0 bg-linear-to-br from-blue-900/70 via-blue-900/60 to-blue-800/70 backdrop-blur-sm"></div>
       </div>
       {/*Logo Bách Khoa*/}
       <div className="absolute top-4 left-4 flex items-center space-x-3 z-10">
@@ -94,25 +94,26 @@ export default function LoginPage() {
       </div>
 
       <div className="w-full max-w-md mt-12 relative z-10">
-        {/* Header with Icon and Title */}
-        <div className="bg-blue-600 text-white rounded-t-lg p-6 flex items-center gap-3 shadow-xl">
-          <div className="bg-white/20 p-3 rounded-lg">
-            <GraduationCap className="w-7 h-7" />
+        {/* Header with Icon and Title - Reduced height */}
+        <div className="bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-t-lg p-5 flex items-center gap-3 shadow-xl border-b-2 border-blue-500">
+          <div className="bg-white/15 p-2.5 rounded-lg backdrop-blur-sm">
+            <GraduationCap className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold leading-tight">Hệ thống Quản lý Đồ án</h1>
-            <p className="text-white text-2xl font-bold leading-tight">Sinh viên</p>
+            <h1 className="text-xl font-bold leading-tight">
+              Hệ thống Quản lý Đồ án sinh viên
+            </h1>
           </div>
         </div>
 
         {/* Login Form Card */}
-        <div className="bg-white rounded-b-lg shadow-xl p-6 space-y-6">
+        <div className="bg-white rounded-b-lg shadow-2xl border-x-2 border-b-2 border-gray-200/50 p-6 space-y-5">
           <div className="space-y-2">
             <h2 className="text-lg font-semibold text-gray-900">
               Đăng nhập vào tài khoản của bạn
             </h2>
-            <p className="text-sm text-gray-600">
-              Email học hoặc Tên người dùng
+            <p className="text-[13px] text-gray-600">
+              Sử dụng email hoặc tên người dùng nội bộ
             </p>
           </div>
 
@@ -126,6 +127,9 @@ export default function LoginPage() {
 
             {/* Email Input */}
             <div className="space-y-2">
+              <label className="text-[13px] font-semibold text-gray-700">
+                Email hoặc Tên đăng nhập
+              </label>
               <Input
                 type="email"
                 placeholder="Nhập email hoặc tên đăng nhập..."
@@ -138,7 +142,7 @@ export default function LoginPage() {
 
             {/* Password Input */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-[13px] font-semibold text-gray-700">
                 Mật khẩu
               </label>
               <div className="relative">
@@ -165,23 +169,45 @@ export default function LoginPage() {
             </div>
 
             {/* Submit Button */}
-            <Button 
-              type="submit" 
-              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium" 
+            <Button
+              type="submit"
+              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md"
               disabled={isLoading}
             >
               {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
             </Button>
           </form>
 
-          {/* Footer Link */}
-          <div className="text-center text-sm">
-            <Link
-              href="/forgot-password"
-              className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
-            >
-              Quên mật khẩu?
-            </Link>
+          {/* Footer Links */}
+          <div className="space-y-3 pt-2">
+            <div className="text-center text-sm">
+              <Link
+                href="/forgot-password"
+                className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
+
+            {/* Trust Cue */}
+            <div className="pt-3 border-t border-gray-200">
+              <p className="text-[11px] text-center text-gray-500 leading-relaxed">
+                <span className="inline-flex items-center gap-1">
+                  <svg
+                    className="w-3 h-3 text-green-600"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Hệ thống nội bộ - Trường Đại học Bách Khoa Đà Nẵng
+                </span>
+              </p>
+            </div>
           </div>
         </div>
       </div>
