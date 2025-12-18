@@ -19,7 +19,7 @@ The project is designed to closely resemble a **real-world software system**, ap
 
 ## 📚 Documentation
 
-- **[📖 BÁO CÁO DỰ ÁN (Tiếng Việt)](BÁO%20CÁO%20DỰ%20ÁN.md)** - Báo cáo chi tiết về hệ thống, kiến trúc, và thiết kế
+- **[📖 BÁO CÁO DỰ ÁN (Tiếng Việt)](<PROJECT_REPORT_(VIETNAMESE).md>)** - Báo cáo chi tiết về hệ thống, kiến trúc, và thiết kế
 - **[🔧 ERROR_HANDLING_FIX](ERROR_HANDLING_FIX.md)** - Tài liệu cải thiện xử lý lỗi và debugging
 
 ---
@@ -443,7 +443,7 @@ Free to use and modify for learning and academic use.
 
 For more detailed information, please refer to:
 
-- **[BÁO CÁO DỰ ÁN (Tiếng Việt)](BÁO%20CÁO%20DỰ%20ÁN.md)** - Comprehensive technical report including:
+- **[BÁO CÁO DỰ ÁN (Tiếng Việt)](<PROJECT_REPORT_(VIETNAMESE).md>)** - Comprehensive technical report including:
 
   - Detailed system requirements
   - Complete API documentation

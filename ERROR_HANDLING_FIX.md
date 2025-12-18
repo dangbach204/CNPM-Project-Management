@@ -1,6 +1,6 @@
 # Error Handling Improvements - Join Project Feature
 
-> 📚 **Related Documentation:** [README](README.md) | [BÁO CÁO DỰ ÁN (Vietnamese)](BÁO%20CÁO%20DỰ%20ÁN.md)
+> 📚 **Related Documentation:** [README](README.md) | [BÁO CÁO DỰ ÁN (Vietnamese)](<PROJECT_REPORT_(VIETNAMESE).md>)
 
 ---
 
@@ -127,13 +127,11 @@ This will tell you exactly what type of error occurred.
 If you need more debugging info, add this to [fe/config/axios.ts](fe/config/axios.ts):
 
 ```typescript
-// Add after line 78 (in request interceptor)
 console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, {
   headers: config.headers,
   data: config.data,
 });
 
-// Add at line 94 (in response interceptor success)
 console.log(`[API Response] ${response.config.url}`, {
   status: response.status,
   data: response.data,
