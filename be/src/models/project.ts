@@ -28,7 +28,7 @@ const Project = db.define(
     },
     status: {
       type: ProjectDataTypes.STRING(50),
-      defaultValue: "pending",
+      defaultValue: "open",
     },
     created_at: {
       type: ProjectDataTypes.DATE,

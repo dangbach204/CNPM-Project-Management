@@ -13,11 +13,9 @@ interface ProjectsSearchFilterProps {
 
 const STATUS_OPTIONS = [
   "all",
-  "available",
+  "open",
   "pending",
   "completed",
-  "approved",
-  "rejected",
   "expired",
 ] as const;
 

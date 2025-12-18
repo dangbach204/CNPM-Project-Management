@@ -40,6 +40,19 @@ export const getProjectsManagement = async (req: Request, res: Response) => {
       order: [["id", "ASC"]],
     });
 
+    // Auto-update expired projects
+    const now = new Date();
+    for (const project of projects) {
+      const projectData = project.toJSON() as any;
+      if (
+        projectData.expire_at &&
+        new Date(projectData.expire_at) < now &&
+        projectData.status !== "expired"
+      ) {
+        await project.update({ status: "expired" });
+      }
+    }
+
     const formattedProjects = projects.map((project: any) => {
       const projectData = project.toJSON();
       const students =
