@@ -110,10 +110,20 @@ export default function MyProjectPage() {
                             {myProject.title}
                           </CardTitle>
                           <div className="flex items-center gap-2">
-                            {isExpired(myProject.expireAt) ? (
-                              <Badge variant="destructive">Đã hết hạn</Badge>
+                            {myProject.status === "expired" || isExpired(myProject.expireAt) ? (
+                              <Badge variant="destructive">Hết hạn</Badge>
+                            ) : myProject.status === "completed" ? (
+                              <Badge className="bg-green-600 hover:bg-green-700">Hoàn thành</Badge>
+                            ) : myProject.status === "approved" ? (
+                              <Badge className="bg-blue-600 hover:bg-blue-700">Đã phê duyệt</Badge>
+                            ) : myProject.status === "rejected" ? (
+                              <Badge variant="destructive">Đã từ chối</Badge>
+                            ) : myProject.status === "pending" ? (
+                              <Badge className="bg-yellow-600 hover:bg-yellow-700">Đang thực hiện</Badge>
+                            ) : myProject.status === "available" ? (
+                              <Badge className="bg-emerald-600 hover:bg-emerald-700">Mở</Badge>
                             ) : (
-                              <Badge variant="default">Đang hoạt động</Badge>
+                              <Badge variant="secondary">Trống</Badge>
                             )}
                           </div>
                         </div>

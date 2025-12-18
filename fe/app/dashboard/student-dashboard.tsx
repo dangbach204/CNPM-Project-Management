@@ -39,9 +39,19 @@ export default function StudentDashboard() {
   ];
 
   const getProjectStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
+      expired: { bg: "bg-red-100", text: "text-red-700", label: "Hết hạn" },
+      completed: { bg: "bg-green-100", text: "text-green-700", label: "Hoàn thành" },
+      approved: { bg: "bg-blue-100", text: "text-blue-700", label: "Đã phê duyệt" },
+      rejected: { bg: "bg-red-100", text: "text-red-700", label: "Đã từ chối" },
+      pending: { bg: "bg-yellow-100", text: "text-yellow-700", label: "Đang thực hiện" },
+      available: { bg: "bg-emerald-100", text: "text-emerald-700", label: "Mở" },
+      open: { bg: "bg-gray-100", text: "text-gray-700", label: "Trống" },
+    };
+    const config = statusConfig[status] || statusConfig.pending;
     return (
-      <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-        Đang thực hiện
+      <span className={`text-xs px-2 py-1 rounded-full ${config.bg} ${config.text}`}>
+        {config.label}
       </span>
     );
   };
@@ -177,7 +187,7 @@ export default function StudentDashboard() {
                             <p className="font-medium group-hover:text-blue-600 transition-colors">
                               {project.title}
                             </p>
-                            {getProjectStatusBadge("")}
+                            {getProjectStatusBadge(project.status)}
                           </div>
                           <Button
                             variant="ghost"
@@ -284,16 +294,17 @@ export default function StudentDashboard() {
                         </span>
                       </div>
                       {submission.reportLink && (
-                        <div className="mt-2">
-                          <a
-                            href={submission.reportLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        <div className="mt-2" onClick={(e) => e.preventDefault()}>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              window.open(submission.reportLink, '_blank');
+                            }}
                             className="text-xs text-blue-600 hover:underline"
-                            onClick={(e) => e.stopPropagation()}
                           >
                             📎 Xem báo cáo
-                          </a>
+                          </button>
                         </div>
                       )}
                       {submission.grade && submission.grade.feedback && (

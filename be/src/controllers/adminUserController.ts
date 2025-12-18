@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import User from "../models/user";
 import LogService, { ENTITY_TYPES, LOG_ACTIONS } from "../lib/logService";
+import { notifyOtherAdmins } from "./notificationController";
 
 export const createUser = async (req: Request, res: Response) => {
   try {
@@ -155,6 +156,17 @@ export const updateUserInfo = async (req: Request, res: Response) => {
       userId,
       { updated_fields: Object.keys(updatedFields), ...updatedFields }
     );
+
+    // Gửi thông báo cho các admin khác
+    if (req.user?.id) {
+      await notifyOtherAdmins(
+        req.user.id,
+        "user_updated",
+        userId,
+        user.full_name,
+        `đã cập nhật thông tin người dùng "${user.full_name}"`
+      );
+    }
 
     return res.status(200).json({
       message: "Thông tin người dùng đã được cập nhật",
