@@ -151,6 +151,10 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
 
     const resetLink = `${process.env.CLIENT_URL || "http://localhost:3000"}/reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`;
 
+    if (!process.env.CLIENT_URL) {
+      throw new Error("CLIENT_URL is not set in environment variables");
+    }
+
     sendEmail({
       to: user.email,
       subject: "Password Reset Request",

@@ -12,9 +12,21 @@ export const getAdminOverview = async () => {
   }
 };
 
-export const getAdminUserManagement = async () => {
+export const getAdminUserManagement = async (params?: {
+  page?: number;
+  limit?: number;
+  role?: string;
+  search?: string;
+}) => {
   try {
-    const response = await api.get<AdminUserManagement>(ADMIN.USER_MANAGEMENT);
+    const response = await api.get<AdminUserManagement>(ADMIN.USER_MANAGEMENT, {
+      params: {
+        page: params?.page || 1,
+        limit: params?.limit || 15,
+        role: params?.role || "all",
+        search: params?.search || "",
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Get admin user management failed", error);

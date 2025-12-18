@@ -7,6 +7,7 @@ import {
   ProjectStudents,
   Log,
 } from "../models/index";
+import { toISOStringOrNull } from "../utils/formatDate";
 
 export const getAdminOverview = async (req: Request, res: Response) => {
   try {
@@ -104,26 +105,10 @@ export const getAdminOverview = async (req: Request, res: Response) => {
       ])
     );
 
-    const formatDate = (date: Date | string | null) => {
-      if (!date) return null;
-      return new Date(date)
-        .toLocaleString("vi-VN", {
-          timeZone: "Asia/Ho_Chi_Minh",
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        })
-        .replace(",", "");
-    };
-
     const formatArray = (arr: any[], dateField: string) =>
       arr.map((item) => ({
         ...item.toJSON(),
-        [dateField]: formatDate(item[dateField]),
+        [dateField]: toISOStringOrNull(item[dateField]),
       }));
 
     const formattedLatestProjects = formatArray(
@@ -144,7 +129,7 @@ export const getAdminOverview = async (req: Request, res: Response) => {
         project_title: submission.project?.title || null,
         student_id: submission.student_id,
         report_link: submission.report_link,
-        submitted_at: formatDate(submission.submitted_at),
+        submitted_at: toISOStringOrNull(submission.submitted_at),
       })
     );
 
@@ -164,7 +149,7 @@ export const getAdminOverview = async (req: Request, res: Response) => {
       project_title: submission.project?.title || null,
       student_id: submission.student_id,
       report_link: submission.report_link,
-      submitted_at: formatDate(submission.submitted_at),
+      submitted_at: toISOStringOrNull(submission.submitted_at),
     }));
 
     return res.status(200).json({
@@ -187,27 +172,51 @@ export const getAdminOverview = async (req: Request, res: Response) => {
 
 export const getUsersManagement = async (req: Request, res: Response) => {
   try {
-    const [users, admins, teachers, students] = await Promise.all([
-      User.findAll({ order: [["id", "ASC"]] }),
-      User.findAll({
-        where: { role: "admin" },
-        order: [["id", "ASC"]],
-      }),
-      User.findAll({
-        where: { role: "teacher" },
-        order: [["id", "ASC"]],
-      }),
-      User.findAll({
-        where: { role: "student" },
-        order: [["id", "ASC"]],
-      }),
+    const page = Math.max(parseInt(req.query.page as string) || 1, 1);
+    const limit = Math.min(
+      Math.max(parseInt(req.query.limit as string) || 15, 1),
+      100
+    );
+    const offset = (page - 1) * limit;
+    const role = req.query.role as string;
+    const search = req.query.search as string;
+
+    const whereClause: any = {};
+    if (role && role !== "all") {
+      whereClause.role = role;
+    }
+    if (search) {
+      whereClause[Op.or] = [
+        { full_name: { [Op.iLike]: `%${search}%` } },
+        { email: { [Op.iLike]: `%${search}%` } },
+      ];
+    }
+
+    const { count: totalUsers, rows: users } = await User.findAndCountAll({
+      where: whereClause,
+      order: [["id", "ASC"]],
+      limit,
+      offset,
+    });
+
+    const [totalAdmins, totalTeachers, totalStudents] = await Promise.all([
+      User.count({ where: { role: "admin" } }),
+      User.count({ where: { role: "teacher" } }),
+      User.count({ where: { role: "student" } }),
     ]);
 
     return res.status(200).json({
       users,
-      admins,
-      teachers,
-      students,
+      totalUsers,
+      totalAdmins,
+      totalTeachers,
+      totalStudents,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalUsers / limit),
+        totalItems: totalUsers,
+        itemsPerPage: limit,
+      },
     });
   } catch (error) {
     console.error("Lỗi lấy quản lý người dùng:", error);

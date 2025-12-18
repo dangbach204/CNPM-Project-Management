@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDateTime } from "@/lib/project-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,7 +25,17 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Loader2, FileText, User, Calendar, Award } from "lucide-react";
+import {
+  Search,
+  Loader2,
+  FileText,
+  User,
+  Calendar,
+  Award,
+  ArrowLeft,
+  FolderOpen,
+  ChevronRight,
+} from "lucide-react";
 import { useGetSubmissions } from "@/hooks/useGetSubmissions";
 import { teacherGradeSubmission } from "@/service/teacher-service";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +51,14 @@ type Submission = {
   feedback: string | null;
 };
 
+type ProjectGroup = {
+  projectTitle: string;
+  submissions: Submission[];
+  totalSubmissions: number;
+  gradedCount: number;
+  notGradedCount: number;
+};
+
 export default function TeacherSubmissionsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -49,6 +68,14 @@ export default function TeacherSubmissionsContent() {
     refetch,
   } = useGetSubmissions();
   const { toast } = useToast();
+
+  const [viewMode, setViewMode] = useState<"projects" | "submissions">(
+    "projects"
+  );
+  const [selectedProjectTitle, setSelectedProjectTitle] = useState<
+    string | null
+  >(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedSubmission, setSelectedSubmission] =
@@ -77,6 +104,41 @@ export default function TeacherSubmissionsContent() {
     ? submissionsResponse.length
     : (submissionsResponse as any)?.totalSubmissions || 0;
 
+  const projectGroups: ProjectGroup[] = submissions.reduce(
+    (acc: ProjectGroup[], submission) => {
+      const existingProject = acc.find(
+        (p) => p.projectTitle === submission.projectTitle
+      );
+
+      if (existingProject) {
+        existingProject.submissions.push(submission);
+        existingProject.totalSubmissions++;
+        if (submission.score !== null && submission.score !== undefined) {
+          existingProject.gradedCount++;
+        } else {
+          existingProject.notGradedCount++;
+        }
+      } else {
+        acc.push({
+          projectTitle: submission.projectTitle,
+          submissions: [submission],
+          totalSubmissions: 1,
+          gradedCount:
+            submission.score !== null && submission.score !== undefined ? 1 : 0,
+          notGradedCount:
+            submission.score !== null && submission.score !== undefined ? 0 : 1,
+        });
+      }
+
+      return acc;
+    },
+    []
+  );
+
+  const currentProjectSubmissions = selectedProjectTitle
+    ? submissions.filter((s) => s.projectTitle === selectedProjectTitle)
+    : [];
+
   useEffect(() => {
     const gradeId = searchParams.get("gradeId");
     if (gradeId && submissions.length > 0) {
@@ -96,7 +158,7 @@ export default function TeacherSubmissionsContent() {
     }
   }, [searchParams, submissions]);
 
-  const filteredSubmissions = submissions.filter((submission) => {
+  const filteredSubmissions = currentProjectSubmissions.filter((submission) => {
     const matchesSearch =
       submission.projectTitle
         .toLowerCase()
@@ -111,6 +173,12 @@ export default function TeacherSubmissionsContent() {
       (statusFilter === "not_graded" && !isGraded);
 
     return matchesSearch && matchesStatus;
+  });
+
+  const filteredProjectGroups = projectGroups.filter((project) => {
+    return project.projectTitle
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
   });
 
   const gradedCount = submissions.filter(
@@ -145,6 +213,20 @@ export default function TeacherSubmissionsContent() {
     router.replace(`/teacher/submissions?gradeId=${submission.id}`, {
       scroll: false,
     });
+  };
+
+  const handleProjectClick = (projectTitle: string) => {
+    setSelectedProjectTitle(projectTitle);
+    setViewMode("submissions");
+    setSearchTerm("");
+    setStatusFilter("all");
+  };
+
+  const handleBackToProjects = () => {
+    setViewMode("projects");
+    setSelectedProjectTitle(null);
+    setSearchTerm("");
+    setStatusFilter("all");
   };
 
   const hasChanges =
@@ -276,59 +358,137 @@ export default function TeacherSubmissionsContent() {
 
           {/* Content layer */}
           <div className="relative z-10 min-h-full p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
+            {/* Back button when in submissions view */}
+            {viewMode === "submissions" && (
+              <Button
+                variant="ghost"
+                onClick={handleBackToProjects}
+                className="mb-2 hover:bg-gray-100"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Quay lại danh sách dự án
+              </Button>
+            )}
+
             {/* Stats Cards - reduced visual weight with softer styling */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-white border border-gray-100 shadow-sm">
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Tổng bài nộp
-                      </p>
-                      <p className="text-3xl font-bold text-gray-900 mt-1">
-                        {totalSubmissions}
-                      </p>
-                    </div>
-                    <div className="p-2.5 bg-blue-50 rounded-lg">
-                      <FileText className="w-5 h-5 text-blue-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-white border border-gray-100 shadow-sm">
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Đã chấm
-                      </p>
-                      <p className="text-3xl font-bold text-green-600 mt-1">
-                        {gradedCount}
-                      </p>
-                    </div>
-                    <div className="p-2.5 bg-green-50 rounded-lg">
-                      <Award className="w-5 h-5 text-green-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-white border border-gray-100 shadow-sm">
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Chưa chấm
-                      </p>
-                      <p className="text-3xl font-bold text-amber-600 mt-1">
-                        {notGradedCount}
-                      </p>
-                    </div>
-                    <div className="p-2.5 bg-amber-50 rounded-lg">
-                      <FileText className="w-5 h-5 text-amber-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {viewMode === "projects" ? (
+                <>
+                  <Card className="bg-white border border-gray-100 shadow-sm">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">
+                            Tổng dự án
+                          </p>
+                          <p className="text-3xl font-bold text-gray-900 mt-1">
+                            {projectGroups.length}
+                          </p>
+                        </div>
+                        <div className="p-2.5 bg-purple-50 rounded-lg">
+                          <FolderOpen className="w-5 h-5 text-purple-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-white border border-gray-100 shadow-sm">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">
+                            Tổng bài nộp
+                          </p>
+                          <p className="text-3xl font-bold text-blue-600 mt-1">
+                            {totalSubmissions}
+                          </p>
+                        </div>
+                        <div className="p-2.5 bg-blue-50 rounded-lg">
+                          <FileText className="w-5 h-5 text-blue-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-white border border-gray-100 shadow-sm">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">
+                            Chưa chấm
+                          </p>
+                          <p className="text-3xl font-bold text-amber-600 mt-1">
+                            {notGradedCount}
+                          </p>
+                        </div>
+                        <div className="p-2.5 bg-amber-50 rounded-lg">
+                          <FileText className="w-5 h-5 text-amber-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <>
+                  <Card className="bg-white border border-gray-100 shadow-sm">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">
+                            Tổng bài nộp
+                          </p>
+                          <p className="text-3xl font-bold text-gray-900 mt-1">
+                            {currentProjectSubmissions.length}
+                          </p>
+                        </div>
+                        <div className="p-2.5 bg-blue-50 rounded-lg">
+                          <FileText className="w-5 h-5 text-blue-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-white border border-gray-100 shadow-sm">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">
+                            Đã chấm
+                          </p>
+                          <p className="text-3xl font-bold text-green-600 mt-1">
+                            {
+                              currentProjectSubmissions.filter(
+                                (s) => s.score !== null && s.score !== undefined
+                              ).length
+                            }
+                          </p>
+                        </div>
+                        <div className="p-2.5 bg-green-50 rounded-lg">
+                          <Award className="w-5 h-5 text-green-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-white border border-gray-100 shadow-sm">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">
+                            Chưa chấm
+                          </p>
+                          <p className="text-3xl font-bold text-amber-600 mt-1">
+                            {
+                              currentProjectSubmissions.filter(
+                                (s) => s.score === null || s.score === undefined
+                              ).length
+                            }
+                          </p>
+                        </div>
+                        <div className="p-2.5 bg-amber-50 rounded-lg">
+                          <FileText className="w-5 h-5 text-amber-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
 
             {/* Search & Filter - cohesive control bar */}
@@ -336,89 +496,150 @@ export default function TeacherSubmissionsContent() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Tìm kiếm theo tên dự án hoặc sinh viên..."
+                  placeholder={
+                    viewMode === "projects"
+                      ? "Tìm kiếm dự án..."
+                      : "Tìm kiếm theo tên sinh viên..."
+                  }
                   className="pl-9 h-10 bg-white border-gray-200 rounded-lg"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[200px] h-10 bg-white border-gray-200 rounded-lg">
-                  <SelectValue placeholder="Tất cả trạng thái" />
-                </SelectTrigger>
-                <SelectContent position="popper" sideOffset={4}>
-                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                  <SelectItem value="graded">Đã chấm</SelectItem>
-                  <SelectItem value="not_graded">Chưa chấm</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Submission Cards - more compact with clear hierarchy */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredSubmissions.length === 0 ? (
-                <div className="col-span-full text-center py-16">
-                  <p className="text-sm text-gray-400">
-                    Không tìm thấy bài nộp nào
-                  </p>
-                </div>
-              ) : (
-                filteredSubmissions.map((submission) => {
-                  const isGraded =
-                    submission.score !== null && submission.score !== undefined;
-
-                  const getScoreColorClass = (score: number) => {
-                    if (score < 7) return "text-red-600";
-                    if (score < 8.5) return "text-yellow-600";
-                    return "text-green-600";
-                  };
-
-                  return (
-                    <Card
-                      key={submission.id}
-                      className="bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
-                      onClick={() => handleViewDetails(submission)}
-                    >
-                      {/* Card header - status first, then title */}
-                      <CardHeader className="p-4 pb-3">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          {/* Status badge emphasized */}
-                          {getStatusBadge(submission)}
-                        </div>
-                        <CardTitle className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug">
-                          {submission.projectTitle}
-                        </CardTitle>
-                      </CardHeader>
-
-                      {/* Card content - student and meta info */}
-                      <CardContent className="p-4 pt-0 space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <User className="h-3.5 w-3.5 shrink-0" />
-                          <span className="truncate">
-                            {submission.studentName}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <Calendar className="h-3.5 w-3.5 shrink-0" />
-                          <span>{submission.submittedAt}</span>
-                        </div>
-                        {/* Score with color-coded display */}
-                        {isGraded && (
-                          <div
-                            className={`flex items-center gap-2 text-sm pt-1 font-medium ${getScoreColorClass(
-                              submission.score!
-                            )}`}
-                          >
-                            <Award className="h-3.5 w-3.5 shrink-0" />
-                            <span>Điểm: {submission.score}</span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })
+              {viewMode === "submissions" && (
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-[200px] h-10 bg-white border-gray-200 rounded-lg">
+                    <SelectValue placeholder="Tất cả trạng thái" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" sideOffset={4}>
+                    <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                    <SelectItem value="graded">Đã chấm</SelectItem>
+                    <SelectItem value="not_graded">Chưa chấm</SelectItem>
+                  </SelectContent>
+                </Select>
               )}
             </div>
+
+            {/* Project Cards or Submission Cards based on view mode */}
+            {viewMode === "projects" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredProjectGroups.length === 0 ? (
+                  <div className="col-span-full text-center py-16">
+                    <p className="text-sm text-gray-400">
+                      Không tìm thấy dự án nào
+                    </p>
+                  </div>
+                ) : (
+                  filteredProjectGroups.map((project, index) => (
+                    <Card
+                      key={index}
+                      className="bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
+                      onClick={() => handleProjectClick(project.projectTitle)}
+                    >
+                      <CardHeader className="p-5 pb-4">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="p-2 bg-purple-50 rounded-lg">
+                            <FolderOpen className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-gray-400" />
+                        </div>
+                        <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-2 leading-snug">
+                          {project.projectTitle}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-5 pt-0 space-y-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">Tổng bài nộp:</span>
+                          <span className="font-semibold text-gray-900">
+                            {project.totalSubmissions}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">Đã chấm:</span>
+                          <Badge className="bg-green-50 text-green-600 hover:bg-green-50 border-0">
+                            {project.gradedCount}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">Chưa chấm:</span>
+                          <Badge className="bg-amber-50 text-amber-600 hover:bg-amber-50 border-0">
+                            {project.notGradedCount}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredSubmissions.length === 0 ? (
+                  <div className="col-span-full text-center py-16">
+                    <p className="text-sm text-gray-400">
+                      Không tìm thấy bài nộp nào
+                    </p>
+                  </div>
+                ) : (
+                  filteredSubmissions.map((submission) => {
+                    const isGraded =
+                      submission.score !== null &&
+                      submission.score !== undefined;
+
+                    const getScoreColorClass = (score: number) => {
+                      if (score < 7) return "text-red-600";
+                      if (score < 8.5) return "text-yellow-600";
+                      return "text-green-600";
+                    };
+
+                    return (
+                      <Card
+                        key={submission.id}
+                        className="bg-white border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
+                        onClick={() => handleViewDetails(submission)}
+                      >
+                        {/* Card header - status first, then title */}
+                        <CardHeader className="p-4 pb-3">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            {/* Status badge emphasized */}
+                            {getStatusBadge(submission)}
+                          </div>
+                          <CardTitle className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug">
+                            {submission.studentName}
+                          </CardTitle>
+                        </CardHeader>
+
+                        {/* Card content - student and meta info */}
+                        <CardContent className="p-4 pt-0 space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <User className="h-3.5 w-3.5 shrink-0" />
+                            <span className="truncate">
+                              {submission.studentEmail}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <Calendar className="h-3.5 w-3.5 shrink-0" />
+                            <span>
+                              {formatDateTime(submission.submittedAt)}
+                            </span>
+                          </div>
+                          {/* Score with color-coded display */}
+                          {isGraded && (
+                            <div
+                              className={`flex items-center gap-2 text-sm pt-1 font-medium ${getScoreColorClass(
+                                submission.score!
+                              )}`}
+                            >
+                              <Award className="h-3.5 w-3.5 shrink-0" />
+                              <span>Điểm: {submission.score}</span>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                )}
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -493,7 +714,7 @@ export default function TeacherSubmissionsContent() {
                           </Label>
                         </div>
                         <p className="text-base text-gray-900 pl-5">
-                          {selectedSubmission.submittedAt}
+                          {formatDateTime(selectedSubmission.submittedAt)}
                         </p>
                       </div>
                     </div>

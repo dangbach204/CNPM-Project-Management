@@ -1,7 +1,6 @@
 import api from "@/config/axios";
 import { TEACHER } from "@/constants/api-endpoint";
 import { TeacherOverview } from "@/types/teacher";
-import { th } from "date-fns/locale";
 
 export const getTeacherOverview = async () => {
   try {

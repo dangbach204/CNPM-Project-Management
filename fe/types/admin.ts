@@ -34,12 +34,27 @@ export interface AdminOverView {
   submissions: Submission[];
 }
 
+export interface Pagination {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+}
+
 export interface AdminUserManagement {
   users: User[];
   totalUsers: number;
-  admins: User[];
-  teachers: User[];
-  students: User[];
+  totalAdmins: number;
+  totalTeachers: number;
+  totalStudents: number;
+  pagination: Pagination;
+}
+
+export interface UserManagementParams {
+  page?: number;
+  limit?: number;
+  role?: string;
+  search?: string;
 }
 
 export interface AdminCreateUser {

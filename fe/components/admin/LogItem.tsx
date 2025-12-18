@@ -10,6 +10,8 @@ import {
 import { Log } from "@/types/admin";
 import { LogActionBadge } from "./LogActionBadge";
 import { cn } from "@/lib/utils";
+// Use shared date formatting utility - formatting happens at render time only
+import { formatDateTime } from "@/lib/project-helpers";
 
 interface LogItemProps {
   log: Log;
@@ -27,17 +29,6 @@ const getEntityIcon = (entityType: string) => {
     default:
       return <Activity className="h-4 w-4" />;
   }
-};
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleString("vi-VN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
 };
 
 export function LogItem({ log, onClick }: LogItemProps) {
@@ -73,7 +64,10 @@ export function LogItem({ log, onClick }: LogItemProps) {
           <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
             <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
-              <span className="font-medium">{formatDate(log.createdAt)}</span>
+              {/* formatDateTime handles locale display from ISO string */}
+              <span className="font-medium">
+                {formatDateTime(log.createdAt)}
+              </span>
             </div>
             {log.ipAddress && (
               <div className="flex items-center gap-1.5">

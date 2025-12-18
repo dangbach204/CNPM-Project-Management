@@ -15,16 +15,16 @@ import { PROJECT_STATS_CONFIG } from "@/constants/project-stats";
 import DeleteUserDialog from "@/components/admin/DeleteUserDialog";
 import { useProjectOperations } from "@/hooks/useProjectOperations";
 import { EditProjectDialog } from "@/components/admin/EditProjectDialog";
-import { useAdminUserManagement } from "@/hooks/useAdminUserManagement";
+import { useAdminOverView } from "@/hooks/useAdminOverView";
 
 export default function AdminProjectsPage() {
   const { isLoading, projectsManagement, refetch } =
     useAdminProjectsManagement() as any;
-  const { adminUserManagement } = useAdminUserManagement();
+  const { overview } = useAdminOverView();
 
   const projects = projectsManagement?.projects || [];
-  const teachers = adminUserManagement?.teachers || [];
-  const students = adminUserManagement?.students || [];
+  const teachers = overview?.teachers || [];
+  const students = overview?.students || [];
 
   const stats = useMemo(
     () =>
@@ -56,18 +56,6 @@ export default function AdminProjectsPage() {
       setFilterStatus(statusKey);
     }
   };
-
-  if (isLoading) {
-    return (
-      <ProtectedRoute allowedRoles={["admin"]}>
-        <div className="flex items-center justify-center h-[60vh]">
-          <p className="text-muted-foreground animate-pulse text-lg">
-            Đang tải dữ liệu...
-          </p>
-        </div>
-      </ProtectedRoute>
-    );
-  }
 
   return (
     <ProtectedRoute allowedRoles={["admin"]}>
@@ -114,91 +102,108 @@ export default function AdminProjectsPage() {
                 </div>
               </div>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                {stats.map((stat) => {
-                  const isActive =
-                    stat.statusKey === null
-                      ? filterStatus === "all"
-                      : filterStatus === stat.statusKey;
+              {/* Loading State */}
+              {isLoading && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                    <p className="mt-4 text-muted-foreground">
+                      Đang tải dữ liệu...
+                    </p>
+                  </div>
+                </div>
+              )}
 
-                  return (
-                    <StatsCard
-                      key={stat.label}
-                      {...stat}
-                      onClick={() => handleStatsCardClick(stat.statusKey)}
-                      isActive={isActive}
-                    />
-                  );
-                })}
-              </div>
+              {/* Content - only show when not loading */}
+              {!isLoading && (
+                <>
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    {stats.map((stat) => {
+                      const isActive =
+                        stat.statusKey === null
+                          ? filterStatus === "all"
+                          : filterStatus === stat.statusKey;
 
-              {/* Search & Filter */}
-              <ProjectsSearchFilter
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                filterStatus={filterStatus}
-                onFilterChange={setFilterStatus}
-              />
+                      return (
+                        <StatsCard
+                          key={stat.label}
+                          {...stat}
+                          onClick={() => handleStatsCardClick(stat.statusKey)}
+                          isActive={isActive}
+                        />
+                      );
+                    })}
+                  </div>
 
-              {/* Delete confirmation dialog */}
-              <DeleteUserDialog
-                open={projectOperations.deleteDialogOpen}
-                onClose={() => projectOperations.setDeleteDialogOpen(false)}
-                onConfirm={projectOperations.handleConfirmDelete}
-                userName={projectOperations.selectedProject?.title}
-                loading={projectOperations.deleteLoading}
-              />
+                  {/* Search & Filter */}
+                  <ProjectsSearchFilter
+                    searchTerm={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    filterStatus={filterStatus}
+                    onFilterChange={setFilterStatus}
+                  />
 
-              {/* Edit Project Dialog */}
-              <EditProjectDialog
-                open={projectOperations.editDialogOpen}
-                onClose={() => projectOperations.setEditDialogOpen(false)}
-                onSave={projectOperations.handleConfirmUpdate}
-                project={projectOperations.editProject}
-                loading={projectOperations.editLoading}
-                teachers={teachers}
-                allStudents={students}
-                allProjects={projects}
-              />
+                  {/* Delete confirmation dialog */}
+                  <DeleteUserDialog
+                    open={projectOperations.deleteDialogOpen}
+                    onClose={() => projectOperations.setDeleteDialogOpen(false)}
+                    onConfirm={projectOperations.handleConfirmDelete}
+                    userName={projectOperations.selectedProject?.title}
+                    loading={projectOperations.deleteLoading}
+                  />
 
-              {/* Projects List */}
-              <Card className="shadow-sm border-0">
-                <CardContent className="pt-6">
-                  {filteredProjects.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="text-muted-foreground text-sm">
-                        {searchTerm || filterStatus !== "all"
-                          ? "Không tìm thấy đề tài nào phù hợp với bộ lọc"
-                          : "Chưa có đề tài nào trong hệ thống"}
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center justify-between mb-4">
-                        <p className="text-sm text-muted-foreground">
-                          Hiển thị{" "}
-                          <span className="font-semibold text-foreground">
-                            {filteredProjects.length}
-                          </span>{" "}
-                          đề tài
-                        </p>
-                      </div>
-                      <div className="space-y-3">
-                        {filteredProjects.map((project: any) => (
-                          <ProjectCard
-                            key={project.id}
-                            project={project}
-                            onEdit={projectOperations.handleUpdateRequest}
-                            onDelete={projectOperations.handleDeleteRequest}
-                            teachers={teachers}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+                  {/* Edit Project Dialog */}
+                  <EditProjectDialog
+                    open={projectOperations.editDialogOpen}
+                    onClose={() => projectOperations.setEditDialogOpen(false)}
+                    onSave={projectOperations.handleConfirmUpdate}
+                    project={projectOperations.editProject}
+                    loading={projectOperations.editLoading}
+                    teachers={teachers}
+                    allStudents={students}
+                    allProjects={projects}
+                  />
+
+                  {/* Projects List */}
+                  <Card className="shadow-sm border-0">
+                    <CardContent className="pt-6">
+                      {filteredProjects.length === 0 ? (
+                        <div className="text-center py-12">
+                          <div className="text-muted-foreground text-sm">
+                            {searchTerm || filterStatus !== "all"
+                              ? "Không tìm thấy đề tài nào phù hợp với bộ lọc"
+                              : "Chưa có đề tài nào trong hệ thống"}
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-between mb-4">
+                            <p className="text-sm text-muted-foreground">
+                              Hiển thị{" "}
+                              <span className="font-semibold text-foreground">
+                                {filteredProjects.length}
+                              </span>{" "}
+                              đề tài
+                            </p>
+                          </div>
+                          <div className="space-y-3">
+                            {filteredProjects.map((project: any) => (
+                              <ProjectCard
+                                key={project.id}
+                                project={project}
+                                onEdit={projectOperations.handleUpdateRequest}
+                                onDelete={projectOperations.handleDeleteRequest}
+                                teachers={teachers}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
           </main>
         </div>

@@ -43,30 +43,36 @@ export default function UserRow({
   const role = (user.role || "student") as UserRole;
 
   return (
-    <tr className="group border-b border-border/40 hover:bg-muted/30 transition-all">
-      <td className="py-3 px-5">
+    <tr className="group hover:bg-blue-50/50 transition-colors duration-200">
+      <td className="py-4 px-6">
         <div className="flex items-center gap-3">
           {/* Circular avatar */}
           <img
             src={user.avatar ?? "/placeholder.svg"}
             alt={user.fullName}
-            className="w-9 h-9 rounded-full ring-2 ring-background group-hover:ring-primary/40 object-cover"
+            className="w-10 h-10 rounded-full ring-2 ring-white shadow-sm group-hover:ring-blue-200 object-cover transition-all"
           />
           <div>
-            <p className="font-medium text-foreground">{user.fullName}</p>
-            <p className="text-xs text-muted-foreground">ID: {user.id}</p>
+            <p className="font-semibold text-gray-900">{user.fullName}</p>
+            <p className="text-xs text-gray-500">ID: {user.id}</p>
           </div>
         </div>
       </td>
-      <td className="py-3 px-5 text-sm text-muted-foreground">{user.email}</td>
-      <td className="py-3 px-5 text-center">
+      <td className="py-4 px-6 text-sm text-gray-600">{user.email}</td>
+      <td className="py-4 px-6 text-center">
         <span
-          className={`inline-block text-xs px-3 py-1 rounded-full font-medium shadow-sm ${ROLE_COLORS[role]}`}
+          className={`inline-flex items-center text-xs px-3 py-1.5 rounded-full font-semibold shadow-sm border ${
+            role === "admin"
+              ? "bg-red-50 text-red-700 border-red-200"
+              : role === "teacher"
+              ? "bg-blue-50 text-blue-700 border-blue-200"
+              : "bg-green-50 text-green-700 border-green-200"
+          }`}
         >
           {ROLE_LABELS[role]}
         </span>
       </td>
-      <td className="py-3 px-5">
+      <td className="py-4 px-6">
         <div className="flex justify-center gap-2">
           {/* Edit button */}
           <Button

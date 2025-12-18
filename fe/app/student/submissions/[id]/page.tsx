@@ -20,6 +20,7 @@ import { useStudentSubmission } from "@/hooks/useStudentSubmission";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { formatDateTime } from "@/lib/project-helpers";
 
 export default function SubmissionDetailPage() {
   const { user } = useAuthStore();
@@ -191,16 +192,7 @@ export default function SubmissionDetailPage() {
                             Ngày nộp
                           </p>
                           <p className="text-[14px] font-semibold text-gray-900">
-                            {new Date(submission.submittedAt).toLocaleString(
-                              "vi-VN",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}
+                            {formatDateTime(submission.submittedAt)}
                           </p>
                         </div>
                       </div>
@@ -239,17 +231,10 @@ export default function SubmissionDetailPage() {
                                 Ngày chấm điểm
                               </p>
                               <p className="text-[14px] font-semibold text-gray-900">
-                                {submission.grade.gradedAt
-                                  ? new Date(
-                                      submission.grade.gradedAt
-                                    ).toLocaleString("vi-VN", {
-                                      year: "numeric",
-                                      month: "long",
-                                      day: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })
-                                  : "Chưa có thông tin"}
+                                {formatDateTime(
+                                  submission.grade.gradedAt,
+                                  "Chưa có thông tin"
+                                )}
                               </p>
                             </div>
                           </div>
