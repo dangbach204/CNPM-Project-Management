@@ -94,14 +94,67 @@ export default function MyProjectPage() {
               </div>
             </div>
 
-            <div className="px-6 sm:px-8 lg:px-12 py-8">
-              <div className="max-w-5xl mx-auto">
-                {/* Project Overview or Empty State */}
-                {!myProject ? (
-                  <Card className="shadow-md border-gray-300/80">
-                    <CardContent className="flex flex-col items-center justify-center py-16">
-                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                        <FileText className="w-8 h-8 text-gray-400" />
+              {/* Project Details */}
+              {!myProject ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <FileText className="w-16 h-16 text-muted-foreground mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">
+                      Chưa có đề tài
+                    </h3>
+                    <p className="text-muted-foreground text-center">
+                      Bạn chưa tham gia đề tài nào. Hãy vào trang Đề tài để chọn
+                      và tham gia một đề tài phù hợp.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-6">
+                  {/* Main Project Card */}
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2 flex-1">
+                          <CardTitle className="text-2xl">
+                            {myProject.title}
+                          </CardTitle>
+                          <div className="flex items-center gap-2">
+                            {myProject.status === "expired" || isExpired(myProject.expireAt) ? (
+                              <Badge variant="destructive">Hết hạn</Badge>
+                            ) : myProject.status === "completed" ? (
+                              <Badge className="bg-green-600 hover:bg-green-700">Hoàn thành</Badge>
+                            ) : myProject.status === "approved" ? (
+                              <Badge className="bg-blue-600 hover:bg-blue-700">Đã phê duyệt</Badge>
+                            ) : myProject.status === "rejected" ? (
+                              <Badge variant="destructive">Đã từ chối</Badge>
+                            ) : myProject.status === "pending" ? (
+                              <Badge className="bg-yellow-600 hover:bg-yellow-700">Đang thực hiện</Badge>
+                            ) : myProject.status === "available" ? (
+                              <Badge className="bg-emerald-600 hover:bg-emerald-700">Mở</Badge>
+                            ) : (
+                              <Badge variant="secondary">Trống</Badge>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => setSubmitDialogOpen(true)}
+                          disabled={isExpired(myProject.expireAt)}
+                        >
+                          <Send className="w-4 h-4 mr-2" />
+                          Nộp báo cáo hoặc báo cáo tiến độ
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {/* Description */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <FileText className="w-5 h-5" />
+                          Mô tả
+                        </h3>
+                        <p className="text-muted-foreground leading-relaxed">
+                          {myProject.description}
+                        </p>
                       </div>
                       <h3 className="text-xl font-semibold mb-2 text-gray-900">
                         Chưa có đề tài

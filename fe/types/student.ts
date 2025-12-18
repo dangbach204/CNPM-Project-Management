@@ -3,6 +3,7 @@ export interface StudentOverview {
     projectId: number;
     title: string;
     description: string;
+    status: "open" | "available" | "pending" | "completed" | "approved" | "rejected" | "expired";
     joinedAt: string;
   }[];
   mySubmissions: {
@@ -39,6 +40,7 @@ export interface MyProject {
   projectId: number;
   title: string;
   description: string;
+  status: "open" | "available" | "pending" | "completed" | "approved" | "rejected" | "expired";
   teacher: {
     id: number;
     name: string;

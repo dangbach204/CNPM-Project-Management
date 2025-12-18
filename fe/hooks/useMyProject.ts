@@ -12,7 +12,9 @@ export const useMyProject = () => {
     try {
       setIsLoading(true);
       const response = await getMyProject();
+      console.log("🔍 MyProject API Response:", response);
       if (response && response.project) {
+        console.log("📦 MyProject data:", response.project);
         setMyProject(response.project);
       }
     } catch (error: any) {

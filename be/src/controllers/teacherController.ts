@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
 import { Grade, Project, ProjectStudents, Submission, User } from "../models";
 import LogService, { ENTITY_TYPES, LOG_ACTIONS } from "../lib/logService";
-import sequelize from "../config/db";
-
+import sequelize from "../config/db";import { notifyStudent } from "./notificationController";
 export const getTeacherOverview = async (req: Request, res: Response) => {
   try {
     const teacherId = req.user?.id;
@@ -320,6 +319,17 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
           projectId,
           { student_id: studentId }
         );
+        // Gửi thông báo cho sinh viên
+        if (req.user?.id) {
+          await notifyStudent(
+            studentId,
+            req.user.id,
+            "added_to_project",
+            projectId,
+            project.title,
+            `đã thêm bạn vào dự án "${project.title}"`
+          );
+        }
       }
     }
 
@@ -567,6 +577,43 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
       await grade.save();
     }
 
+    // Gửi thông báo cho sinh viên
+    console.log("📧 Attempting to send notification...");
+    const submissionData = await Submission.findByPk(submissionId, {
+      include: [
+        {
+          model: Project,
+          as: "submissionProject",
+          attributes: ["title"],
+        },
+      ],
+    });
+
+    console.log("📧 Submission data:", {
+      studentId: submissionData?.student_id,
+      teacherId: req.user?.id,
+      projectTitle: (submissionData as any)?.submissionProject?.title,
+    });
+
+    if (submissionData && req.user?.id) {
+      console.log("📧 Sending notification to student ID:", submissionData.student_id);
+      try {
+        await notifyStudent(
+          submissionData.student_id,
+          req.user.id,
+          "grade_submitted",
+          Number(submissionId),
+          (submissionData as any).submissionProject?.title || "Bài nộp",
+          `đã chấm điểm bài nộp của bạn: ${score}/10${feedback ? ` - ${feedback}` : ""}`
+        );
+        console.log("✅ Notification sent successfully!");
+      } catch (error) {
+        console.error("❌ Error sending notification:", error);
+      }
+    } else {
+      console.log("❌ Cannot send notification - missing data");
+    }
+
     return res.status(200).json({
       message: "Grading successful",
       grade: {
@@ -592,6 +639,8 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid projectId parameter" });
     }
 
+    console.log("🎯 teacherUpdateProjectInfo - Request body:", req.body);
+
     const {
       title,
       description,
@@ -600,6 +649,8 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
       addStudents,
       removeStudents,
     } = req.body;
+
+    console.log("📦 Extracted fields:", { title, description, status, expiredAt, addStudents, removeStudents });
 
     if (
       !title &&
@@ -625,7 +676,11 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
     if (status !== undefined) updateData.status = status;
     if (expiredAt !== undefined) updateData.expire_at = expiredAt;
 
+    console.log("💾 updateData:", updateData);
+    console.log("🔢 updateData keys count:", Object.keys(updateData).length);
+
     if (Object.keys(updateData).length > 0) {
+      console.log("✅ Updating project with data:", updateData);
       await project.update(updateData, { transaction });
 
       await LogService.log(
@@ -635,6 +690,60 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
         projectId,
         { updated_fields: Object.keys(updateData), ...updateData }
       );
+
+      // Gửi thông báo cho sinh viên nếu có thay đổi status hoặc expiredAt
+      console.log("🔔 Checking notification conditions:", {
+        hasStatus: status !== undefined,
+        hasExpiredAt: expiredAt !== undefined,
+        hasUserId: !!req.user?.id,
+        status,
+        expiredAt
+      });
+
+      if ((status !== undefined || expiredAt !== undefined) && req.user?.id) {
+        const projectStudents = await ProjectStudents.findAll({
+          where: { project_id: projectId },
+        });
+
+        console.log("👥 Found students in project:", projectStudents.length);
+
+        const statusLabels: { [key: string]: string } = {
+          open: "Trống",
+          available: "Mở",
+          pending: "Đang thực hiện",
+          completed: "Hoàn thành",
+          approved: "Đã phê duyệt",
+          rejected: "Đã từ chối",
+          expired: "Hết hạn",
+        };
+
+        let message = `đã cập nhật dự án "${project.title}"`;
+        if (status !== undefined) {
+          message += ` - Trạng thái: ${statusLabels[status] || status}`;
+        }
+        if (expiredAt !== undefined) {
+          const date = new Date(expiredAt);
+          message += ` - Hạn chót: ${date.toLocaleDateString("vi-VN")}`;
+        }
+
+        console.log("📧 Sending notifications with message:", message);
+
+        for (const ps of projectStudents) {
+          console.log("📨 Notifying student:", ps.student_id);
+          await notifyStudent(
+            ps.student_id,
+            req.user.id,
+            "project_updated",
+            projectId,
+            project.title,
+            message
+          );
+        }
+
+        console.log("✅ Notifications sent successfully");
+      } else {
+        console.log("❌ Notification conditions not met");
+      }
     }
 
     if (addStudents && Array.isArray(addStudents) && addStudents.length > 0) {
@@ -693,6 +802,18 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
           projectId,
           { student_id: studentId }
         );
+
+        // Gửi thông báo cho sinh viên
+        if (req.user?.id) {
+          await notifyStudent(
+            studentId,
+            req.user.id,
+            "added_to_project",
+            projectId,
+            project.title,
+            `đã thêm bạn vào dự án "${project.title}"`
+          );
+        }
       }
     }
 
