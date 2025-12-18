@@ -26,6 +26,8 @@ export function NotificationBell() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      case "user_created":
+        return <User className="w-4 h-4 text-green-500" />;
       case "user_updated":
         return <User className="w-4 h-4 text-blue-500" />;
       case "project_updated":
@@ -43,6 +45,8 @@ export function NotificationBell() {
 
   const getNotificationTitle = (type: string) => {
     switch (type) {
+      case "user_created":
+        return "Tạo người dùng mới";
       case "user_updated":
         return "Cập nhật người dùng";
       case "project_updated":

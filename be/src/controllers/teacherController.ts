@@ -594,11 +594,18 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
     const submissionId = req.params.submissionId;
     const { score, feedback } = req.body;
 
+    console.log('=== GRADE REQUEST ===');
+    console.log('score:', score, 'type:', typeof score);
+    console.log('feedback:', feedback);
+
     if (score === undefined || score === null) {
       return res.status(400).json({ message: "Score is required" });
     }
 
-    if (typeof score !== "number" || score < 0 || score > 10) {
+    // Convert score to number if it's a string
+    const numericScore = typeof score === 'string' ? parseFloat(score) : score;
+
+    if (typeof numericScore !== "number" || isNaN(numericScore) || numericScore < 0 || numericScore > 10) {
       return res.status(400).json({ message: "Invalid score" });
     }
 
@@ -615,11 +622,11 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
       grade = await Grade.create({
         teacher_id: req.user?.id,
         submission_id: submissionId,
-        score: score,
+        score: numericScore,
         feedback: feedback || null,
       });
     } else {
-      grade.score = score;
+      grade.score = numericScore;
       grade.feedback = feedback ?? grade.feedback;
       await grade.save();
     }
@@ -635,9 +642,15 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
       ],
     });
 
+    // Lấy thông tin giáo viên
+    const teacher = await User.findByPk(req.user?.id, {
+      attributes: ["full_name"],
+    });
+
     console.log("📧 Submission data:", {
       studentId: submissionData?.student_id,
       teacherId: req.user?.id,
+      teacherName: teacher?.full_name,
       projectTitle: (submissionData as any)?.submissionProject?.title,
     });
 
@@ -647,13 +660,16 @@ export const teacherGradeSubmission = async (req: Request, res: Response) => {
         submissionData.student_id
       );
       try {
+        const projectTitle = (submissionData as any).submissionProject?.title || "Bài nộp";
+        const teacherName = teacher?.full_name || "Giáo viên";
+        
         await notifyStudent(
           submissionData.student_id,
           req.user.id,
           "grade_submitted",
           Number(submissionId),
-          (submissionData as any).submissionProject?.title || "Bài nộp",
-          `đã chấm điểm bài nộp của bạn: ${score}/10${feedback ? ` - ${feedback}` : ""}`
+          projectTitle,
+          `${teacherName} đã chấm điểm báo cáo đề tài "${projectTitle}" của bạn: ${numericScore}/10${feedback ? ` - Nhận xét: ${feedback}` : ""}`
         );
         console.log("✅ Notification sent successfully!");
       } catch (error) {
@@ -726,11 +742,42 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Project không tồn tại" });
     }
 
+    // Lưu giá trị cũ để so sánh
+    const oldValues = {
+      title: project.title,
+      description: project.description,
+      status: project.status,
+      expiredAt: project.expire_at,
+    };
+
     const updateData: any = {};
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
     if (status !== undefined) updateData.status = status;
     if (expiredAt !== undefined) updateData.expire_at = expiredAt;
+
+    // Track actual changes để chỉ gửi thông báo cho field thực sự thay đổi
+    const actualChanges: any = {};
+    if (title !== undefined && title !== oldValues.title) actualChanges.title = title;
+    if (description !== undefined && description !== oldValues.description) actualChanges.description = description;
+    if (status !== undefined && status !== oldValues.status) actualChanges.status = status;
+    
+    // So sánh date chính xác (CHỈ so sánh phần NGÀY, không so sánh time)
+    if (expiredAt !== undefined && oldValues.expiredAt) {
+      // Extract chỉ phần date (YYYY-MM-DD)
+      const newDateOnly = new Date(expiredAt).toISOString().split('T')[0];
+      const oldDateOnly = new Date(oldValues.expiredAt).toISOString().split('T')[0];
+      
+      if (newDateOnly !== oldDateOnly) {
+        actualChanges.expiredAt = expiredAt;
+      }
+    } else if (expiredAt !== undefined && !oldValues.expiredAt) {
+      // Trường hợp thêm mới expiredAt
+      actualChanges.expiredAt = expiredAt;
+    }
+
+    console.log("💾 updateData:", updateData);
+    console.log("🔢 updateData keys count:", Object.keys(updateData).length);
 
     if (Object.keys(updateData).length > 0) {
       console.log("✅ Updating project with data:", updateData);
@@ -744,15 +791,17 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
         { updated_fields: Object.keys(updateData), ...updateData }
       );
 
+      // Gửi thông báo cho sinh viên - mỗi thay đổi một thông báo riêng
+      console.log("🔔 Checking notification conditions:", {
+        hasTitle: title !== undefined,
+        hasDescription: description !== undefined,
       console.log("Checking notification conditions:", {
         hasStatus: status !== undefined,
         hasExpiredAt: expiredAt !== undefined,
         hasUserId: !!req.user?.id,
-        status,
-        expiredAt,
       });
 
-      if ((status !== undefined || expiredAt !== undefined) && req.user?.id) {
+      if ((status !== undefined || expiredAt !== undefined || title !== undefined || description !== undefined) && req.user?.id) {
         const projectStudents = await ProjectStudents.findAll({
           where: { project_id: projectId },
         });
@@ -769,27 +818,59 @@ export const teacherUpdateProjectInfo = async (req: Request, res: Response) => {
           expired: "Hết hạn",
         };
 
-        let message = `đã cập nhật dự án "${project.title}"`;
-        if (status !== undefined) {
-          message += ` - Trạng thái: ${statusLabels[status] || status}`;
-        }
-        if (expiredAt !== undefined) {
-          const date = new Date(expiredAt);
-          message += ` - Hạn chót: ${date.toLocaleDateString("vi-VN")}`;
-        }
-
-        console.log("📧 Sending notifications with message:", message);
-
+        // Gửi từng thông báo riêng biệt - CHỈ khi giá trị THỰC SỰ thay đổi
         for (const ps of projectStudents) {
-          console.log("📨 Notifying student:", ps.student_id);
-          await notifyStudent(
-            ps.student_id,
-            req.user.id,
-            "project_updated",
-            projectId,
-            project.title,
-            message
-          );
+          // Thông báo khi đổi tên (CHỈ khi thay đổi)
+          if (actualChanges.title) {
+            await notifyStudent(
+              ps.student_id,
+              req.user.id,
+              "project_updated",
+              projectId,
+              project.title,
+              `đã đổi tên dự án thành "${actualChanges.title}"`
+            );
+          }
+          
+          // Thông báo khi đổi mô tả (CHỈ khi thay đổi)
+          if (actualChanges.description) {
+            const shortDesc = actualChanges.description.length > 100 
+              ? actualChanges.description.substring(0, 100) + '...' 
+              : actualChanges.description;
+            await notifyStudent(
+              ps.student_id,
+              req.user.id,
+              "project_updated",
+              projectId,
+              project.title,
+              `đã đổi mô tả dự án thành "${shortDesc}"`
+            );
+          }
+          
+          // Thông báo khi đổi trạng thái (CHỈ khi thay đổi)
+          if (actualChanges.status) {
+            await notifyStudent(
+              ps.student_id,
+              req.user.id,
+              "project_updated",
+              projectId,
+              project.title,
+              `đã đổi trạng thái dự án thành "${statusLabels[actualChanges.status] || actualChanges.status}"`
+            );
+          }
+          
+          // Thông báo khi đổi hạn nộp (CHỈ khi thay đổi)
+          if (actualChanges.expiredAt) {
+            const date = new Date(actualChanges.expiredAt);
+            await notifyStudent(
+              ps.student_id,
+              req.user.id,
+              "project_updated",
+              projectId,
+              project.title,
+              `đã đổi hạn nộp dự án thành ${date.toLocaleDateString("vi-VN")}`
+            );
+          }
         }
 
         console.log("✅ Notifications sent successfully");
