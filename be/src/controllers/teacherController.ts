@@ -175,6 +175,20 @@ export const createProject = async (req: Request, res: Response) => {
 
     const parsedExpireAt = parseDate(expireAt);
 
+    
+    if (parsedExpireAt) {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const expireDate = new Date(parsedExpireAt);
+      expireDate.setHours(0, 0, 0, 0);
+      
+      if (expireDate < now) {
+        return res.status(400).json({
+          message: "Ngày hết hạn phải sau ngày hiện tại",
+        });
+      }
+    }
+
     const newProject = await Project.create({
       title,
       description,
@@ -264,6 +278,22 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
         message:
           "expiredAt phải là chuỗi ISO-8601 hợp lệ (VD: 2024-01-15T10:30:00Z)",
       });
+    }
+
+    
+    if (expiredAt) {
+      const projectData = project.toJSON() as any;
+      const createdAt = new Date(projectData.created_at);
+      createdAt.setHours(0, 0, 0, 0);
+      const expireDate = new Date(expiredAt);
+      expireDate.setHours(0, 0, 0, 0);
+      
+      if (expireDate < createdAt) {
+        await transaction.rollback();
+        return res.status(400).json({
+          message: "Ngày hết hạn phải sau ngày tạo đề tài",
+        });
+      }
     }
 
     const updateData: any = {};
