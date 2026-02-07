@@ -3,30 +3,38 @@ import bcrypt from "bcrypt";
 import User from "../models/user";
 import LogService, { ENTITY_TYPES, LOG_ACTIONS } from "../lib/logService";
 import { notifyOtherAdmins } from "./notificationController";
+import sequelize from "../config/db";
 
 export const createUser = async (req: Request, res: Response) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const { fullName, email, role, password } = req.body;
     const avatarFile = req.file;
 
-    if (!fullName || !email || !role || !password) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    const existingUser = await User.findOne({ where: { email } });
+    // Check for existing email within transaction with lock
+    const existingUser = await User.findOne({
+      where: { email },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
     if (existingUser) {
+      await transaction.rollback();
       return res.status(400).json({ message: "Email already exists" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({
-      full_name: fullName,
-      email,
-      role,
-      password_hash: passwordHash,
-      avatar: avatarFile ? avatarFile.path : null,
-    });
+    const newUser = await User.create(
+      {
+        full_name: fullName,
+        email,
+        role,
+        password_hash: passwordHash,
+        avatar: avatarFile ? avatarFile.path : null,
+      },
+      { transaction },
+    );
 
     await LogService.log(
       LOG_ACTIONS.CREATE_USER,
@@ -37,17 +45,19 @@ export const createUser = async (req: Request, res: Response) => {
         fullName: newUser.full_name,
         email: newUser.email,
         role: newUser.role,
-      }
+      },
     );
 
-    // Gửi thông báo cho các admin khác
+    await transaction.commit();
+
+    // Gửi thông báo cho các admin khác (outside transaction - non-critical)
     if (req.user?.id) {
       await notifyOtherAdmins(
         req.user.id,
         "user_created",
         newUser.id,
         newUser.full_name,
-        `đã tạo tài khoản mới "${newUser.full_name}" (${newUser.role})`
+        `đã tạo tài khoản mới "${newUser.full_name}" (${newUser.role})`,
       );
     }
 
@@ -60,10 +70,10 @@ export const createUser = async (req: Request, res: Response) => {
       avatar: newUser.avatar,
     });
   } catch (error: any) {
+    await transaction.rollback();
     console.error("Error creating user:", error);
     return res.status(500).json({
       message: "Server error while creating user",
-      error: error.message,
     });
   }
 };
@@ -90,7 +100,7 @@ export const deleteUser = async (req: Request, res: Response) => {
       req,
       ENTITY_TYPES.USER,
       Number(userId),
-      userData
+      userData,
     );
 
     return res.status(200).json({ message: "Xóa người dùng thành công" });
@@ -103,33 +113,34 @@ export const deleteUser = async (req: Request, res: Response) => {
 };
 
 export const updateUserInfo = async (req: Request, res: Response) => {
+  const transaction = await sequelize.transaction();
+
   try {
     const userIdParam = req.params.userId;
     const userId = Number(userIdParam);
-    if (Number.isNaN(userId)) {
-      return res.status(400).json({ message: "Invalid userId parameter" });
-    }
 
     const { fullName, email, role } = req.body;
     const avatarFile = req.file;
 
-    if (!fullName && !email && !role && !avatarFile) {
-      return res.status(400).json({ message: "No fields to update" });
-    }
-
-    const user = await User.findByPk(userId);
+    // Lock the user row to prevent concurrent modifications
+    const user = await User.findByPk(userId, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
     if (!user) {
+      await transaction.rollback();
       return res.status(404).json({ message: "Người dùng không tồn tại" });
     }
 
     if (email && email !== user.email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return res.status(400).json({ message: "Email không hợp lệ" });
-      }
-
-      const existing = await User.findOne({ where: { email } });
+      // Check email uniqueness within transaction with lock
+      const existing = await User.findOne({
+        where: { email },
+        transaction,
+        lock: transaction.LOCK.UPDATE,
+      });
       if (existing && existing.id !== user.id) {
+        await transaction.rollback();
         return res.status(400).json({ message: "Email đã tồn tại" });
       }
 
@@ -141,10 +152,6 @@ export const updateUserInfo = async (req: Request, res: Response) => {
     }
 
     if (role) {
-      const allowedRoles = ["admin", "teacher", "student"];
-      if (!allowedRoles.includes(role)) {
-        return res.status(400).json({ message: "Role không hợp lệ" });
-      }
       user.role = role;
     }
 
@@ -152,7 +159,7 @@ export const updateUserInfo = async (req: Request, res: Response) => {
       user.avatar = avatarFile.path;
     }
 
-    await user.save();
+    await user.save({ transaction });
 
     const updatedFields: any = {};
     if (fullName) updatedFields.fullName = fullName;
@@ -165,16 +172,19 @@ export const updateUserInfo = async (req: Request, res: Response) => {
       req,
       ENTITY_TYPES.USER,
       userId,
-      { updated_fields: Object.keys(updatedFields), ...updatedFields }
+      { updated_fields: Object.keys(updatedFields), ...updatedFields },
     );
 
+    await transaction.commit();
+
+    // Notifications outside transaction (non-critical)
     if (req.user?.id) {
       await notifyOtherAdmins(
         req.user.id,
         "user_updated",
         userId,
         user.full_name,
-        `đã cập nhật thông tin người dùng "${user.full_name}"`
+        `đã cập nhật thông tin người dùng "${user.full_name}"`,
       );
     }
 
@@ -189,10 +199,10 @@ export const updateUserInfo = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
+    await transaction.rollback();
     console.error("Lỗi sửa người dùng:", error);
     return res.status(500).json({
       message: "Lỗi server khi sửa người dùng",
-      error: (error as Error).message,
     });
   }
 };

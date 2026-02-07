@@ -5,31 +5,21 @@ import crypto from "crypto";
 import User from "../models/user";
 import LogService, { LOG_ACTIONS, ENTITY_TYPES } from "../lib/logService";
 import PasswordResetTokens from "../models/passwordResetTokens";
-import { sendEmail } from "../utils/sendEmail";
+import { queueEmail } from "../utils/emailQueue";
+import { env } from "../config/env";
 
 const generateAccessToken = (user: any) => {
-  return jwt.sign(
-    { id: user.id, role: user.role },
-    process.env.JWT_SECRET || "ACCESS_SECRET",
-    { expiresIn: "15m" }
-  );
+  return jwt.sign({ id: user.id, role: user.role }, env.JWT_SECRET, {
+    expiresIn: "15m",
+  });
 };
 
 const generateRefreshToken = (user: any) => {
-  return jwt.sign(
-    { id: user.id },
-    process.env.JWT_REFRESH_SECRET || "REFRESH_SECRET",
-    { expiresIn: "7d" }
-  );
+  return jwt.sign({ id: user.id }, env.JWT_REFRESH_SECRET, { expiresIn: "7d" });
 };
 
 export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
-
-  if (!email || !password)
-    return res
-      .status(400)
-      .json({ message: "Email và mật khẩu không được để trống" });
 
   try {
     const user = await User.findOne({
@@ -74,13 +64,10 @@ export const loginUser = async (req: Request, res: Response) => {
 export const refreshToken = async (req: Request, res: Response) => {
   const { refresh } = req.body;
 
-  if (!refresh) return res.status(400).json({ message: "Thiếu refresh token" });
-
   try {
-    const payload = jwt.verify(
-      refresh,
-      process.env.JWT_REFRESH_SECRET || "REFRESH_SECRET"
-    ) as { id: number };
+    const payload = jwt.verify(refresh, env.JWT_REFRESH_SECRET) as {
+      id: number;
+    };
 
     const user = await User.findOne({
       where: { id: payload.id },
@@ -94,15 +81,13 @@ export const refreshToken = async (req: Request, res: Response) => {
 
     const newAccess = jwt.sign(
       { id: user.id, role: user.role },
-      process.env.JWT_SECRET || "ACCESS_SECRET",
-      { expiresIn: "15m" }
+      env.JWT_SECRET,
+      { expiresIn: "15m" },
     );
 
-    const newRefresh = jwt.sign(
-      { id: user.id },
-      process.env.JWT_REFRESH_SECRET || "REFRESH_SECRET",
-      { expiresIn: "7d" }
-    );
+    const newRefresh = jwt.sign({ id: user.id }, env.JWT_REFRESH_SECRET, {
+      expiresIn: "7d",
+    });
 
     return res.json({
       access: newAccess,
@@ -119,10 +104,6 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
   const { email } = req.body;
 
   try {
-    if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      return res.status(400).json({ message: "Email không hợp lệ." });
-    }
-
     const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(200).json({
@@ -155,10 +136,11 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
       throw new Error("CLIENT_URL is not set in environment variables");
     }
 
-    sendEmail({
-      to: user.email,
-      subject: "Password Reset Request",
-      html: `
+    // Queue email for async sending with automatic retry
+    queueEmail(
+      user.email,
+      "Password Reset Request",
+      `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #003366;">Password Reset Request</h2>
       <p>Hello,</p>
@@ -177,12 +159,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
       </p>
   </div>
   `,
-    }).catch((err) => {
-      console.error(
-        "Send reset email failed:",
-        err?.response?.data || err.message
-      );
-    });
+    );
 
     return res.status(200).json({
       message:
@@ -198,14 +175,6 @@ export const verifyResetToken = async (req: Request, res: Response) => {
   const { email, token } = req.body;
 
   try {
-    if (!email || !token) {
-      return res.status(400).json({ message: "Thiếu thông tin cần thiết." });
-    }
-
-    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      return res.status(400).json({ message: "Email không hợp lệ." });
-    }
-
     const user = await User.findOne({
       where: { email },
     });
@@ -249,20 +218,6 @@ export const resetPassword = async (req: Request, res: Response) => {
   const { email, token, newPassword } = req.body;
 
   try {
-    if (!email || !token || !newPassword) {
-      return res.status(400).json({ message: "Thiếu thông tin cần thiết." });
-    }
-
-    if (newPassword.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "Mật khẩu mới phải có ít nhất 6 ký tự." });
-    }
-
-    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      return res.status(400).json({ message: "Email không hợp lệ." });
-    }
-
     const user = await User.findOne({
       where: { email },
     });
@@ -309,7 +264,7 @@ export const resetPassword = async (req: Request, res: Response) => {
       user.id,
       {
         email: user.email,
-      }
+      },
     );
 
     return res.status(200).json({ message: "Đặt lại mật khẩu thành công." });

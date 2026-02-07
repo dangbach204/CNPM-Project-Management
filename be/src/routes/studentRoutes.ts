@@ -8,6 +8,11 @@ import {
   studentGetProjects,
   getMySubmissions,
 } from "../controllers/studentController";
+import { validateBody, validateParams } from "../middlewares/validate";
+import {
+  projectIdParamSchema,
+  submitProjectSchema,
+} from "../validators/schemas";
 
 const router = express.Router();
 
@@ -20,10 +25,19 @@ router.get("/projects", studentGetProjects);
 router.get("/my-project", getMyProject);
 
 // Project Actions
-router.patch("/join-project/:projectId", studentJoinProject);
+router.patch(
+  "/join-project/:projectId",
+  validateParams(projectIdParamSchema),
+  studentJoinProject,
+);
 
 // Submissions
-router.post("/submit-project/:projectId", submitProject);
+router.post(
+  "/submit-project/:projectId",
+  validateParams(projectIdParamSchema),
+  validateBody(submitProjectSchema),
+  submitProject,
+);
 router.get("/my-submissions", getMySubmissions);
 
 export default router;

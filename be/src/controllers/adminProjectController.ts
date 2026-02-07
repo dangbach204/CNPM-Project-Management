@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Op } from "sequelize";
 import Project from "../models/project";
 import User from "../models/user";
 import { ProjectStudents } from "../models";
@@ -40,20 +41,51 @@ export const getProjectsManagement = async (req: Request, res: Response) => {
       order: [["id", "ASC"]],
     });
 
-    // Auto-update expired projects
+    // Bulk update all expired projects in a single query (instead of N+1)
     const now = new Date();
-    for (const project of projects) {
-      const projectData = project.toJSON() as any;
-      if (
-        projectData.expire_at &&
-        new Date(projectData.expire_at) < now &&
-        projectData.status !== "expired"
-      ) {
-        await project.update({ status: "expired" });
-      }
-    }
+    await Project.update(
+      { status: "expired" },
+      {
+        where: {
+          expire_at: { [Op.lt]: now },
+          status: { [Op.ne]: "expired" },
+        },
+      },
+    );
 
-    const formattedProjects = projects.map((project: any) => {
+    // Refresh projects to get updated status
+    const refreshedProjects = await Project.findAll({
+      attributes: [
+        "id",
+        "title",
+        "description",
+        "teacher_id",
+        "status",
+        "created_at",
+        "expire_at",
+      ],
+      include: [
+        {
+          model: User,
+          as: "teacher",
+          attributes: ["id", "full_name", "email", "avatar"],
+        },
+        {
+          model: ProjectStudents,
+          as: "projectStudents",
+          include: [
+            {
+              model: User,
+              as: "student",
+              attributes: ["id", "full_name", "email", "avatar"],
+            },
+          ],
+        },
+      ],
+      order: [["id", "ASC"]],
+    });
+
+    const formattedProjects = refreshedProjects.map((project: any) => {
       const projectData = project.toJSON();
       const students =
         projectData?.projectStudents?.map((projectStudent: any) => ({
@@ -117,7 +149,7 @@ export const deleteProject = async (req: Request, res: Response) => {
       {
         title: projectData.title,
         teacher_id: projectData.teacher_id,
-      }
+      },
     );
 
     await transaction.commit();
@@ -268,7 +300,7 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
         req,
         ENTITY_TYPES.PROJECT,
         projectId,
-        { updated_fields: Object.keys(updateData), ...updateData }
+        { updated_fields: Object.keys(updateData), ...updateData },
       );
     }
 
@@ -294,24 +326,39 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
         });
       }
 
+      // Bulk validate students (instead of N+1 queries)
+      const validStudents = await User.findAll({
+        where: {
+          id: { [Op.in]: addStudents },
+          role: "student",
+        },
+        attributes: ["id"],
+      });
+
+      const validStudentIds = new Set(validStudents.map((s: any) => s.id));
       for (const studentId of addStudents) {
-        const student = await User.findByPk(studentId);
-        if (!student || student.role !== "student") {
+        if (!validStudentIds.has(studentId)) {
           await transaction.rollback();
           return res.status(400).json({
             message: `Sinh viên với ID ${studentId} không hợp lệ`,
           });
         }
+      }
 
-        const existingProject = await ProjectStudents.findOne({
-          where: { student_id: studentId },
+      // Bulk check for existing project memberships
+      const existingMemberships = await ProjectStudents.findAll({
+        where: {
+          student_id: { [Op.in]: addStudents },
+        },
+        attributes: ["student_id"],
+      });
+
+      if (existingMemberships.length > 0) {
+        const conflictingId = existingMemberships[0].student_id;
+        await transaction.rollback();
+        return res.status(400).json({
+          message: `Sinh viên với ID ${conflictingId} đã tham gia project khác`,
         });
-        if (existingProject) {
-          await transaction.rollback();
-          return res.status(400).json({
-            message: `Sinh viên với ID ${studentId} đã tham gia project khác`,
-          });
-        }
       }
 
       const projectStudentsData = addStudents.map((studentId) => ({
@@ -326,7 +373,7 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
           req,
           ENTITY_TYPES.PROJECT,
           projectId,
-          { student_id: studentId }
+          { student_id: studentId },
         );
       }
     }
@@ -350,7 +397,7 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
           req,
           ENTITY_TYPES.PROJECT,
           projectId,
-          { student_id: studentId }
+          { student_id: studentId },
         );
       }
     }
@@ -368,7 +415,7 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
             "project_updated",
             projectId,
             project.title,
-            `đã đổi tên đề tài thành "${actualChanges.title}"`
+            `đã đổi tên đề tài thành "${actualChanges.title}"`,
           );
         }
 
@@ -383,7 +430,7 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
             "project_updated",
             projectId,
             project.title,
-            `đã đổi mô tả đề tài thành "${shortDesc}"`
+            `đã đổi mô tả đề tài thành "${shortDesc}"`,
           );
         }
 
@@ -403,7 +450,7 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
             "project_updated",
             projectId,
             project.title,
-            `đã đổi trạng thái đề tài thành "${statusLabels[actualChanges.status] || actualChanges.status}"`
+            `đã đổi trạng thái đề tài thành "${statusLabels[actualChanges.status] || actualChanges.status}"`,
           );
         }
 
@@ -415,7 +462,7 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
             "project_updated",
             projectId,
             project.title,
-            `đã đổi hạn nộp đề tài thành ${date.toLocaleDateString("vi-VN")}`
+            `đã đổi hạn nộp đề tài thành ${date.toLocaleDateString("vi-VN")}`,
           );
         }
 
@@ -427,7 +474,7 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
             "project_updated",
             projectId,
             project.title,
-            `đã đổi giáo viên hướng dẫn đề tài thành "${teacher?.full_name}"`
+            `đã đổi giáo viên hướng dẫn đề tài thành "${teacher?.full_name}"`,
           );
         }
 
@@ -438,7 +485,7 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
             "project_updated",
             projectId,
             project.title,
-            `đã thêm ${addStudents.length} sinh viên vào đề tài`
+            `đã thêm ${addStudents.length} sinh viên vào đề tài`,
           );
         }
 
@@ -449,7 +496,7 @@ export const updateProjectInfo = async (req: Request, res: Response) => {
             "project_updated",
             projectId,
             project.title,
-            `đã xóa ${removeStudents.length} sinh viên khỏi đề tài`
+            `đã xóa ${removeStudents.length} sinh viên khỏi đề tài`,
           );
         }
       }

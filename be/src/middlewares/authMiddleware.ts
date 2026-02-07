@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { env } from "../config/env";
 
 interface JwtPayload {
   id: number;
@@ -17,7 +18,7 @@ declare global {
 export const authMiddleware = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const authHeader = req.headers.authorization;
 
@@ -27,10 +28,7 @@ export const authMiddleware = (
   const token = authHeader.substring(7);
 
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "ACCESS_SECRET"
-    ) as JwtPayload;
+    const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
 
     req.user = decoded;
     next();
